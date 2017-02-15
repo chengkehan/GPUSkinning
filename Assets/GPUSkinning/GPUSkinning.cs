@@ -27,31 +27,7 @@ public class GPUSkinning : MonoBehaviour
 
 	private GPUSkinning_BoneAnimation[] boneAnimations = null;
 
-    private Matrix4x4[] matricesUniformBlock = null;
-
-    private int shaderPropID_Matrices = 0;
-
-    private int shaderPropID_MatricesTex = 0;
-
-    private int shaderPropID_MatricesTexFrameTexels = 0;
-
-    private int shaderPropID_MatricesTexSize = 0;
-
-    private int shaderPropID_AnimLength = 0;
-
-    private int shaderPropID_AnimFPS = 0;
-
     private GPUSkinning_SpawnObject[] spawnObjects = null;
-
-	private Texture2D matricesTex = null;
-
-    private int matricesTexFrameTexels = 0;
-
-	private int matricesTexWidth = 128;
-
-	private int matricesTexHeight = 128;
-
-    private Mesh[] additionalVertexStreames = null;
 
     private void Start () 
 	{
@@ -64,7 +40,7 @@ public class GPUSkinning : MonoBehaviour
         smr = GetComponentInChildren<SkinnedMeshRenderer>();
 		mesh = smr.sharedMesh;
 
-        // Init Bones
+        // 初始化骨骼对象
 		int numBones = smr.bones.Length;
 		bones = new GPUSkinning_Bone[numBones];
 		for(int i = 0; i < numBones; ++i)
@@ -77,7 +53,7 @@ public class GPUSkinning : MonoBehaviour
 
         matricesUniformBlock = new Matrix4x4[numBones];
 
-        // Construct Bones' Hierarchy
+        // 构建骨骼的层级结构
         for(int i = 0; i < numBones; ++i)
         {
             if(bones[i].transform == smr.rootBone)
@@ -113,7 +89,7 @@ public class GPUSkinning : MonoBehaviour
         newMtrl.CopyPropertiesFromMaterial(smr.sharedMaterial);
 		mr.sharedMaterial = newMtrl;
 
-        // Fetch bone-weight storing as tangents
+        // 保存骨骼动画权重
         Vector4[] tangents = new Vector4[mesh.vertexCount];
         for(int i = 0; i < mesh.vertexCount; ++i)
         {
@@ -132,6 +108,7 @@ public class GPUSkinning : MonoBehaviour
 		newMesh.triangles = mesh.triangles;
 		mf.sharedMesh = newMesh;
 
+		// 为每个角色生成差异化数据
         additionalVertexStreames = new Mesh[100];
         for(int i = 0; i < additionalVertexStreames.Length; ++i)
         {
@@ -151,8 +128,8 @@ public class GPUSkinning : MonoBehaviour
         }
         mr.additionalVertexStreams = additionalVertexStreames[0];
 
-        // Fetch animations' data
 #if UNITY_EDITOR
+		// 从 Unity 的 Animation 中提取骨骼动画所需要的数据
         int boneAnimationsCount = 0;
 		boneAnimations = new GPUSkinning_BoneAnimation[GetComponent<Animator>().runtimeAnimatorController.animationClips.Length];
 		foreach(AnimationClip animClip in GetComponent<Animator>().runtimeAnimatorController.animationClips)
@@ -226,6 +203,7 @@ public class GPUSkinning : MonoBehaviour
         AssetDatabase.CreateAsset(boneAnimations[0], "Assets/GPUSkinning/Resources/anim0.asset");
         AssetDatabase.Refresh();
 #else
+		// 直接读取序列化的骨骼动画数据
         boneAnimations = new GPUSkinning_BoneAnimation[] { Resources.Load("anim0") as GPUSkinning_BoneAnimation };
         foreach(var boneAnimation in boneAnimations)
         {
@@ -241,7 +219,7 @@ public class GPUSkinning : MonoBehaviour
         }
 #endif
 
-        // Create Spawn-Objects
+        // 创建出更多的角色模型
         if (spawnPoints != null)
         {
             List<GPUSkinning_SpawnObject> list = new List<GPUSkinning_SpawnObject>();
@@ -262,6 +240,7 @@ public class GPUSkinning : MonoBehaviour
             spawnObjects = list.ToArray();
         }
 
+		// 销毁并暂停 Unity 的 Animator
         GameObject.Destroy(transform.FindChild("pelvis").gameObject);
         GameObject.Destroy(transform.FindChild("mutant_mesh").gameObject);
         Object.Destroy(gameObject.GetComponent<Animator>());
@@ -270,6 +249,7 @@ public class GPUSkinning : MonoBehaviour
 
 		//PrintBones();
 
+		// 将骨骼动画数据保存到纹理中
 		if(SystemInfo.SupportsTextureFormat(TextureFormat.RGBAHalf))
 		{
 			matricesTex = new Texture2D(matricesTexWidth, matricesTexHeight, TextureFormat.RGBAHalf, false);
@@ -280,60 +260,6 @@ public class GPUSkinning : MonoBehaviour
 		BakeAnimationsToTexture();
 
         SetPlayMode0();
-    }
-
-	private void BakeAnimationsToTexture()
-	{
-		if(matricesTex != null)
-		{
-            Color[] colorBuffer = matricesTex.GetPixels();
-            int colorBufferIndex = 0;
-
-			GPUSkinning_BoneAnimation boneAnimation = boneAnimations[0];
-			for(int frameIndex = 0; frameIndex < boneAnimation.frames.Length; ++frameIndex)
-			{
-                float second = (float)(frameIndex) / (float)boneAnimation.fps;
-				UpdateBoneAnimationMatrix(null, second);
-                int numBones = bones.Length;
-                for (int i = 0; i < numBones; ++i)
-                {
-                    Matrix4x4 animMat = bones[i].animationMatrix;
-
-                    Color c = colorBuffer[colorBufferIndex];
-                    c.r = animMat.m00; c.g = animMat.m01; c.b = animMat.m02; c.a = animMat.m03;
-                    colorBuffer[colorBufferIndex++] = c;
-
-                    c = colorBuffer[colorBufferIndex];
-                    c.r = animMat.m10; c.g = animMat.m11; c.b = animMat.m12; c.a = animMat.m13;
-                    colorBuffer[colorBufferIndex++] = c;
-
-                    c = colorBuffer[colorBufferIndex];
-                    c.r = animMat.m20; c.g = animMat.m21; c.b = animMat.m22; c.a = animMat.m23;
-                    colorBuffer[colorBufferIndex++] = c;
-                }
-                
-                if(matricesTexFrameTexels == 0)
-                {
-                    shaderPropID_MatricesTexFrameTexels = Shader.PropertyToID("_MatricesTexFrameTexels");
-                    matricesTexFrameTexels = colorBufferIndex;
-                }
-            }
-
-            matricesTex.SetPixels(colorBuffer);
-            matricesTex.Apply(false, true);
-		}
-	}
-
-    private void UpdateMatricesTextureUniforms()
-    {
-        if (matricesTex != null)
-        {
-            newMtrl.SetTexture(shaderPropID_MatricesTex, matricesTex);
-            newMtrl.SetFloat(shaderPropID_MatricesTexFrameTexels, matricesTexFrameTexels);
-            newMtrl.SetVector(shaderPropID_MatricesTexSize, new Vector4(matricesTex.width, matricesTex.height, 0, 0));
-            newMtrl.SetFloat(shaderPropID_AnimLength, boneAnimations[0].length);
-            newMtrl.SetFloat(shaderPropID_AnimFPS, boneAnimations[0].fps);
-        }
     }
 
 	private float second = 0.0f;
@@ -352,6 +278,13 @@ public class GPUSkinning : MonoBehaviour
             UpdateMatricesTextureUniforms();
         }
 	}
+
+	// ---------------------------------------------------------------------------------------------------------------------------------------------------
+	// 通过矩阵数组的方式传递骨骼动画数据
+
+	private int shaderPropID_Matrices = 0;
+
+	private Matrix4x4[] matricesUniformBlock = null;
 
 	private bool isCurrFrameIndexChanged = false;
 	private void Play()
@@ -399,32 +332,84 @@ public class GPUSkinning : MonoBehaviour
 			UpdateBoneTransformMatrix(children[i], mat, frame);
 		}
 	}
+	// ---------------------------------------------------------------------------------------------------------------------------------------------------
 
-	private void OnDestroy()
+	// ---------------------------------------------------------------------------------------------------------------------------------------------------
+	// 通过纹理中存储的矩阵数据传递骨骼动画数据
+
+	private int shaderPropID_MatricesTex = 0;
+
+	private int shaderPropID_MatricesTexFrameTexels = 0;
+
+	private int shaderPropID_MatricesTexSize = 0;
+
+	private int shaderPropID_AnimLength = 0;
+
+	private int shaderPropID_AnimFPS = 0;
+
+	private Texture2D matricesTex = null;
+
+	private int matricesTexFrameTexels = 0;
+
+	private int matricesTexWidth = 128;
+
+	private int matricesTexHeight = 128;
+
+	private Mesh[] additionalVertexStreames = null;
+
+	private void UpdateMatricesTextureUniforms()
 	{
-		if(newMtrl != null)
+		if (matricesTex != null)
 		{
-			Object.Destroy(newMtrl);
-			newMtrl = null;
+			newMtrl.SetTexture(shaderPropID_MatricesTex, matricesTex);
+			newMtrl.SetFloat(shaderPropID_MatricesTexFrameTexels, matricesTexFrameTexels);
+			newMtrl.SetVector(shaderPropID_MatricesTexSize, new Vector4(matricesTex.width, matricesTex.height, 0, 0));
+			newMtrl.SetFloat(shaderPropID_AnimLength, boneAnimations[0].length);
+			newMtrl.SetFloat(shaderPropID_AnimFPS, boneAnimations[0].fps);
 		}
-		if(newMesh != null)
-		{
-			Object.Destroy(newMesh);
-			newMesh = null;
-		}
+	}
+
+	// 将骨骼动画数据保存到纹理中
+	private void BakeAnimationsToTexture()
+	{
 		if(matricesTex != null)
 		{
-			Object.Destroy(matricesTex);
-			matricesTex = null;
+			Color[] colorBuffer = matricesTex.GetPixels();
+			int colorBufferIndex = 0;
+
+			GPUSkinning_BoneAnimation boneAnimation = boneAnimations[0];
+			for(int frameIndex = 0; frameIndex < boneAnimation.frames.Length; ++frameIndex)
+			{
+				float second = (float)(frameIndex) / (float)boneAnimation.fps;
+				UpdateBoneAnimationMatrix(null, second);
+				int numBones = bones.Length;
+				for (int i = 0; i < numBones; ++i)
+				{
+					Matrix4x4 animMat = bones[i].animationMatrix;
+
+					Color c = colorBuffer[colorBufferIndex];
+					c.r = animMat.m00; c.g = animMat.m01; c.b = animMat.m02; c.a = animMat.m03;
+					colorBuffer[colorBufferIndex++] = c;
+
+					c = colorBuffer[colorBufferIndex];
+					c.r = animMat.m10; c.g = animMat.m11; c.b = animMat.m12; c.a = animMat.m13;
+					colorBuffer[colorBufferIndex++] = c;
+
+					c = colorBuffer[colorBufferIndex];
+					c.r = animMat.m20; c.g = animMat.m21; c.b = animMat.m22; c.a = animMat.m23;
+					colorBuffer[colorBufferIndex++] = c;
+				}
+
+				if(matricesTexFrameTexels == 0)
+				{
+					shaderPropID_MatricesTexFrameTexels = Shader.PropertyToID("_MatricesTexFrameTexels");
+					matricesTexFrameTexels = colorBufferIndex;
+				}
+			}
+
+			matricesTex.SetPixels(colorBuffer);
+			matricesTex.Apply(false, true);
 		}
-        if(additionalVertexStreames != null)
-        {
-            foreach(var m in additionalVertexStreames)
-            {
-                Object.Destroy(m);
-            }
-            additionalVertexStreames = null;
-        }
 	}
 
     private int playMode = 0;
@@ -463,6 +448,35 @@ public class GPUSkinning : MonoBehaviour
             }
         }
     }
+
+	// ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+	private void OnDestroy()
+	{
+		if(newMtrl != null)
+		{
+			Object.Destroy(newMtrl);
+			newMtrl = null;
+		}
+		if(newMesh != null)
+		{
+			Object.Destroy(newMesh);
+			newMesh = null;
+		}
+		if(matricesTex != null)
+		{
+			Object.Destroy(matricesTex);
+			matricesTex = null;
+		}
+		if(additionalVertexStreames != null)
+		{
+			foreach(var m in additionalVertexStreames)
+			{
+				Object.Destroy(m);
+			}
+			additionalVertexStreames = null;
+		}
+	}
 
     private void OnGUI()
     {
