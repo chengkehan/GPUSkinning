@@ -1,1 +1,1 @@
-![img](screenshot.gif)
+![img](screenshot.gif =200x)
