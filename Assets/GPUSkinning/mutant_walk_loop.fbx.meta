@@ -1,0 +1,215 @@
+fileFormatVersion: 2
+guid: d51b8fb85ab794ceab0bef132df30621
+timeCreated: 1478935653
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: chest
+    100002: head
+    100004: Larm
+    100006: Lcalf
+    100008: Lfingers
+    100010: Lfoot
+    100012: Lforearm
+    100014: Lshoulder
+    100016: Lthigh
+    100018: Lthumb
+    100020: Lweaponholder
+    100022: Lwrist
+    100024: mutant_mesh
+    100026: //RootNode
+    100028: neck
+    100030: pelvis
+    100032: Rarm
+    100034: Rcalf
+    100036: Rfingers
+    100038: Rfoot
+    100040: Rforearm
+    100042: Ribs
+    100044: Rshoulder
+    100046: Rthigh
+    100048: Rthumb
+    100050: Rweaponholder
+    100052: Rwrist
+    100054: stomach
+    400000: chest
+    400002: head
+    400004: Larm
+    400006: Lcalf
+    400008: Lfingers
+    400010: Lfoot
+    400012: Lforearm
+    400014: Lshoulder
+    400016: Lthigh
+    400018: Lthumb
+    400020: Lweaponholder
+    400022: Lwrist
+    400024: mutant_mesh
+    400026: //RootNode
+    400028: neck
+    400030: pelvis
+    400032: Rarm
+    400034: Rcalf
+    400036: Rfingers
+    400038: Rfoot
+    400040: Rforearm
+    400042: Ribs
+    400044: Rshoulder
+    400046: Rthigh
+    400048: Rthumb
+    400050: Rweaponholder
+    400052: Rwrist
+    400054: stomach
+    4300000: mutant_mesh
+    7400000: WalkF
+    9500000: //RootNode
+    13700000: mutant_mesh
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: WalkF
+      takeName: WalkF
+      firstFrame: 0
+      lastFrame: 60
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 1
+      loopBlend: 1
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: mutant_mesh
+        weight: 1
+      - path: pelvis
+        weight: 1
+      - path: pelvis/Lthigh
+        weight: 1
+      - path: pelvis/Lthigh/Lcalf
+        weight: 1
+      - path: pelvis/Lthigh/Lcalf/Lfoot
+        weight: 1
+      - path: pelvis/Rthigh
+        weight: 1
+      - path: pelvis/Rthigh/Rcalf
+        weight: 1
+      - path: pelvis/Rthigh/Rcalf/Rfoot
+        weight: 1
+      - path: pelvis/stomach
+        weight: 1
+      - path: pelvis/stomach/Ribs
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Lshoulder
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Lshoulder/Larm
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Lshoulder/Larm/Lforearm
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Lshoulder/Larm/Lforearm/Lwrist
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Lshoulder/Larm/Lforearm/Lwrist/Lfingers
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Lshoulder/Larm/Lforearm/Lwrist/Lthumb
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/neck
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/neck/head
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Rshoulder
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Rshoulder/Rarm
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Rshoulder/Rarm/Rforearm
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Rshoulder/Rarm/Rforearm/Rwrist
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Rshoulder/Rarm/Rforearm/Rwrist/Rfingers
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Rshoulder/Rarm/Rforearm/Rwrist/Rthumb
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Rshoulder/Rarm/Rforearm/Rwrist/Rweaponholder
+        weight: 1
+      - path: pelvis/stomach/Ribs/chest/Rshoulder/Rarm/Rforearm/Rwrist/Rweaponholder/Lweaponholder
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
