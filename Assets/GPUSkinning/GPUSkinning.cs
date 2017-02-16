@@ -267,6 +267,8 @@ public class GPUSkinning : MonoBehaviour
     {
         PressKeyToSwitchMode();
 
+        ViewFrustumCulling();
+
         if (IsPlayMode0())
         {
             UpdateBoneAnimationMatrix(null, second);
@@ -277,6 +279,12 @@ public class GPUSkinning : MonoBehaviour
         {
             UpdateMatricesTextureUniforms();
         }
+    }
+
+    // TODO:
+    private void ViewFrustumCulling()
+    {
+        // 如果在视锥体外则关闭 Renderer
     }
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------
