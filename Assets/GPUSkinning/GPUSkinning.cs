@@ -36,6 +36,9 @@ public class GPUSkinning : MonoBehaviour
         shaderPropID_MatricesTexSize = Shader.PropertyToID("_MatricesTexSize");
         shaderPropID_AnimLength = Shader.PropertyToID("_AnimLength");
         shaderPropID_AnimFPS = Shader.PropertyToID("_AnimFPS");
+        shaderPropID_TerrainTex = Shader.PropertyToID("_TerrainTex");
+        shaderPropID_TerrainSize = Shader.PropertyToID("_TerrainSize");
+        shaderPropID_TerrainPos = Shader.PropertyToID("_TerrainPos");
 
         smr = GetComponentInChildren<SkinnedMeshRenderer>();
         mesh = smr.sharedMesh;
@@ -260,6 +263,10 @@ public class GPUSkinning : MonoBehaviour
         BakeAnimationsToTexture();
 
         SetPlayMode0();
+
+        InitTerrain();
+
+        SetTerrainHeightSwitch();
     }
 
     private float second = 0.0f;
@@ -279,6 +286,8 @@ public class GPUSkinning : MonoBehaviour
         {
             UpdateMatricesTextureUniforms();
         }
+
+        UpdateTerrainUniforms();
     }
 
     // TODO:
@@ -466,6 +475,60 @@ public class GPUSkinning : MonoBehaviour
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------
+    // Terrain
+
+    [Header("Terrain Setting")]
+
+    public Texture2D terrainTexture = null;
+
+    public Terrain terrain = null;
+
+    private TerrainData terrainData = null;
+
+    private Vector4 terrainSize;
+
+    private int shaderPropID_TerrainTex = 0;
+
+    private int shaderPropID_TerrainSize = 0;
+
+    private int shaderPropID_TerrainPos = 0;
+
+    private void InitTerrain()
+    {
+        if (terrain != null)
+        {
+            terrainData = terrain.terrainData;
+            terrainSize = terrainData.size;
+        }
+    }
+
+    private void UpdateTerrainUniforms()
+    {
+        if (terrain != null)
+        {
+            newMtrl.SetTexture(shaderPropID_TerrainTex, terrainTexture);
+            newMtrl.SetVector(shaderPropID_TerrainSize, terrainSize);
+            newMtrl.SetVector(shaderPropID_TerrainPos, terrain.transform.position);
+        }
+    }
+
+    private void SetTerrainHeightSwitch()
+    {
+        if(terrain == null)
+        {
+            newMtrl.EnableKeyword("TERRAIN_HEIGHT_OFF");
+            newMtrl.DisableKeyword("TERRAIN_HEIGHT_ON");
+        }
+        else
+        {
+            newMtrl.EnableKeyword("TERRAIN_HEIGHT_ON");
+            newMtrl.DisableKeyword("TERRAIN_HEIGHT_OFF");
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------
+
     private void OnDestroy()
     {
         if (newMtrl != null)
@@ -498,6 +561,13 @@ public class GPUSkinning : MonoBehaviour
         if (matricesTex != null)
         {
             GUILayout.Label("Press Space Key to Switch Mode");
+        }
+        if(terrain != null)
+        {
+            if(GUILayout.Button("Terrain"))
+            {
+                terrain.enabled = !terrain.enabled;
+            }
         }
     }
 
