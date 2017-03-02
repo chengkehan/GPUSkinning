@@ -39,6 +39,7 @@ public class GPUSkinning : MonoBehaviour
         shaderPropID_TerrainTex = Shader.PropertyToID("_TerrainTex");
         shaderPropID_TerrainSize = Shader.PropertyToID("_TerrainSize");
         shaderPropID_TerrainPos = Shader.PropertyToID("_TerrainPos");
+        shaderPropID_mpb_time = Shader.PropertyToID("_mpb_time");
 
         smr = GetComponentInChildren<SkinnedMeshRenderer>();
         mesh = smr.sharedMesh;
@@ -112,24 +113,27 @@ public class GPUSkinning : MonoBehaviour
         mf.sharedMesh = newMesh;
 
         // 为每个角色生成差异化数据
-        additionalVertexStreames = new Mesh[100];
-        for (int i = 0; i < additionalVertexStreames.Length; ++i)
+        if (IsMatricesTextureSupported())
         {
-            Mesh m = new Mesh();
-            float rnd = Random.Range(0.0f, 10.0f);
-            Vector2[] uv2 = new Vector2[mesh.vertexCount];
-            for (int j = 0; j < mesh.vertexCount; ++j)
+            additionalVertexStreames = new Mesh[50];
+            for (int i = 0; i < additionalVertexStreames.Length; ++i)
             {
-                Vector2 uv = Vector2.zero;
-                uv.x = rnd;
-                uv2[j] = uv;
+                Mesh m = new Mesh();
+                float rnd = Random.Range(0.0f, 10.0f);
+                Vector2[] uv2 = new Vector2[mesh.vertexCount];
+                for (int j = 0; j < mesh.vertexCount; ++j)
+                {
+                    Vector2 uv = Vector2.zero;
+                    uv.x = rnd;
+                    uv2[j] = uv;
+                }
+                m.vertices = newMesh.vertices;
+                m.uv2 = uv2;
+                m.UploadMeshData(true);
+                additionalVertexStreames[i] = m;
             }
-            m.vertices = newMesh.vertices;
-            m.uv2 = uv2;
-            m.UploadMeshData(true);
-            additionalVertexStreames[i] = m;
+            mr.additionalVertexStreams = additionalVertexStreames[0];
         }
-        mr.additionalVertexStreams = additionalVertexStreames[0];
 
 #if UNITY_EDITOR
         // 从 Unity 的 Animation 中提取骨骼动画所需要的数据
@@ -237,7 +241,11 @@ public class GPUSkinning : MonoBehaviour
                     spawnObject.mr = spawnObject.transform.gameObject.AddComponent<MeshRenderer>();
                     spawnObject.mr.sharedMaterial = newMtrl;
                     spawnObject.mf.sharedMesh = newMesh;
-                    spawnObject.mr.additionalVertexStreams = additionalVertexStreames[Random.Range(0, additionalVertexStreames.Length)];
+                    if (additionalVertexStreames != null)
+                    {
+                        // 当开启 GPUInstancing 时，这个是不需要的，偷懒就直接设置了
+                        spawnObject.mr.additionalVertexStreams = additionalVertexStreames[Random.Range(0, additionalVertexStreames.Length)];
+                    }
                 }
             }
             spawnObjects = list.ToArray();
@@ -252,13 +260,7 @@ public class GPUSkinning : MonoBehaviour
 
         //PrintBones();
 
-        // 将骨骼动画数据保存到纹理中
-        if (SystemInfo.SupportsTextureFormat(TextureFormat.RGBAHalf))
-        {
-            matricesTex = new Texture2D(matricesTexWidth, matricesTexHeight, TextureFormat.RGBAHalf, false);
-            matricesTex.name = "_MatricesTex";
-            matricesTex.filterMode = FilterMode.Point;
-        }
+        CreateMatricesTexture();
 
         BakeAnimationsToTexture();
 
@@ -267,13 +269,13 @@ public class GPUSkinning : MonoBehaviour
         InitTerrain();
 
         SetTerrainHeightSwitch();
+
+        InitGPUInstancing();
     }
 
     private float second = 0.0f;
     private void Update()
     {
-        PressKeyToSwitchMode();
-
         ViewFrustumCulling();
 
         if (IsPlayMode0())
@@ -295,6 +297,97 @@ public class GPUSkinning : MonoBehaviour
     {
         // 如果在视锥体外则关闭 Renderer
     }
+
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------
+    // GPU Instancing
+
+    private int shaderPropID_mpb_time = 0;
+
+    private MaterialPropertyBlock[] gpuInstancing_mpbs = null;
+
+    private int isGPUInstancingSupported = -1;
+
+    private void InitGPUInstancing()
+    {
+        if(CheckGPUInstancingIsSupported())
+        {
+            newMtrl.shader.maximumLOD = 200;
+            SetGPUInstancingMaterialPropertyBlock();
+        }
+        else
+        {
+            newMtrl.shader.maximumLOD = 100;
+            ClearGPUInstancingMaterialPropertyBlock();
+        }
+    }
+
+    private void SwitchGPUInstancing()
+    {
+        if(CheckGPUInstancingIsSupported())
+        {
+            if (newMtrl.shader.maximumLOD == 200)
+            {
+                newMtrl.shader.maximumLOD = 100;
+                ClearGPUInstancingMaterialPropertyBlock();
+            }
+            else
+            {
+                newMtrl.shader.maximumLOD = 200;
+                SetGPUInstancingMaterialPropertyBlock();
+            }
+        }
+    }
+
+    private bool CheckGPUInstancingIsSupported()
+    {
+        if(IsGPUInstancingSupported())
+        {
+            return true;
+        }
+        else
+        {
+            Debug.LogError("GPU Instancing is not supported!");
+            return false;
+        }
+    }
+
+    private bool IsGPUInstancingSupported()
+    {
+        if(isGPUInstancingSupported == -1)
+        {
+            isGPUInstancingSupported = SystemInfo.supportsInstancing ? 1 : 0;
+        }
+        return isGPUInstancingSupported == 1;
+    }
+
+    private void SetGPUInstancingMaterialPropertyBlock()
+    {
+        if(gpuInstancing_mpbs == null)
+        {
+            gpuInstancing_mpbs = new MaterialPropertyBlock[50];
+            for(int i = 0; i < gpuInstancing_mpbs.Length; ++i)
+            {
+                MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+                mpb.SetFloat(shaderPropID_mpb_time, Random.value * 10);
+                gpuInstancing_mpbs[i] = mpb;
+            }
+        }
+
+        foreach (var obj in spawnObjects)
+        {
+            obj.mr.SetPropertyBlock(gpuInstancing_mpbs[Random.Range(0, gpuInstancing_mpbs.Length)]);
+        }
+    }
+
+    private void ClearGPUInstancingMaterialPropertyBlock()
+    {
+        foreach (var obj in spawnObjects)
+        {
+            obj.mr.SetPropertyBlock(null);
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------
     // 通过矩阵数组的方式传递骨骼动画数据
@@ -386,6 +479,21 @@ public class GPUSkinning : MonoBehaviour
         }
     }
 
+    private bool IsMatricesTextureSupported()
+    {
+        return SystemInfo.SupportsTextureFormat(TextureFormat.RGBAHalf);
+    }
+
+    private void CreateMatricesTexture()
+    {
+        if (SystemInfo.SupportsTextureFormat(TextureFormat.RGBAHalf))
+        {
+            matricesTex = new Texture2D(matricesTexWidth, matricesTexHeight, TextureFormat.RGBAHalf, false);
+            matricesTex.name = "_MatricesTex";
+            matricesTex.filterMode = FilterMode.Point;
+        }
+    }
+
     // 将骨骼动画数据保存到纹理中
     private void BakeAnimationsToTexture()
     {
@@ -457,20 +565,6 @@ public class GPUSkinning : MonoBehaviour
     private bool IsPlayMode0()
     {
         return playMode == 0;
-    }
-    private void PressKeyToSwitchMode()
-    {
-        if (Input.GetKeyUp(KeyCode.Space))
-        {
-            if (IsPlayMode0())
-            {
-                SetPlayMode1();
-            }
-            else
-            {
-                SetPlayMode0();
-            }
-        }
     }
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -558,16 +652,47 @@ public class GPUSkinning : MonoBehaviour
 
     private void OnGUI()
     {
+        int btnSize = Screen.height / 6;
+        Rect btnRect = new Rect(0, 0, btnSize * 2, btnSize);
+        // Switch Mode
         if (matricesTex != null)
         {
-            GUILayout.Label("Press Space Key to Switch Mode");
+            if(GUI.Button(btnRect, "Switch Mode"))
+            {
+                if (IsPlayMode0())
+                {
+                    SetPlayMode1();
+                }
+                else
+                {
+                    SetPlayMode0();
+                }
+            }
+            btnRect.y += btnSize;
         }
-        if(terrain != null)
+        // Terrain
+        if (terrain != null)
         {
-            if(GUILayout.Button("Terrain"))
+            if(GUI.Button(btnRect, "Terrain"))
             {
                 terrain.enabled = !terrain.enabled;
             }
+            btnRect.y += btnSize;
+        }
+        // GPU Instancing
+        if (IsGPUInstancingSupported())
+        {
+            if (GUI.Button(btnRect, "GPU Instancing"))
+            {
+                SwitchGPUInstancing();
+            }
+        }
+        else
+        {
+            Color oldColor = GUI.color;
+            GUI.color = Color.red;
+            GUI.Label(btnRect, "GPU Instancing is not supported!");
+            GUI.color = oldColor;
         }
     }
 
