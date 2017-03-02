@@ -1,4 +1,4 @@
-GPUSkinning to improve performance.
+## GPUSkinning to improve performance.
 
 Record data of bone animation from Animation Component, customize GPUSkinning rather than Unity built-in.
 
@@ -10,7 +10,7 @@ Record data of bone animation from Animation Component, customize GPUSkinning ra
 
 3. Base on Way1 and Way2, Using GPU Instancing to get the minimum Batches
 
-4. Compute bone hierarchy matrix of all frames -> Store data into a ComputeBuffer -> Skinning in ComputeShader
+4. Compute bone hierarchy matrix of all frames -> Store data into a ComputeBuffer -> Skinning in ComputeShader(DirectX 11)
 
 ![img](screenshot.gif)
 
