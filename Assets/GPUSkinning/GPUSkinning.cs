@@ -347,6 +347,11 @@ public class GPUSkinning : MonoBehaviour
 
     private void InitComputeBuffer(Mesh mesh)
     {
+        if(!SystemInfo.supportsComputeShaders)
+        {
+            return;
+        }
+
         // Material
         Shader shader = Shader.Find("Unlit/ProceduralModel");
         if(!shader.isSupported)
