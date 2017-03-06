@@ -8,7 +8,7 @@ Record data of bone animation from Animation Component, customize GPUSkinning ra
 
 2. Compute bone hierarchy matrix of all frames -> Store all matrices into a Texture -> Skinning in Vertex Shader(Extract all matrices of current frame to skinning)(Using "additionalVertexStreams" to get individual animtion)
 
-3. Base on Way1 and Way2, Using GPU Instancing to get the minimum Batches
+3. Base on Way1 and Way2, Using GPU Instancing to get the minimum Batches, Using Level of Detail to reduce triangle-rendering overhead.
 
 4. Compute bone hierarchy matrix of all frames -> Store data into a ComputeBuffer -> Skinning in ComputeShader(DirectX 11)
 
