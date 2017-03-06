@@ -84,7 +84,7 @@ public class GPUSkinning : MonoBehaviour
             currentBone.children = children.ToArray();
         };
         CollectChildren(bones[rootBoneIndex]);
-
+        
         // New MeshFilter MeshRenderer
         mf = gameObject.AddComponent<MeshFilter>();
         mr = gameObject.AddComponent<MeshRenderer>();
@@ -93,21 +93,10 @@ public class GPUSkinning : MonoBehaviour
         newMtrl.CopyPropertiesFromMaterial(smr.sharedMaterial);
         mr.sharedMaterial = newMtrl;
 
-        // 保存骨骼动画权重
-        Vector4[] tangents = new Vector4[mesh.vertexCount];
-        for (int i = 0; i < mesh.vertexCount; ++i)
-        {
-            BoneWeight boneWeight = mesh.boneWeights[i];
-            tangents[i].x = boneWeight.boneIndex0;
-            tangents[i].y = boneWeight.weight0;
-            tangents[i].z = boneWeight.boneIndex1;
-            tangents[i].w = boneWeight.weight1;
-        }
-
         // New Mesh
         newMesh = new Mesh();
         newMesh.vertices = mesh.vertices;
-        newMesh.tangents = tangents;
+        newMesh.tangents = ExtractBoneWeights(mesh);
         newMesh.uv = mesh.uv;
         newMesh.triangles = mesh.triangles;
         mf.sharedMesh = newMesh;
@@ -115,24 +104,8 @@ public class GPUSkinning : MonoBehaviour
         // 为每个角色生成差异化数据
         if (IsMatricesTextureSupported())
         {
-            additionalVertexStreames = new Mesh[50];
-            for (int i = 0; i < additionalVertexStreames.Length; ++i)
-            {
-                Mesh m = new Mesh();
-                float rnd = Random.Range(0.0f, 10.0f);
-                Vector2[] uv2 = new Vector2[mesh.vertexCount];
-                for (int j = 0; j < mesh.vertexCount; ++j)
-                {
-                    Vector2 uv = Vector2.zero;
-                    uv.x = rnd;
-                    uv2[j] = uv;
-                }
-                m.vertices = newMesh.vertices;
-                m.uv2 = uv2;
-                m.UploadMeshData(true);
-                additionalVertexStreames[i] = m;
-            }
-            mr.additionalVertexStreams = additionalVertexStreames[0];
+            InitAdditionalVertexStream(newMesh);
+            mr.additionalVertexStreams = RandomAdditionalVertexStream();
         }
 
 #if UNITY_EDITOR
@@ -244,7 +217,7 @@ public class GPUSkinning : MonoBehaviour
                     if (additionalVertexStreames != null)
                     {
                         // 当开启 GPUInstancing 时，这个是不需要的，偷懒就直接设置了
-                        spawnObject.mr.additionalVertexStreams = additionalVertexStreames[Random.Range(0, additionalVertexStreames.Length)];
+                        spawnObject.mr.additionalVertexStreams = RandomAdditionalVertexStream();
                     }
                 }
             }
@@ -274,13 +247,15 @@ public class GPUSkinning : MonoBehaviour
 
         InitComputeBuffer(newMesh);
 
+        SetupLodMesh();
+
         newMesh.UploadMeshData(true);
     }
 
     private float second = 0.0f;
     private void Update()
     {
-        ViewFrustumCulling();
+        UpdateLodBoundingSpheres();
 
         if (IsPlayMode0())
         {
@@ -296,11 +271,112 @@ public class GPUSkinning : MonoBehaviour
         UpdateTerrainUniforms();
     }
 
-    // TODO:
-    private void ViewFrustumCulling()
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------
+    // LOD Mesh
+
+    [Header("LOD Mesh")]
+
+    public Mesh lodMesh = null;
+
+    private Mesh newLodMesh = null;
+
+    private CullingGroup lodCullingGroup = null;
+
+    private BoundingSphere[] lodBoundingSpheres = null;
+
+    private Mesh[] lodAdditionalVertexStreames = null;
+
+    private Mesh RandomLodAdditionalVertexStream()
     {
-        // 如果在视锥体外则关闭 Renderer
+        return lodAdditionalVertexStreames == null ? null : lodAdditionalVertexStreames[Random.Range(0, lodAdditionalVertexStreames.Length)];
     }
+
+    private void UpdateLodBoundingSpheres()
+    {
+        if(lodBoundingSpheres != null && spawnObjects != null)
+        {
+            int length = lodBoundingSpheres.Length;
+            for (int i = 0; i < length; ++i)
+            {
+                BoundingSphere bound = lodBoundingSpheres[i];
+                bound.position = spawnObjects[i].transform.position;
+                lodBoundingSpheres[i] = bound;
+            }
+        }
+    }
+
+    private void SetupLodMesh()
+    {
+        if (lodMesh != null && spawnObjects != null)
+        {
+            newLodMesh = new Mesh();
+            newLodMesh.vertices = lodMesh.vertices;
+            newLodMesh.uv = lodMesh.uv;
+            newLodMesh.triangles = lodMesh.triangles;
+            newLodMesh.tangents = ExtractBoneWeights(lodMesh);
+
+            lodAdditionalVertexStreames = new Mesh[50];
+            InitAdditionalVertexStream_Internal(lodAdditionalVertexStreames, newLodMesh);
+
+            // Bounding Sphere
+            lodBoundingSpheres = new BoundingSphere[spawnObjects.Length];
+            for(int i = 0; i < lodBoundingSpheres.Length; ++i)
+            {
+                lodBoundingSpheres[i] = new BoundingSphere(spawnObjects[i].transform.position, 1f);
+            }
+
+            // Culling Group
+            lodCullingGroup = new CullingGroup();
+            lodCullingGroup.targetCamera = Camera.main;
+            lodCullingGroup.SetBoundingSpheres(lodBoundingSpheres);
+            lodCullingGroup.SetBoundingSphereCount(lodBoundingSpheres.Length);
+            lodCullingGroup.SetBoundingDistances(new float[] { 10, 15, 25, 40 });
+            lodCullingGroup.SetDistanceReferencePoint(Camera.main.transform);
+            lodCullingGroup.onStateChanged = OnLodCullingGroupOnStateChangedHandler;
+
+            newLodMesh.UploadMeshData(true);
+        }
+    }
+
+    private void OnLodCullingGroupOnStateChangedHandler(CullingGroupEvent evt)
+    {
+        GPUSkinning_SpawnObject obj = spawnObjects[evt.index];
+        MeshRenderer mr = obj.mr;
+        if (evt.isVisible)
+        {
+            if (!mr.enabled)
+            {
+                mr.enabled = true;
+            }
+
+            MeshFilter mf = obj.mf;
+            if (evt.currentDistance > 1)
+            {
+                if(mf.sharedMesh != newLodMesh)
+                {
+                    mf.sharedMesh = newLodMesh;
+                    mr.additionalVertexStreams = RandomLodAdditionalVertexStream();
+                }
+            }
+            else
+            {
+                if(mf.sharedMesh != newMesh)
+                {
+                    mf.sharedMesh = newMesh;
+                    mr.additionalVertexStreams = RandomAdditionalVertexStream();
+                }
+            }
+        }
+        else
+        {
+            if(mr.enabled)
+            {
+                mr.enabled = false;
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------
     // Compute Shader 
@@ -607,6 +683,38 @@ public class GPUSkinning : MonoBehaviour
 
     private Mesh[] additionalVertexStreames = null;
 
+    private void InitAdditionalVertexStream(Mesh mesh)
+    {
+        additionalVertexStreames = new Mesh[50];
+        InitAdditionalVertexStream_Internal(additionalVertexStreames, mesh);
+    }
+
+    private void InitAdditionalVertexStream_Internal(Mesh[] additionalVertexStreames, Mesh mesh)
+    {
+        Vector3[] newMeshVertices = mesh.vertices;
+        for (int i = 0; i < additionalVertexStreames.Length; ++i)
+        {
+            Mesh m = new Mesh();
+            float rnd = Random.Range(0.0f, 10.0f);
+            Vector2[] uv2 = new Vector2[mesh.vertexCount];
+            for (int j = 0; j < mesh.vertexCount; ++j)
+            {
+                Vector2 uv = Vector2.zero;
+                uv.x = rnd;
+                uv2[j] = uv;
+            }
+            m.vertices = newMeshVertices;
+            m.uv2 = uv2;
+            m.UploadMeshData(true);
+            additionalVertexStreames[i] = m;
+        }
+    }
+
+    private Mesh RandomAdditionalVertexStream()
+    {
+        return additionalVertexStreames == null ? null : additionalVertexStreames[Random.Range(0, additionalVertexStreames.Length)];
+    }
+
     private void UpdateMatricesTextureUniforms()
     {
         if (matricesTex != null)
@@ -787,6 +895,11 @@ public class GPUSkinning : MonoBehaviour
             Object.Destroy(newMesh);
             newMesh = null;
         }
+        if(newLodMesh != null)
+        {
+            Object.Destroy(newLodMesh);
+            newLodMesh = null;
+        }
         if (matricesTex != null)
         {
             Object.Destroy(matricesTex);
@@ -799,6 +912,14 @@ public class GPUSkinning : MonoBehaviour
                 Object.Destroy(m);
             }
             additionalVertexStreames = null;
+        }
+        if(lodAdditionalVertexStreames != null)
+        {
+            foreach (var m in lodAdditionalVertexStreames)
+            {
+                Object.Destroy(m);
+            }
+            lodAdditionalVertexStreames = null;
         }
         if(verticesComputeBuffer != null)
         {
@@ -825,6 +946,12 @@ public class GPUSkinning : MonoBehaviour
             Object.Destroy(proceduralModelMaterial);
             proceduralModelMaterial = null;
         }
+        if(lodCullingGroup != null)
+        {
+            lodCullingGroup.Dispose();
+            lodCullingGroup = null;
+        }
+        lodBoundingSpheres = null;
     }
 
     private void OnGUI()
@@ -890,6 +1017,20 @@ public class GPUSkinning : MonoBehaviour
             }
             btnRect.y += btnSize;
         }
+    }
+
+    private Vector4[] ExtractBoneWeights(Mesh mesh)
+    {
+        Vector4[] tangents = new Vector4[mesh.vertexCount];
+        for (int i = 0; i < mesh.vertexCount; ++i)
+        {
+            BoneWeight boneWeight = mesh.boneWeights[i];
+            tangents[i].x = boneWeight.boneIndex0;
+            tangents[i].y = boneWeight.weight0;
+            tangents[i].z = boneWeight.boneIndex1;
+            tangents[i].w = boneWeight.weight1;
+        }
+        return tangents;
     }
 
     private GPUSkinning_Bone GetBoneByTransform(Transform transform)
