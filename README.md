@@ -17,3 +17,5 @@ Record data of bone animation from Animation Component, customize GPUSkinning ra
 [http://chengkehan.github.io/GPUSkinning.html](http://chengkehan.github.io/GPUSkinning.html)
 
 [http://chengkehan.github.io/GPUSkinning2.html](http://chengkehan.github.io/GPUSkinning2.html)
+
+[http://chengkehan.github.io/GPUSkinning3.html](http://chengkehan.github.io/GPUSkinning3.html)
