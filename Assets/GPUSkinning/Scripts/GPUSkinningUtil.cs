@@ -3,27 +3,6 @@ using System.Collections;
 
 public class GPUSkinningUtil
 {
-    public static void InitAdditionalVertexStream(Mesh[] additionalVertexStreames, Mesh mesh)
-    {
-        Vector3[] newMeshVertices = mesh.vertices;
-        for (int i = 0; i < additionalVertexStreames.Length; ++i)
-        {
-            Mesh m = new Mesh();
-            float rnd = Random.Range(0.0f, 10.0f);
-            Vector2[] uv2 = new Vector2[mesh.vertexCount];
-            for (int j = 0; j < mesh.vertexCount; ++j)
-            {
-                Vector2 uv = Vector2.zero;
-                uv.x = rnd;
-                uv2[j] = uv;
-            }
-            m.vertices = newMeshVertices;
-            m.uv2 = uv2;
-            m.UploadMeshData(true);
-            additionalVertexStreames[i] = m;
-        }
-    }
-
     public static Vector4[] ExtractBoneWeights(Mesh mesh)
     {
         Vector4[] tangents = new Vector4[mesh.vertexCount];
@@ -38,7 +17,7 @@ public class GPUSkinningUtil
         return tangents;
     }
 
-    public static void ExtractBoneAnimMatrix(GPUSkinning gpuSkinning, GPUSkinning_BoneAnimation boneAnimation, System.Action<Matrix4x4> boneAnimMatrixCB, System.Action<int> frameCB)
+	public static void ExtractBoneAnimMatrix(GPUSkinning gpuSkinning, GPUSkinning_BoneAnimation boneAnimation, System.Action<Matrix4x4, Matrix4x4> boneAnimMatrixCB, System.Action<int> frameCB)
     {
         for (int frameIndex = 0; frameIndex < boneAnimation.frames.Length; ++frameIndex)
         {
@@ -47,8 +26,7 @@ public class GPUSkinningUtil
             int numBones = gpuSkinning.model.bones.Length;
             for (int i = 0; i < numBones; ++i)
             {
-                Matrix4x4 animMat = gpuSkinning.model.bones[i].animationMatrix;
-                boneAnimMatrixCB(animMat);
+				boneAnimMatrixCB(gpuSkinning.model.bones[i].animationMatrix, gpuSkinning.model.bones[i].hierarchyMatrix);
             }
             frameCB(frameIndex);
         }

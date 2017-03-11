@@ -42,6 +42,8 @@ public class GPUSkinning_PlayingMode : GPUSkinning_Component
     {
         gpuSkinning.model.newMtrl.EnableKeyword(playModeKey0);
         gpuSkinning.model.newMtrl.DisableKeyword(playModeKey1);
+        gpuSkinning.joint.material.EnableKeyword(playModeKey0);
+        gpuSkinning.joint.material.DisableKeyword(playModeKey1);
         playMode = 0;
     }
 
@@ -51,6 +53,8 @@ public class GPUSkinning_PlayingMode : GPUSkinning_Component
         {
             gpuSkinning.model.newMtrl.EnableKeyword(playModeKey1);
             gpuSkinning.model.newMtrl.DisableKeyword(playModeKey0);
+            gpuSkinning.joint.material.EnableKeyword(playModeKey1);
+            gpuSkinning.joint.material.DisableKeyword(playModeKey0);
             playMode = 1;
         }
     }

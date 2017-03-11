@@ -1,8 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[System.Serializable]
 public class GPUSkinning_Terrain : GPUSkinning_Component
 {
+    public Texture2D terrainTexture = null;
+
+    public Terrain terrain = null;
+
     private TerrainData terrainData = null;
 
     private Vector4 terrainSize;
@@ -21,13 +26,13 @@ public class GPUSkinning_Terrain : GPUSkinning_Component
         shaderPropID_TerrainSize = Shader.PropertyToID("_TerrainSize");
         shaderPropID_TerrainPos = Shader.PropertyToID("_TerrainPos");
 
-        if (gpuSkinning.terrain != null)
+        if (terrain != null)
         {
-            terrainData = gpuSkinning.terrain.terrainData;
+            terrainData = terrain.terrainData;
             terrainSize = terrainData.size;
         }
 
-        if (gpuSkinning.terrain == null)
+        if (terrain == null)
         {
             gpuSkinning.model.newMtrl.EnableKeyword("TERRAIN_HEIGHT_OFF");
             gpuSkinning.model.newMtrl.DisableKeyword("TERRAIN_HEIGHT_ON");
@@ -41,21 +46,21 @@ public class GPUSkinning_Terrain : GPUSkinning_Component
 
     public void Update()
     {
-        if (gpuSkinning.terrain != null)
+        if (terrain != null)
         {
-            gpuSkinning.model.newMtrl.SetTexture(shaderPropID_TerrainTex, gpuSkinning.terrainTexture);
+            gpuSkinning.model.newMtrl.SetTexture(shaderPropID_TerrainTex, terrainTexture);
             gpuSkinning.model.newMtrl.SetVector(shaderPropID_TerrainSize, terrainSize);
-            gpuSkinning.model.newMtrl.SetVector(shaderPropID_TerrainPos, gpuSkinning.terrain.transform.position);
+            gpuSkinning.model.newMtrl.SetVector(shaderPropID_TerrainPos, terrain.transform.position);
         }
     }
 
     public void OnGUI(ref Rect rect, int size)
     {
-        if (gpuSkinning.terrain != null)
+        if (terrain != null)
         {
             if (GUI.Button(rect, "Terrain"))
             {
-                gpuSkinning.terrain.enabled = !gpuSkinning.terrain.enabled;
+                terrain.enabled = !terrain.enabled;
             }
             rect.y += size;
         }

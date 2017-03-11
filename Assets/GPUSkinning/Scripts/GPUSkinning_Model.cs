@@ -10,31 +10,44 @@ using UnityEditor;
 /// Extract bone animation data from Animation Component.
 /// Store data and hierarchy as customize Data Structure.
 /// </summary>
+[System.Serializable]
 public class GPUSkinning_Model : GPUSkinning_Component
 {
+    public Transform[] spawnPoints = null;
+
     private SkinnedMeshRenderer smr = null;
 
     private Mesh mesh = null;
 
+    [System.NonSerialized]
     public GPUSkinning_Bone[] bones = null;
 
+    [System.NonSerialized]
     public int rootBoneIndex = 0;
 
     private MeshFilter mf = null;
 
     private MeshRenderer mr = null;
 
+    [System.NonSerialized]
     public Material newMtrl = null;
 
+    [System.NonSerialized]
     public Mesh newMesh = null;
 
+    [System.NonSerialized]
     public GPUSkinning_BoneAnimation[] boneAnimations = null;
 
+    [System.NonSerialized]
     public GPUSkinning_SpawnObject[] spawnObjects = null;
+
+    private int shaderPropID_Time = 0;
 
     public override void Init(GPUSkinning gpuSkinning)
     {
         base.Init(gpuSkinning);
+
+        shaderPropID_Time = Shader.PropertyToID("_GameTime");
 
         smr = gpuSkinning.GetComponentInChildren<SkinnedMeshRenderer>();
         mesh = smr.sharedMesh;
@@ -47,6 +60,7 @@ public class GPUSkinning_Model : GPUSkinning_Component
             GPUSkinning_Bone bone = new GPUSkinning_Bone();
             bones[i] = bone;
             bone.transform = smr.bones[i];
+            bone.name = bone.transform.gameObject.name;
             bone.bindpose = mesh.bindposes[i]/*smr to bone*/;
         }
 
@@ -187,16 +201,16 @@ public class GPUSkinning_Model : GPUSkinning_Component
 #endif
 
         // Spawn many models
-        if (gpuSkinning.spawnPoints != null)
+        if (spawnPoints != null)
         {
             List<GPUSkinning_SpawnObject> list = new List<GPUSkinning_SpawnObject>();
-            for (int i = 0; i < gpuSkinning.spawnPoints.Length; ++i)
+            for (int i = 0; i < spawnPoints.Length; ++i)
             {
-                for (int j = 0; j < gpuSkinning.spawnPoints[i].childCount; ++j)
+                for (int j = 0; j < spawnPoints[i].childCount; ++j)
                 {
                     GPUSkinning_SpawnObject spawnObject = new GPUSkinning_SpawnObject();
                     list.Add(spawnObject);
-                    spawnObject.transform = gpuSkinning.spawnPoints[i].GetChild(j);
+                    spawnObject.transform = spawnPoints[i].GetChild(j);
                     spawnObject.mf = spawnObject.transform.gameObject.AddComponent<MeshFilter>();
                     spawnObject.mr = spawnObject.transform.gameObject.AddComponent<MeshRenderer>();
                     spawnObject.mr.sharedMaterial = newMtrl;
@@ -225,13 +239,13 @@ public class GPUSkinning_Model : GPUSkinning_Component
 
     public void PostInit()
     {
-        mr.additionalVertexStreams = gpuSkinning.matrixTexture.RandomAdditionalVertexStream();
+		gpuSkinning.matrixTexture.additionalVertexStreames.SetRandomStream(mr);
 
         if(spawnObjects != null)
         {
             foreach(var obj in spawnObjects)
             {
-                obj.mr.additionalVertexStreams = gpuSkinning.matrixTexture.RandomAdditionalVertexStream();
+				gpuSkinning.matrixTexture.additionalVertexStreames.SetRandomStream(obj);
             }
         }
 
@@ -246,6 +260,11 @@ public class GPUSkinning_Model : GPUSkinning_Component
         //PrintBones();
     }
 
+    public void Update()
+    {
+        newMtrl.SetFloat(shaderPropID_Time, gpuSkinning.second);
+    }
+
     private GPUSkinning_Bone GetBoneByTransform(Transform transform)
     {
         foreach (GPUSkinning_Bone bone in bones)
@@ -258,7 +277,7 @@ public class GPUSkinning_Model : GPUSkinning_Component
         return null;
     }
 
-    private GPUSkinning_Bone GetBoneByHierarchyName(string hierarchyName)
+    public GPUSkinning_Bone GetBoneByHierarchyName(string hierarchyName)
     {
         System.Func<GPUSkinning_Bone, string, GPUSkinning_Bone> Search = null;
         Search = (bone, name) =>

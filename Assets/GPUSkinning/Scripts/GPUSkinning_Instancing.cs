@@ -10,7 +10,11 @@ public class GPUSkinning_Instancing : GPUSkinning_Component
 
     private MaterialPropertyBlock[] gpuInstancing_mpbs = null;
 
+	private float[] mpb_values = null;
+
     private int isGPUInstancingSupported = -1;
+
+    private bool isGPUInstancingOn = false;
 
     public override void Init(GPUSkinning gpuSkinning)
     {
@@ -21,11 +25,13 @@ public class GPUSkinning_Instancing : GPUSkinning_Component
         if (CheckGPUInstancingIsSupported())
         {
             gpuSkinning.model.newMtrl.shader.maximumLOD = 200;
+            gpuSkinning.joint.material.shader.maximumLOD = 200;
             SetGPUInstancingMaterialPropertyBlock();
         }
         else
         {
             gpuSkinning.model.newMtrl.shader.maximumLOD = 100;
+            gpuSkinning.joint.material.shader.maximumLOD = 100;
             ClearGPUInstancingMaterialPropertyBlock();
         }
     }
@@ -34,6 +40,12 @@ public class GPUSkinning_Instancing : GPUSkinning_Component
     {
         base.Destroy();
         gpuInstancing_mpbs = null;
+		mpb_values = null;
+    }
+
+    public bool IsGPUInstancingOn()
+    {
+        return isGPUInstancingOn;
     }
 
     public void OnGUI(ref Rect rect, int size)
@@ -48,10 +60,10 @@ public class GPUSkinning_Instancing : GPUSkinning_Component
         }
         else
         {
-            Color oldColor = GUI.color;
+			Color tempColor = GUI.color;
             GUI.color = Color.red;
             GUI.Label(rect, "GPU Instancing is not supported!");
-            GUI.color = oldColor;
+            GUI.color = tempColor;
             rect.y += size;
         }
     }
@@ -62,11 +74,13 @@ public class GPUSkinning_Instancing : GPUSkinning_Component
         {
             if (gpuSkinning.model.newMtrl.shader.maximumLOD == 200)
             {
+                gpuSkinning.joint.material.shader.maximumLOD = 100;
                 gpuSkinning.model.newMtrl.shader.maximumLOD = 100;
                 ClearGPUInstancingMaterialPropertyBlock();
             }
             else
             {
+                gpuSkinning.joint.material.shader.maximumLOD = 200;
                 gpuSkinning.model.newMtrl.shader.maximumLOD = 200;
                 SetGPUInstancingMaterialPropertyBlock();
             }
@@ -100,11 +114,14 @@ public class GPUSkinning_Instancing : GPUSkinning_Component
         if (gpuInstancing_mpbs == null)
         {
             gpuInstancing_mpbs = new MaterialPropertyBlock[50];
+			mpb_values = new float[gpuInstancing_mpbs.Length];
             for (int i = 0; i < gpuInstancing_mpbs.Length; ++i)
             {
                 MaterialPropertyBlock mpb = new MaterialPropertyBlock();
-                mpb.SetFloat(shaderPropID_mpb_time, Random.value * 10);
+				float rndValue = Random.value * 10;
+				mpb.SetFloat(shaderPropID_mpb_time, rndValue);
                 gpuInstancing_mpbs[i] = mpb;
+				mpb_values[i] = rndValue;
             }
         }
 
@@ -112,9 +129,13 @@ public class GPUSkinning_Instancing : GPUSkinning_Component
         {
             foreach (var obj in gpuSkinning.model.spawnObjects)
             {
-                obj.mr.SetPropertyBlock(gpuInstancing_mpbs[Random.Range(0, gpuInstancing_mpbs.Length)]);
+				int rndIndex = Random.Range(0, gpuInstancing_mpbs.Length);
+				obj.mr.SetPropertyBlock(gpuInstancing_mpbs[rndIndex]);
+				obj.timeOffset_instancingOn = mpb_values[rndIndex];
             }
         }
+
+        isGPUInstancingOn = true;
     }
 
     private void ClearGPUInstancingMaterialPropertyBlock()
@@ -126,5 +147,7 @@ public class GPUSkinning_Instancing : GPUSkinning_Component
                 obj.mr.SetPropertyBlock(null);
             }
         }
+
+        isGPUInstancingOn = false;
     }
 }

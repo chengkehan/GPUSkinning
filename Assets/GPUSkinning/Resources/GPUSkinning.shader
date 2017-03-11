@@ -10,13 +10,14 @@
 
 	uniform float4x4 _Matrices[24];
 	uniform sampler2D _MatricesTex;
-	uniform float _MatricesTexFrameTexels;
+	uniform float _NumPixelsPerFrame;
 	uniform float4 _MatricesTexSize;
 	uniform float _AnimLength;
 	uniform float _AnimFPS;
 	uniform sampler2D _TerrainTex;
 	uniform float3 _TerrainSize;
 	uniform float3 _TerrainPos;
+	uniform float _GameTime;
 
 #ifdef GPU_INSTANCING_ON
 	UNITY_INSTANCING_CBUFFER_START(MyProperties)
@@ -31,7 +32,7 @@
 		float2 uv2 : TEXCOORD1;
 		float4 tangent : TANGENT;
 #ifdef GPU_INSTANCING_ON
-		UNITY_INSTANCE_ID
+		UNITY_INSTANCE_ID // UNITY_VERTEX_INPUT_INSTANCE_ID(Unity5.5 and later version)
 #endif
 	};
 
@@ -70,15 +71,14 @@
 #endif
 
 #ifdef GPU_SKINNING_MATRIX_TEXTURE
-		float time = _Time.y;
 	#ifdef GPU_INSTANCING_ON
 		float timeOffset = UNITY_ACCESS_INSTANCED_PROP(_mpb_time);
 	#endif
 	#ifdef GPU_INSTANCING_OFF
 		float timeOffset = v.uv2.x;
 	#endif
-		int frameIndex = (int)(((_Time.y + timeOffset) * _AnimFPS) % (_AnimLength * _AnimFPS));
-		int frameStartIndex = frameIndex * _MatricesTexFrameTexels;
+		int frameIndex = (int)(((_GameTime + timeOffset) * _AnimFPS) % (_AnimLength * _AnimFPS));
+		int frameStartIndex = frameIndex * _NumPixelsPerFrame;
 
 		float4x4 mat0 = getMatrix(frameStartIndex, v.tangent.x);
 		float4x4 mat1 = getMatrix(frameStartIndex, v.tangent.z);

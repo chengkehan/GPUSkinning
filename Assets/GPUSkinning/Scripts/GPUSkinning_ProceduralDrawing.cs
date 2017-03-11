@@ -25,6 +25,8 @@ public class GPUSkinning_ProceduralDrawing : GPUSkinning_Component
 
     private int proceduralModelGap = 1;
 
+    private int shaderPropID_Time = 0;
+
     public override void Init(GPUSkinning gpuSkinning)
     {
         base.Init(gpuSkinning);
@@ -33,6 +35,8 @@ public class GPUSkinning_ProceduralDrawing : GPUSkinning_Component
         {
             return;
         }
+
+        shaderPropID_Time = Shader.PropertyToID("_GameTime");
 
         // Material
         Shader shader = Shader.Find("Unlit/ProceduralModel");
@@ -72,10 +76,10 @@ public class GPUSkinning_ProceduralDrawing : GPUSkinning_Component
         GPUSkinningUtil.ExtractBoneAnimMatrix(
             gpuSkinning, 
             gpuSkinning.model.boneAnimations[0], 
-            (mat) =>
+			(animMat, hierarchyMat) =>
             {
                 var matData = new GPUSkinning_ComputeShader_Matrix();
-                matData.mat = mat;
+                matData.mat = animMat;
                 cbMatricesList.Add(matData);
                 ++matIndex;
             },
@@ -149,10 +153,10 @@ public class GPUSkinning_ProceduralDrawing : GPUSkinning_Component
     {
         if (proceduralModelMaterial == null)
         {
-            Color oldColor = GUI.color;
+			Color tempColor = GUI.color;
             GUI.color = Color.red;
             GUI.Label(rect, "Compute Shader is not supported!");
-            GUI.color = oldColor;
+            GUI.color = tempColor;
             rect.y += size;
         }
         else
@@ -177,6 +181,7 @@ public class GPUSkinning_ProceduralDrawing : GPUSkinning_Component
             return;
         }
 
+        proceduralModelMaterial.SetFloat(shaderPropID_Time, gpuSkinning.second);
         proceduralModelMaterial.SetBuffer("_VertCB", verticesComputeBuffer);
         proceduralModelMaterial.SetBuffer("_MatCB", matricesComputeBuffer);
         proceduralModelMaterial.SetBuffer("_GlobalCB", globalDataComputeBuffer);

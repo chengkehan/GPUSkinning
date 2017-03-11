@@ -13,11 +13,7 @@ public class GPUSkinning_Bone
 
     public Matrix4x4 animationMatrix;
 
-    public string name
-    {
-        get
-        {
-            return transform.gameObject.name;
-        }
-    }
+    public Matrix4x4 hierarchyMatrix;
+
+    public string name = null;
 }

@@ -21,9 +21,9 @@ public class GPUSkinning_MatrixArray : GPUSkinning_Component
         matricesUniformBlock = new Matrix4x4[gpuSkinning.GetComponentInChildren<SkinnedMeshRenderer>().bones.Length];
     }
 
-    public void Update(float second)
+    public void Update()
     {
-        UpdateBoneAnimationMatrix(null, second);
+        UpdateBoneAnimationMatrix(null, gpuSkinning.second);
         Play();
     }
 
@@ -64,6 +64,7 @@ public class GPUSkinning_MatrixArray : GPUSkinning_Component
         int index = BoneAnimationFrameIndexOf(frame, bone);
         Matrix4x4 mat = parentMatrix * frame.matrices[index];
         bone.animationMatrix = mat * bone.bindpose;
+        bone.hierarchyMatrix = mat;
 
         GPUSkinning_Bone[] children = bone.children;
         int numChildren = children.Length;

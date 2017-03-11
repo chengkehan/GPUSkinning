@@ -59,6 +59,8 @@
 			StructuredBuffer<GlobalData> _GlobalCB;
 			StructuredBuffer<Model> _ModelCB;
 
+			uniform float _GameTime;
+
 			sampler2D _MainTex;
 			float4 _MainTex_ST;
 			
@@ -73,7 +75,7 @@
 				float4 vert = float4(vertex.vertex, 1);
 				float4 tan = vertex.tangents;
 
-				int frameIndex = (int)(((_Time.y + model.time) * global.fps) % (global.animLength * global.fps));
+				int frameIndex = (int)(((_GameTime + model.time) * global.fps) % (global.animLength * global.fps));
 				int frameStartIndex = frameIndex * global.oneFrameMatricesStride;
 
 				float4x4 mat0 = _MatCB[frameStartIndex + tan.x].mat;

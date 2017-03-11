@@ -1,28 +1,30 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[System.Serializable]
 public class GPUSkinning_LOD : GPUSkinning_Component
 {
+    public Mesh lodMesh = null;
+
     private Mesh newLodMesh = null;
 
     private CullingGroup lodCullingGroup = null;
 
     private BoundingSphere[] lodBoundingSpheres = null;
 
-    private Mesh[] additionalVertexStreames = null;
+	private GPUSkinning_AdditionalVertexStreames additionalVertexStreames = null;
 
     public override void Init(GPUSkinning gpuSkinning)
     {
         base.Init(gpuSkinning);
 
         newLodMesh = new Mesh();
-        newLodMesh.vertices = gpuSkinning.lodMesh.vertices;
-        newLodMesh.uv = gpuSkinning.lodMesh.uv;
-        newLodMesh.triangles = gpuSkinning.lodMesh.triangles;
-        newLodMesh.tangents = GPUSkinningUtil.ExtractBoneWeights(gpuSkinning.lodMesh);
+        newLodMesh.vertices = lodMesh.vertices;
+        newLodMesh.uv = lodMesh.uv;
+        newLodMesh.triangles = lodMesh.triangles;
+        newLodMesh.tangents = GPUSkinningUtil.ExtractBoneWeights(lodMesh);
 
-        additionalVertexStreames = new Mesh[50];
-        GPUSkinningUtil.InitAdditionalVertexStream(additionalVertexStreames, newLodMesh);
+		additionalVertexStreames = new GPUSkinning_AdditionalVertexStreames(newLodMesh);
 
         // Bounding Sphere
         lodBoundingSpheres = new BoundingSphere[gpuSkinning.model.spawnObjects.Length];
@@ -54,10 +56,7 @@ public class GPUSkinning_LOD : GPUSkinning_Component
         }
         if (additionalVertexStreames != null)
         {
-            foreach (var m in additionalVertexStreames)
-            {
-                Object.Destroy(m);
-            }
+			additionalVertexStreames.Destroy();
             additionalVertexStreames = null;
         }
         if (lodCullingGroup != null)
@@ -99,7 +98,7 @@ public class GPUSkinning_LOD : GPUSkinning_Component
                 if (mf.sharedMesh != newLodMesh)
                 {
                     mf.sharedMesh = newLodMesh;
-                    mr.additionalVertexStreams = RandomAdditionalVertexStream();
+					additionalVertexStreames.SetRandomStream(obj);
                 }
             }
             else
@@ -107,7 +106,7 @@ public class GPUSkinning_LOD : GPUSkinning_Component
                 if (mf.sharedMesh != gpuSkinning.model.newMesh)
                 {
                     mf.sharedMesh = gpuSkinning.model.newMesh;
-                    mr.additionalVertexStreams = gpuSkinning.matrixTexture.RandomAdditionalVertexStream();
+					gpuSkinning.matrixTexture.additionalVertexStreames.SetRandomStream(obj);
                 }
             }
         }
@@ -118,10 +117,5 @@ public class GPUSkinning_LOD : GPUSkinning_Component
                 mr.enabled = false;
             }
         }
-    }
-
-    private Mesh RandomAdditionalVertexStream()
-    {
-        return additionalVertexStreames == null ? null : additionalVertexStreames[Random.Range(0, additionalVertexStreames.Length)];
     }
 }

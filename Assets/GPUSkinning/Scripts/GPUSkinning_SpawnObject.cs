@@ -8,4 +8,8 @@ public class GPUSkinning_SpawnObject
     public MeshRenderer mr = null;
 
     public Transform transform = null;
+
+	public float timeOffset_instancingOff = 0;
+
+	public float timeOffset_instancingOn = 0;
 }
