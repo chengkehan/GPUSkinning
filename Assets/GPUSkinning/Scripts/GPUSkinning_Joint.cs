@@ -110,6 +110,16 @@ public class GPUSkinning_Joint : GPUSkinning_Component
 			GUI.color = tempColor;
 			rect.x -= size;
 		}
+
+		{
+			rect.x += size * 2;
+			Color tempColor = GUI.color;
+			GUI.color = Color.yellow;
+			GUI.Label(rect, "Maybe the limitation of uniform will cause a shader compile error. For more details, see \"Weapon.shader\". ");
+			GUI.color = tempColor;
+			rect.x -= size * 2;
+		}
+
         if(GUI.Button(rect, "Weapon"))
         {
             isDrawing = !isDrawing;
