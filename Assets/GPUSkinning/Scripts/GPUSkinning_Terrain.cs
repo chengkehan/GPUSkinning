@@ -1,6 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// Calculating the altitude of a model then adding the altitude's value to vertices' position in vertex shader.
+/// As you know, doing altitude calculating in vertex shader is unreasonable, because of redundant computation, especially there are many vertices in a mesh.
+/// So sometimes moving altitude calculating to App-Side is better.
+/// </summary>
 [System.Serializable]
 public class GPUSkinning_Terrain : GPUSkinning_Component
 {
