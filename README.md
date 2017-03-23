@@ -1,5 +1,21 @@
 ## GPUSkinning to improve performance.
 
+### v0.2
+
+TODO: 
+
+* No hard-code. 
+
+* More easy to use(editor tool). 
+
+* Compatible with various animation types(legacy, generic, humanoid, animation).
+
+* New animation api.
+
+### [v0.1-alpha](https://github.com/chengkehan/GPUSkinning/tree/v0.1-alpha)
+
+_Experimental Version.This version is not for production use, just to verify feasibility of idea._
+
 Record data of bone animation from Animation Component, customize GPUSkinning rather than Unity built-in.
 
 4 Ways to implement: 
