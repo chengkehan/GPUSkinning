@@ -10,7 +10,7 @@ TODO:
 
 * Compatible with various animation types(legacy, generic, humanoid, animation).
 
-* New animation api.
+* New GPUSkinning api.
 
 ### [v0.1-alpha](https://github.com/chengkehan/GPUSkinning/tree/v0.1-alpha)
 
