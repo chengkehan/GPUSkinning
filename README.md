@@ -6,7 +6,7 @@ TODO:
 
 * No hard-code. 
 
-* More easy to use(editor tool). 
+* Easier to use(editor tool). 
 
 * Compatible with various animation types(legacy, generic, humanoid, animation).
 
@@ -41,3 +41,5 @@ Record data of bone animation from Animation Component, customize GPUSkinning ra
 [http://chengkehan.github.io/GPUSkinning2.html](http://chengkehan.github.io/GPUSkinning2.html)
 
 [http://chengkehan.github.io/GPUSkinning3.html](http://chengkehan.github.io/GPUSkinning3.html)
+
+[http://chengkehan.github.io/GPUSkinning4.html](http://chengkehan.github.io/GPUSkinning4.html)
