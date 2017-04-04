@@ -35,6 +35,12 @@ public class GPUSkinningSamplerEditor : Editor
 
     private Material boundsMtrl = null;
 
+    private bool isBoundsVisible = true;
+
+    private GameObject[] arrowGos = null;
+
+    private Material[] arrowMtrls = null;
+
     public override void OnInspectorGUI ()
 	{
 //		base.OnInspectorGUI ();
@@ -189,19 +195,28 @@ public class GPUSkinningSamplerEditor : Editor
                             GUILayout.Label("Bounds");
                             EditorGUILayout.Space();
 
-                            Vector3 boundsCenter = bounds.center;
-                            boundsCenter.x = EditorGUILayout.Slider("center.x", boundsCenter.x, -10, 10);
-                            boundsCenter.y = EditorGUILayout.Slider("center.y", boundsCenter.y, -10, 10);
-                            boundsCenter.z = EditorGUILayout.Slider("center.z", boundsCenter.z, -10, 10);
-                            bounds.center = boundsCenter;
+                            isBoundsVisible = EditorGUILayout.Toggle("Visible", isBoundsVisible);
 
                             EditorGUILayout.Space();
 
+                            Color tempGUIColor = GUI.color;
+                            Vector3 boundsCenter = bounds.center;
                             Vector3 boundsExts = bounds.extents;
-                            boundsExts.x = EditorGUILayout.Slider("extends.x", boundsExts.x, 0.1f, 10);
-                            boundsExts.y = EditorGUILayout.Slider("extends.y", boundsExts.y, 0.1f, 10);
-                            boundsExts.z = EditorGUILayout.Slider("extends.z", boundsExts.z, 0.1f, 10);
+                            {
+                                GUI.color = Color.red;
+                                boundsCenter.x = EditorGUILayout.Slider("center.x", boundsCenter.x, -10, 10);
+                                boundsExts.x = EditorGUILayout.Slider("extends.x", boundsExts.x, 0.1f, 10);
+
+                                GUI.color = Color.green;
+                                boundsCenter.y = EditorGUILayout.Slider("center.y", boundsCenter.y, -10, 10);
+                                boundsExts.y = EditorGUILayout.Slider("extends.y", boundsExts.y, 0.1f, 10);
+                                GUI.color = Color.blue;
+                                boundsCenter.z = EditorGUILayout.Slider("center.z", boundsCenter.z, -10, 10);
+                                boundsExts.z = EditorGUILayout.Slider("extends.z", boundsExts.z, 0.1f, 10);
+                            }
+                            bounds.center = boundsCenter;
                             bounds.extents = boundsExts;
+                            GUI.color = tempGUIColor;
 
                             EditorGUILayout.Space();
 
@@ -277,11 +292,57 @@ public class GPUSkinningSamplerEditor : Editor
         }
     }
 
+    private void DrawArrows()
+    {
+        if(arrowGos == null)
+        {
+            arrowGos = new GameObject[3];
+            arrowMtrls = new Material[arrowGos.Length];
+            for(int i = 0; i < arrowGos.Length; ++i)
+            {
+                GameObject go = Instantiate<GameObject>(Resources.Load<GameObject>("Model/GPUSkinningSamplerEditor_Arrow"));
+                go.hideFlags = HideFlags.HideAndDontSave;
+                arrowGos[i] = go;
+
+                arrowMtrls[i] = new Material(Shader.Find("GPUSkinning/GPUSkinningSamplerEditor_UnlitColor"));
+                arrowMtrls[i].hideFlags = HideFlags.HideAndDontSave;
+
+                go.GetComponentInChildren<MeshRenderer>().sharedMaterial = arrowMtrls[i];
+            }
+
+            arrowMtrls[0].color = Color.red;
+            arrowMtrls[1].color = Color.green;
+            arrowMtrls[2].color = Color.blue;
+        }
+
+        if(arrowGos != null && preview != null)
+        {
+            arrowGos[0].transform.parent = preview.transform;
+            arrowGos[0].transform.localPosition = Vector3.zero;
+            arrowGos[0].transform.localEulerAngles = new Vector3(0, 180, 0);
+
+            arrowGos[1].transform.parent = preview.transform;
+            arrowGos[1].transform.localPosition = Vector3.zero;
+            arrowGos[1].transform.localEulerAngles = new Vector3(0, 0, -90);
+
+            arrowGos[2].transform.parent = preview.transform;
+            arrowGos[2].transform.localPosition = Vector3.zero;
+            arrowGos[2].transform.localEulerAngles = new Vector3(0, 90, 0);
+
+            for (int i = 0; i < arrowGos.Length; ++i)
+            {
+                GameObject arrowGo = arrowGos[i];
+                arrowGo.SetActive(isBoundsVisible);
+            }
+        }
+    }
+
     private void DrawBounds()
     {
         if(boundsGos == null)
         {
-            boundsMtrl = new Material(Shader.Find("GPUSkinning/GPUSkinningSamplerEditor_Bounds"));
+            boundsMtrl = new Material(Shader.Find("GPUSkinning/GPUSkinningSamplerEditor_UnlitColor"));
+            boundsMtrl.color = Color.white;
 
             boundsGos = new GameObject[12];
             for(int i = 0; i < boundsGos.Length; ++i)
@@ -296,7 +357,6 @@ public class GPUSkinningSamplerEditor : Editor
         if(boundsGos != null && preview != null)
         {
             float thinness = 0.01f;
-            //Debug.LogError(bounds);
             boundsGos[0].transform.parent = preview.transform;
             boundsGos[0].transform.localScale = new Vector3(thinness, thinness, bounds.extents.z * 2);
             boundsGos[0].transform.localPosition = bounds.center + new Vector3(bounds.extents.x, -bounds.extents.y, 0);
@@ -335,6 +395,12 @@ public class GPUSkinningSamplerEditor : Editor
             boundsGos[11].transform.parent = preview.transform;
             boundsGos[11].transform.localScale = new Vector3(thinness, bounds.extents.y * 2, thinness);
             boundsGos[11].transform.localPosition = bounds.center + new Vector3(-bounds.extents.x, 0, -bounds.extents.z);
+
+            for(int i = 0; i < boundsGos.Length; ++i)
+            {
+                GameObject boundsGo = boundsGos[i];
+                boundsGo.SetActive(isBoundsVisible);
+            }
         }
     }
 
@@ -345,6 +411,7 @@ public class GPUSkinningSamplerEditor : Editor
         if(preview != null)
         {
             DrawBounds();
+            DrawArrows();
 
             preview.DoUpdate(deltaTime);
             cam.Render();
@@ -405,6 +472,21 @@ public class GPUSkinningSamplerEditor : Editor
                     DestroyImmediate(boundsGo);
                 }
                 boundsGos = null;
+            }
+
+            if(arrowGos != null)
+            {
+                foreach(GameObject arrowGo in arrowGos)
+                {
+                    DestroyImmediate(arrowGo);
+                }
+                arrowGos = null;
+
+                foreach(Material mtrl in arrowMtrls)
+                {
+                    DestroyImmediate(mtrl);
+                }
+                arrowMtrls = null;
             }
 
             DestroyImmediate(boundsMtrl);
