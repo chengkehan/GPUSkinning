@@ -1,4 +1,6 @@
-﻿Shader "Unlit/Weapon"
+﻿// Upgrade NOTE: replaced 'UNITY_INSTANCE_ID' with 'UNITY_VERTEX_INPUT_INSTANCE_ID'
+
+Shader "Unlit/Weapon"
 {
 	Properties
 	{
@@ -14,7 +16,7 @@
 		float4 vertex : POSITION;
 		float2 uv : TEXCOORD0;
 #ifdef GPU_INSTANCING_ON
-		UNITY_INSTANCE_ID // UNITY_VERTEX_INPUT_INSTANCE_ID(Unity5.5 and later version)
+		UNITY_VERTEX_INPUT_INSTANCE_ID // UNITY_VERTEX_INPUT_INSTANCE_ID(Unity5.5 and later version)
 #endif
 	};
 

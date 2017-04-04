@@ -1,4 +1,6 @@
-﻿Shader "Unlit/GPUSkinning"
+﻿// Upgrade NOTE: replaced 'UNITY_INSTANCE_ID' with 'UNITY_VERTEX_INPUT_INSTANCE_ID'
+
+Shader "Unlit/GPUSkinning"
 {
 	Properties
 	{
@@ -32,7 +34,7 @@
 		float2 uv2 : TEXCOORD1;
 		float4 tangent : TANGENT;
 #ifdef GPU_INSTANCING_ON
-		UNITY_INSTANCE_ID // UNITY_VERTEX_INPUT_INSTANCE_ID(Unity5.5 and later version)
+		UNITY_VERTEX_INPUT_INSTANCE_ID // UNITY_VERTEX_INPUT_INSTANCE_ID(Unity5.5 and later version)
 #endif
 	};
 
