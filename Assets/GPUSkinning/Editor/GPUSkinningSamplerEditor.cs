@@ -59,8 +59,37 @@ public class GPUSkinningSamplerEditor : Editor
 		BeginBox();
 		{
 			sampler.animName = EditorGUILayout.TextField("Animation Name", sampler.animName);
-			sampler.anim = EditorGUILayout.ObjectField("Animation", sampler.anim, typeof(GPUSkinningAnimation)) as GPUSkinningAnimation;
-			
+
+            GUI.enabled = false;
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            {
+                GUILayout.FlexibleSpace();
+                sampler.anim = EditorGUILayout.ObjectField(sampler.anim, typeof(GPUSkinningAnimation)) as GPUSkinningAnimation;
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            {
+                GUILayout.FlexibleSpace();
+                sampler.savedMesh = EditorGUILayout.ObjectField(sampler.savedMesh, typeof(Mesh)) as Mesh;
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            {
+                GUILayout.FlexibleSpace();
+                sampler.savedMtrl = EditorGUILayout.ObjectField(sampler.savedMtrl, typeof(Material)) as Material;
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            {
+                GUILayout.FlexibleSpace();
+                sampler.savedShader = EditorGUILayout.ObjectField(sampler.savedShader, typeof(Shader)) as Shader;
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+            GUI.enabled = true;
+
+
 			sampler.skinQuality = (GPUSkinningQuality)EditorGUILayout.EnumPopup("Quality", sampler.skinQuality);
 
 			sampler.shaderType = (GPUSkinningShaderType)EditorGUILayout.EnumPopup("Shader Type", sampler.shaderType);
@@ -70,14 +99,16 @@ public class GPUSkinningSamplerEditor : Editor
 
 			if(GUILayout.Button("Step1: Play Scene"))
 			{
-				EditorApplication.isPlaying = true;
+                DestroyPreview();
+                EditorApplication.isPlaying = true;
 			}
 
 			if(Application.isPlaying)
 			{
 				if(GUILayout.Button("Step2: Start Sample"))
 				{
-					if(sampler != null)
+                    DestroyPreview();
+                    if (sampler != null)
 					{
 						sampler.StartSample();
 					}
@@ -101,25 +132,16 @@ public class GPUSkinningSamplerEditor : Editor
 		{
 			if(GUILayout.Button("Preview/Edit"))
 			{
-				Object obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_ANIM_PATH));
-				if(obj != null && obj is GPUSkinningAnimation)
-				{
-					anim = obj as GPUSkinningAnimation;
-				}
-				obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_MESH_PATH));
-				if(obj != null && obj is Mesh)
-				{
-					mesh = obj as Mesh;
+                anim = sampler.anim;
+                mesh = sampler.savedMesh;
+                mtrl = sampler.savedMtrl;
+                if(mesh != null)
+                {
                     bounds = mesh.bounds;
-				}
-				obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_MTRL_PATH));
-				if(obj != null && obj is Material)
-				{
-					mtrl = obj as Material;
-				}
+                }
 				if(anim == null || mesh == null || mtrl == null)
 				{
-					EditorUtility.DisplayDialog("GPUSkinning", "Missing Sampleing Resources", "OK");
+					EditorUtility.DisplayDialog("GPUSkinning", "Missing Sampling Resources", "OK");
 				}
 				else
 				{
@@ -429,20 +451,8 @@ public class GPUSkinningSamplerEditor : Editor
         }
     }
 
-    private void Awake()
+    private void DestroyPreview()
     {
-        EditorApplication.update += GPUSkinningPreviewUpdateHandler;
-        time = Time.realtimeSinceStartup;
-    }
-
-	private void OnDestroy()
-    {
-        EditorApplication.update -= GPUSkinningPreviewUpdateHandler;
-
-        //GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_ANIM_PATH);
-        //GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_MESH_PATH);
-        //GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_MTRL_PATH);
-
         if (rt != null)
         {
             cam.targetTexture = null;
@@ -465,24 +475,24 @@ public class GPUSkinningSamplerEditor : Editor
             DestroyImmediate(preview.gameObject);
             preview = null;
 
-            if(boundsGos != null)
+            if (boundsGos != null)
             {
-                foreach(GameObject boundsGo in boundsGos)
+                foreach (GameObject boundsGo in boundsGos)
                 {
                     DestroyImmediate(boundsGo);
                 }
                 boundsGos = null;
             }
 
-            if(arrowGos != null)
+            if (arrowGos != null)
             {
-                foreach(GameObject arrowGo in arrowGos)
+                foreach (GameObject arrowGo in arrowGos)
                 {
                     DestroyImmediate(arrowGo);
                 }
                 arrowGos = null;
 
-                foreach(Material mtrl in arrowMtrls)
+                foreach (Material mtrl in arrowMtrls)
                 {
                     DestroyImmediate(mtrl);
                 }
@@ -492,6 +502,18 @@ public class GPUSkinningSamplerEditor : Editor
             DestroyImmediate(boundsMtrl);
             boundsMtrl = null;
         }
+    }
+
+    private void Awake()
+    {
+        EditorApplication.update += GPUSkinningPreviewUpdateHandler;
+        time = Time.realtimeSinceStartup;
+    }
+
+	private void OnDestroy()
+    {
+        EditorApplication.update -= GPUSkinningPreviewUpdateHandler;
+        DestroyPreview();
 	}
 
 	private void BeginBox()

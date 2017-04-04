@@ -27,6 +27,18 @@ public class GPUSkinningSampler : MonoBehaviour
 	[System.NonSerialized]
 	public bool isSampling = false;
 
+    [HideInInspector]
+    [SerializeField]
+    public Mesh savedMesh = null;
+
+    [HideInInspector]
+    [SerializeField]
+    public Material savedMtrl = null;
+
+    [HideInInspector]
+    [SerializeField]
+    public Shader savedShader = null;
+
 	private Animator animator = null;
 
 	private SkinnedMeshRenderer smr = null;
@@ -45,19 +57,12 @@ public class GPUSkinningSampler : MonoBehaviour
 	[System.NonSerialized]
 	public int samplingFrameIndex = 0;
 
-	[HideInInspector]
-	[System.NonSerialized]
 	public const string TEMP_SAVED_ANIM_PATH = "GPUSkinning_Temp_Save_Anim_Path";
-
-	[HideInInspector]
-	[System.NonSerialized]
 	public const string TEMP_SAVED_MTRL_PATH = "GPUSkinning_Temp_Save_Mtrl_Path";
-
-	[HideInInspector]
-	[System.NonSerialized]
 	public const string TEMP_SAVED_MESH_PATH = "GPUSkinning_Temp_Save_Mesh_Path";
+    public const string TEMP_SAVED_SHADER_PATH = "GPUSkinning_Temp_Save_Shader_Path";
 
-	public void StartSample()
+    public void StartSample()
 	{
 		if(animClip == null)
 		{
@@ -254,6 +259,41 @@ public class GPUSkinningSampler : MonoBehaviour
 			ShowDialog("Cannot find Animator Component");
 			return;
 		}
+
+        if(!Application.isPlaying)
+        {
+            Object obj = AssetDatabase.LoadMainAssetAtPath(ReadTempData(TEMP_SAVED_ANIM_PATH));
+            if (obj != null && obj is GPUSkinningAnimation)
+            {
+                anim = obj as GPUSkinningAnimation;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(ReadTempData(TEMP_SAVED_MESH_PATH));
+            if (obj != null && obj is Mesh)
+            {
+                savedMesh = obj as Mesh;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(ReadTempData(TEMP_SAVED_MTRL_PATH));
+            if(obj != null && obj is Material)
+            {
+                savedMtrl = obj as Material;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(ReadTempData(TEMP_SAVED_SHADER_PATH));
+            if(obj != null && obj is Shader)
+            {
+                savedShader = obj as Shader;
+            }
+
+            DeleteTempData(TEMP_SAVED_ANIM_PATH);
+            DeleteTempData(TEMP_SAVED_MESH_PATH);
+            DeleteTempData(TEMP_SAVED_MTRL_PATH);
+            DeleteTempData(TEMP_SAVED_SHADER_PATH);
+
+            EditorUtility.SetDirty(this);
+            UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
+        }
 	}
 
 	private void Update()
@@ -286,10 +326,17 @@ public class GPUSkinningSampler : MonoBehaviour
 
 					string savedAnimPath = dir + "/GPUSKinning_Anim_" + animName + ".asset";
 					EditorUtility.SetDirty(gpuSkinningAnimation);
-					AssetDatabase.CreateAsset(gpuSkinningAnimation, savedAnimPath);
+                    if (anim != gpuSkinningAnimation)
+                    {
+                        AssetDatabase.CreateAsset(gpuSkinningAnimation, savedAnimPath);
+                    }
                     WriteTempData(TEMP_SAVED_ANIM_PATH, savedAnimPath);
 
 					Mesh newMesh = CreateNewMesh();
+                    if(savedMesh != null)
+                    {
+                        newMesh.bounds = savedMesh.bounds;
+                    }
 					string savedMeshPath = dir + "/GPUSKinning_Mesh_" + animName + ".asset";
 					AssetDatabase.CreateAsset(newMesh, savedMeshPath);
                     WriteTempData(TEMP_SAVED_MESH_PATH, savedMeshPath);
@@ -342,6 +389,7 @@ public class GPUSkinningSampler : MonoBehaviour
 		shaderStr = SkinQualityShaderStr(shaderStr);
 		string shaderPath = dir + "/GPUSKinning_Shader_" + animName + ".shader";
 		File.WriteAllText(shaderPath, shaderStr);
+        WriteTempData(TEMP_SAVED_SHADER_PATH, shaderPath);
 		AssetDatabase.ImportAsset(shaderPath);
 
 		Material mtrl = new Material(AssetDatabase.LoadMainAssetAtPath(shaderPath) as Shader);
@@ -408,14 +456,19 @@ public class GPUSkinningSampler : MonoBehaviour
 		return PlayerPrefs.GetString("GPUSkinning_UserPreferDir", Application.dataPath);
 	}
 
-    public static void WriteTempData(string key, string value)
+    private void WriteTempData(string key, string value)
     {
         PlayerPrefs.SetString(key, value);
     }
 
-    public static string ReadTempData(string key)
+    private string ReadTempData(string key)
     {
         return PlayerPrefs.GetString(key, string.Empty);
+    }
+
+    private void DeleteTempData(string key)
+    {
+        PlayerPrefs.DeleteKey(key);
     }
 #endif
 }
