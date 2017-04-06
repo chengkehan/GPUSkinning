@@ -11,16 +11,28 @@ using UnityEditor;
 public class GPUSkinningSampler : MonoBehaviour 
 {
 #if UNITY_EDITOR
+    [HideInInspector]
+    [SerializeField]
 	public string animName = null;
 
+    [HideInInspector]
+    [SerializeField]
 	public AnimationClip animClip = null;
 
+    [HideInInspector]
+    [SerializeField]
 	public GPUSkinningQuality skinQuality = GPUSkinningQuality.Bone2;
 
+    [HideInInspector]
+    [SerializeField]
 	public Transform rootBoneTransform = null;
 
+    [HideInInspector]
+    [SerializeField]
     public GPUSkinningAnimation anim = null;
 
+    [HideInInspector]
+    [SerializeField]
 	public GPUSkinningShaderType shaderType = GPUSkinningShaderType.Unlit;
 
 	[HideInInspector]
@@ -259,41 +271,6 @@ public class GPUSkinningSampler : MonoBehaviour
 			ShowDialog("Cannot find Animator Component");
 			return;
 		}
-
-        if(!Application.isPlaying)
-        {
-            Object obj = AssetDatabase.LoadMainAssetAtPath(ReadTempData(TEMP_SAVED_ANIM_PATH));
-            if (obj != null && obj is GPUSkinningAnimation)
-            {
-                anim = obj as GPUSkinningAnimation;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(ReadTempData(TEMP_SAVED_MESH_PATH));
-            if (obj != null && obj is Mesh)
-            {
-                savedMesh = obj as Mesh;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(ReadTempData(TEMP_SAVED_MTRL_PATH));
-            if(obj != null && obj is Material)
-            {
-                savedMtrl = obj as Material;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(ReadTempData(TEMP_SAVED_SHADER_PATH));
-            if(obj != null && obj is Shader)
-            {
-                savedShader = obj as Shader;
-            }
-
-            DeleteTempData(TEMP_SAVED_ANIM_PATH);
-            DeleteTempData(TEMP_SAVED_MESH_PATH);
-            DeleteTempData(TEMP_SAVED_MTRL_PATH);
-            DeleteTempData(TEMP_SAVED_SHADER_PATH);
-
-            EditorUtility.SetDirty(this);
-            UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
-        }
 	}
 
 	private void Update()
@@ -456,17 +433,17 @@ public class GPUSkinningSampler : MonoBehaviour
 		return PlayerPrefs.GetString("GPUSkinning_UserPreferDir", Application.dataPath);
 	}
 
-    private void WriteTempData(string key, string value)
+    public static void WriteTempData(string key, string value)
     {
         PlayerPrefs.SetString(key, value);
     }
 
-    private string ReadTempData(string key)
+    public static string ReadTempData(string key)
     {
         return PlayerPrefs.GetString(key, string.Empty);
     }
 
-    private void DeleteTempData(string key)
+    public static void DeleteTempData(string key)
     {
         PlayerPrefs.DeleteKey(key);
     }
