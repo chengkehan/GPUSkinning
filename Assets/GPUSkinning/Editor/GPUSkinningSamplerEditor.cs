@@ -58,44 +58,44 @@ public class GPUSkinningSamplerEditor : Editor
 
 		BeginBox();
 		{
-			sampler.animName = EditorGUILayout.TextField("Animation Name", sampler.animName);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("animName"), new GUIContent("Animation Name"));
 
             GUI.enabled = false;
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
-                sampler.anim = EditorGUILayout.ObjectField(sampler.anim, typeof(GPUSkinningAnimation)) as GPUSkinningAnimation;
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("anim"), new GUIContent());
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
-                sampler.savedMesh = EditorGUILayout.ObjectField(sampler.savedMesh, typeof(Mesh)) as Mesh;
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("savedMesh"), new GUIContent());
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
-                sampler.savedMtrl = EditorGUILayout.ObjectField(sampler.savedMtrl, typeof(Material)) as Material;
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("savedMtrl"), new GUIContent());
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
-                sampler.savedShader = EditorGUILayout.ObjectField(sampler.savedShader, typeof(Shader)) as Shader;
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("savedShader"), new GUIContent());
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             GUI.enabled = true;
 
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("skinQuality"), new GUIContent("Quality"));
 
-			sampler.skinQuality = (GPUSkinningQuality)EditorGUILayout.EnumPopup("Quality", sampler.skinQuality);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("shaderType"), new GUIContent("Shader Type"));
 
-			sampler.shaderType = (GPUSkinningShaderType)EditorGUILayout.EnumPopup("Shader Type", sampler.shaderType);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("animClip"), new GUIContent("Clip"));
 
-			sampler.animClip = EditorGUILayout.ObjectField("Clip", sampler.animClip, typeof(AnimationClip)) as AnimationClip;
-			sampler.rootBoneTransform = EditorGUILayout.ObjectField("Root Bone", sampler.rootBoneTransform, typeof(Transform)) as Transform;
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("rootBoneTransform"), new GUIContent("Root Bone"));
 
 			if(GUILayout.Button("Step1: Play Scene"))
 			{
@@ -262,6 +262,8 @@ public class GPUSkinningSamplerEditor : Editor
             }
 		}
 		EndBox();
+
+        serializedObject.ApplyModifiedProperties();
 
         Repaint();
 	}
@@ -508,6 +510,40 @@ public class GPUSkinningSamplerEditor : Editor
     {
         EditorApplication.update += GPUSkinningPreviewUpdateHandler;
         time = Time.realtimeSinceStartup;
+
+        if (!Application.isPlaying)
+        {
+            Object obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_ANIM_PATH));
+            if (obj != null && obj is GPUSkinningAnimation)
+            {
+                serializedObject.FindProperty("anim").objectReferenceValue = obj;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_MESH_PATH));
+            if (obj != null && obj is Mesh)
+            {
+                serializedObject.FindProperty("savedMesh").objectReferenceValue = obj;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_MTRL_PATH));
+            if (obj != null && obj is Material)
+            {
+                serializedObject.FindProperty("savedMtrl").objectReferenceValue = obj;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_SHADER_PATH));
+            if (obj != null && obj is Shader)
+            {
+                serializedObject.FindProperty("savedShader").objectReferenceValue = obj;
+            }
+
+            serializedObject.ApplyModifiedProperties();
+
+            GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_ANIM_PATH);
+            GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_MESH_PATH);
+            GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_MTRL_PATH);
+            GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_SHADER_PATH);
+        }
     }
 
 	private void OnDestroy()
