@@ -22,6 +22,14 @@ public class GPUSkinningPreview : MonoBehaviour
         }
     }
 
+    public void Play(string clipName)
+    {
+        if(player != null)
+        {
+            player.Play(clipName);
+        }
+    }
+
     public void DoUpdate(float deltaTime) 
     {
         if (player != null)

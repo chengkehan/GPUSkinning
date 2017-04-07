@@ -21,6 +21,8 @@ public class GPUSkinningSamplerEditor : Editor
 
     private GPUSkinningPreview preview = null;
 
+    private int previewClipIndex = 0;
+
     private float time = 0;
 
     private Vector3 camLookAtOffset = Vector3.zero;
@@ -43,8 +45,6 @@ public class GPUSkinningSamplerEditor : Editor
 
     public override void OnInspectorGUI ()
 	{
-//		base.OnInspectorGUI ();
-
 		GPUSkinningSampler sampler = target as GPUSkinningSampler;
 		if(sampler == null)
 		{
@@ -93,11 +93,11 @@ public class GPUSkinningSamplerEditor : Editor
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("shaderType"), new GUIContent("Shader Type"));
 
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("animClip"), new GUIContent("Clip"));
-
             EditorGUILayout.PropertyField(serializedObject.FindProperty("rootBoneTransform"), new GUIContent("Root Bone"));
 
-			if(GUILayout.Button("Step1: Play Scene"))
+            AnimClipsGUI(serializedObject, "animClips");
+
+            if (GUILayout.Button("Step1: Play Scene"))
 			{
                 DestroyPreview();
                 EditorApplication.isPlaying = true;
@@ -110,18 +110,10 @@ public class GPUSkinningSamplerEditor : Editor
                     DestroyPreview();
                     if (sampler != null)
 					{
+                        sampler.BeginSample();
 						sampler.StartSample();
 					}
 				}
-
-				if(sampler.isSampling)
-				{
-                    EditorUtility.DisplayProgressBar("Sampling", sampler.animClip.name, (float)(sampler.samplingFrameIndex + 1) / sampler.samplingTotalFrams);
-				}
-                else
-                {
-                    EditorUtility.ClearProgressBar();
-                }
 			}
 		}
 		EndBox();
@@ -166,6 +158,8 @@ public class GPUSkinningSamplerEditor : Editor
                         cam.enabled = false;
                         camGo.transform.position = new Vector3(100, 100, 100);
 
+                        previewClipIndex = 0;
+
                         GameObject previewGo = new GameObject("GPUSkinningPreview_Go");
                         previewGo.hideFlags = HideFlags.HideAndDontSave;
                         previewGo.transform.position = new Vector3(100, 100, 103);
@@ -174,7 +168,7 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.anim = anim;
                         preview.mesh = mesh;
                         preview.mtrl = mtrl;
-                        preview.clipName = sampler.animClip.name;
+                        preview.clipName = anim.clips == null || anim.clips.Length == 0 ? null : anim.clips[previewClipIndex].name;
                         preview.Init();
                     }
 				}
@@ -203,6 +197,8 @@ public class GPUSkinningSamplerEditor : Editor
                     GUILayout.FlexibleSpace();
                 }
                 EditorGUILayout.EndHorizontal();
+
+                PreviewClipsSelectionGUI();
 
                 EditorGUILayout.BeginHorizontal();
                 {
@@ -265,6 +261,56 @@ public class GPUSkinningSamplerEditor : Editor
 
         Repaint();
 	}
+
+    private void PreviewClipsSelectionGUI()
+    {
+        if(anim.clips == null || anim.clips.Length == 0 || preview == null)
+        {
+            return;
+        }
+
+        previewClipIndex = Mathf.Clamp(previewClipIndex, 0, anim.clips.Length - 1);
+        string[] options = new string[anim.clips.Length];
+        for(int i = 0; i < anim.clips.Length; ++i)
+        {
+            options[i] = anim.clips[i].name;
+        }
+        EditorGUILayout.Space();
+        EditorGUILayout.BeginHorizontal();
+        {
+            EditorGUILayout.Space();
+            previewClipIndex = EditorGUILayout.Popup(string.Empty, previewClipIndex, options);
+            EditorGUILayout.Space();
+        }
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.Space();
+        preview.Play(options[previewClipIndex]);
+    }
+
+    private void AnimClipsGUI(SerializedObject obj, string name)
+    {
+        BeginBox();
+        {
+            EditorGUILayout.PrefixLabel("Sample Clips");
+
+            EditorGUILayout.PropertyField(obj.FindProperty("updateOrNew"), new GUIContent("Update Or New"));
+
+            int no = obj.FindProperty(name + ".Array.size").intValue;
+            int c = EditorGUILayout.IntField("Size", no);
+            if (c != no)
+                obj.FindProperty(name + ".Array.size").intValue = c;
+
+            for (int i = 0; i < no; i++)
+            {
+                var prop = obj.FindProperty(string.Format("{0}.Array.data[{1}]", name, i));
+                if (prop != null)
+                {
+                    EditorGUILayout.PropertyField(prop);
+                }
+            }
+        }
+        EndBox();
+    }
 
     private void Interaction(Rect rect)
     {
@@ -426,7 +472,7 @@ public class GPUSkinningSamplerEditor : Editor
         }
     }
 
-    private void GPUSkinningPreviewUpdateHandler()
+    private void UpdateHandler()
     {
         float deltaTime = Time.realtimeSinceStartup - time;
         
@@ -440,6 +486,27 @@ public class GPUSkinningSamplerEditor : Editor
         }
 
         time = Time.realtimeSinceStartup;
+
+        GPUSkinningSampler sampler = target as GPUSkinningSampler;
+
+        if(!sampler.isSampling && sampler.IsSamplingProgress())
+        {
+            if (++sampler.samplingClipIndex < sampler.animClips.Length)
+            {
+                sampler.StartSample();
+            }
+            else
+            {
+                sampler.EndSample();
+                EditorApplication.isPlaying = false;
+                EditorUtility.ClearProgressBar();
+            }
+        }
+        
+        if (sampler.isSampling)
+        {
+            EditorUtility.DisplayProgressBar("Sampling", sampler.animClip.name, (float)(sampler.samplingFrameIndex + 1) / sampler.samplingTotalFrams);
+        }
     }
 
     private void GetLastGUIRect(ref Rect rect)
@@ -506,7 +573,7 @@ public class GPUSkinningSamplerEditor : Editor
 
     private void Awake()
     {
-        EditorApplication.update += GPUSkinningPreviewUpdateHandler;
+        EditorApplication.update += UpdateHandler;
         time = Time.realtimeSinceStartup;
 
         if (!Application.isPlaying)
@@ -546,7 +613,7 @@ public class GPUSkinningSamplerEditor : Editor
 
 	private void OnDestroy()
     {
-        EditorApplication.update -= GPUSkinningPreviewUpdateHandler;
+        EditorApplication.update -= UpdateHandler;
         DestroyPreview();
 	}
 

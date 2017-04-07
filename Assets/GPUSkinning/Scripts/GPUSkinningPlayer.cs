@@ -59,8 +59,6 @@ public class GPUSkinningPlayer
                 return;
             }
         }
-
-        Debug.LogError("Missing Clip:" + clipName);
     }
 
     public void Update(float timeDelta)

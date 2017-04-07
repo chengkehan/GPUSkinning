@@ -16,8 +16,16 @@ public class GPUSkinningSampler : MonoBehaviour
 	public string animName = null;
 
     [HideInInspector]
-    [SerializeField]
+    [System.NonSerialized]
 	public AnimationClip animClip = null;
+
+    [HideInInspector]
+    [SerializeField]
+    public AnimationClip[] animClips = null;
+
+    [HideInInspector]
+    [System.NonSerialized]
+    public int samplingClipIndex = -1;
 
     [HideInInspector]
     [SerializeField]
@@ -51,6 +59,10 @@ public class GPUSkinningSampler : MonoBehaviour
     [SerializeField]
     public Shader savedShader = null;
 
+    [HideInInspector]
+    [SerializeField]
+    public bool updateOrNew = true;
+
 	private Animator animator = null;
 
 	private SkinnedMeshRenderer smr = null;
@@ -58,8 +70,6 @@ public class GPUSkinningSampler : MonoBehaviour
 	private GPUSkinningAnimation gpuSkinningAnimation = null;
 
     private GPUSkinningClip gpuSkinningClip = null;
-
-	private int rootBoneIndex = 0;
 
 	[HideInInspector]
 	[System.NonSerialized]
@@ -74,11 +84,38 @@ public class GPUSkinningSampler : MonoBehaviour
 	public const string TEMP_SAVED_MESH_PATH = "GPUSkinning_Temp_Save_Mesh_Path";
     public const string TEMP_SAVED_SHADER_PATH = "GPUSkinning_Temp_Save_Shader_Path";
 
+    public void BeginSample()
+    {
+        samplingClipIndex = 0;
+    }
+
+    public void EndSample()
+    {
+        samplingClipIndex = -1;
+    }
+
+    public bool IsSamplingProgress()
+    {
+        return samplingClipIndex != -1;
+    }
+
     public void StartSample()
 	{
-		if(animClip == null)
+        if (isSampling)
+        {
+            return;
+        }
+
+        if(animClips.Length == 0)
+        {
+            ShowDialog("Missing AnimationClip");
+            return;
+        }
+
+        animClip = animClips[samplingClipIndex];
+        if (animClip == null)
 		{
-			ShowDialog("Missing AnimationClip");
+            isSampling = false;
 			return;
 		}
 
@@ -113,15 +150,18 @@ public class GPUSkinningSampler : MonoBehaviour
 			return;
 		}
 
-		if(isSampling)
-		{
-			return;
-		}
-
 		samplingFrameIndex = 0;
 
 		gpuSkinningAnimation = anim == null ? ScriptableObject.CreateInstance<GPUSkinningAnimation>() : anim;
 		gpuSkinningAnimation.name = animName;
+
+        if(samplingClipIndex == 0)
+        {
+            if(!updateOrNew)
+            {
+                gpuSkinningAnimation.clips = null;
+            }
+        }
 
 		List<GPUSkinningBone> bones_result = new List<GPUSkinningBone>();
 		CollectBones(bones_result, smr.bones, mesh.bindposes, null, rootBoneTransform, 0);
@@ -129,36 +169,37 @@ public class GPUSkinningSampler : MonoBehaviour
         gpuSkinningAnimation.rootBoneIndex = 0;
 
         int numClips = gpuSkinningAnimation.clips == null ? 0 : gpuSkinningAnimation.clips.Length;
+        int clipIndex = -1;
         for (int i = 0; i < numClips; ++i)
         {
             if (gpuSkinningAnimation.clips[i].name == animClip.name)
             {
-                gpuSkinningClip = gpuSkinningAnimation.clips[i];
-				if (gpuSkinningClip.frames.Length != (int)(animClip.frameRate * animClip.length))
-				{
-					ShowDialog("Mismatched frames");
-					return;
-				}
+                clipIndex = i;
                 break;
             }
         }
-        if (gpuSkinningClip == null)
-        {
-            gpuSkinningClip = new GPUSkinningClip();
-            gpuSkinningClip.name = animClip.name;
-            gpuSkinningClip.fps = (int)animClip.frameRate;
-            gpuSkinningClip.length = animClip.length;
-            gpuSkinningClip.frames = new GPUSkinningFrame[(int)(gpuSkinningClip.fps * gpuSkinningClip.length)];
 
-            if(gpuSkinningAnimation.clips == null)
-            {
-                gpuSkinningAnimation.clips = new GPUSkinningClip[] { gpuSkinningClip };
-            }
-            else
+        gpuSkinningClip = new GPUSkinningClip();
+        gpuSkinningClip.name = animClip.name;
+        gpuSkinningClip.fps = (int)animClip.frameRate;
+        gpuSkinningClip.length = animClip.length;
+        gpuSkinningClip.frames = new GPUSkinningFrame[(int)(gpuSkinningClip.fps * gpuSkinningClip.length)];
+
+        if(gpuSkinningAnimation.clips == null)
+        {
+            gpuSkinningAnimation.clips = new GPUSkinningClip[] { gpuSkinningClip };
+        }
+        else
+        {
+            if (clipIndex == -1)
             {
                 List<GPUSkinningClip> clips = new List<GPUSkinningClip>(gpuSkinningAnimation.clips);
                 clips.Add(gpuSkinningClip);
                 gpuSkinningAnimation.clips = clips.ToArray();
+            }
+            else
+            {
+                gpuSkinningAnimation.clips[clipIndex] = gpuSkinningClip;
             }
         }
 
@@ -285,8 +326,6 @@ public class GPUSkinningSampler : MonoBehaviour
 
         if (samplingFrameIndex >= totalFrams)
         {
-            isSampling = false;
-
             string savePath = null;
             if (anim == null)
             {
@@ -317,8 +356,9 @@ public class GPUSkinningSampler : MonoBehaviour
                         AssetDatabase.CreateAsset(gpuSkinningAnimation, savedAnimPath);
                     }
                     WriteTempData(TEMP_SAVED_ANIM_PATH, savedAnimPath);
+                    anim = gpuSkinningAnimation;
 
-					Mesh newMesh = CreateNewMesh();
+                    Mesh newMesh = CreateNewMesh();
                     if(savedMesh != null)
                     {
                         newMesh.bounds = savedMesh.bounds;
@@ -326,6 +366,7 @@ public class GPUSkinningSampler : MonoBehaviour
 					string savedMeshPath = dir + "/GPUSKinning_Mesh_" + animName + ".asset";
 					AssetDatabase.CreateAsset(newMesh, savedMeshPath);
                     WriteTempData(TEMP_SAVED_MESH_PATH, savedMeshPath);
+                    savedMesh = newMesh;
 
 					CreateShaderAndMaterial(dir);
 
@@ -333,8 +374,7 @@ public class GPUSkinningSampler : MonoBehaviour
 					AssetDatabase.SaveAssets();
 				}
 			}
-
-            EditorApplication.isPlaying = false;
+            isSampling = false;
             return;
         }
         
