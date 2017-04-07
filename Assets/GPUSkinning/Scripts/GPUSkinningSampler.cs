@@ -349,7 +349,22 @@ public class GPUSkinningSampler : MonoBehaviour
         for(int i = 0; i < numBones; ++i)
         {
             Transform boneTransform = bones[i].transform;
-            frame.matrices[i] = Matrix4x4.TRS(boneTransform.localPosition, boneTransform.localRotation, boneTransform.localScale);
+            GPUSkinningBone currentBone = GetBoneByTransform(boneTransform);
+            frame.matrices[i] = currentBone.bindpose;
+            do
+            {
+                Matrix4x4 mat = Matrix4x4.TRS(currentBone.transform.localPosition, currentBone.transform.localRotation, currentBone.transform.localScale);
+                frame.matrices[i] = mat * frame.matrices[i];
+                if (currentBone.parentBoneIndex == -1)
+                {
+                    break;
+                }
+                else
+                {
+                    currentBone = bones[currentBone.parentBoneIndex];
+                }
+            }
+            while (true);
         }
     }
 

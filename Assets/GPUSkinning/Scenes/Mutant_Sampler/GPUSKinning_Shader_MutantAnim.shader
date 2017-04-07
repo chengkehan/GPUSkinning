@@ -31,11 +31,15 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 	{
 		v2f o;
 
+		
+
+		
 		float4 pos =
 			mul(_GPUSkinning_MatrixArray[v.uv2.x], v.vertex) * v.uv2.y +
-			mul(_GPUSkinning_MatrixArray[v.uv2.z], v.vertex) * v.uv2.w + 
-			mul(_GPUSkinning_MatrixArray[v.uv3.x], v.vertex) * v.uv3.y + 
-			mul(_GPUSkinning_MatrixArray[v.uv3.z], v.vertex) * v.uv3.w;
+			mul(_GPUSkinning_MatrixArray[v.uv2.z], v.vertex) * v.uv2.w;
+		
+
+		
 
 		o.vertex = UnityObjectToClipPos(pos);
 		o.uv = TRANSFORM_TEX(v.uv, _MainTex);

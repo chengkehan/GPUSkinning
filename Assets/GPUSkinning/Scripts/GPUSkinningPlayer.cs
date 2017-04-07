@@ -21,8 +21,6 @@ public class GPUSkinningPlayer
 
     private int playingFrameIndex = -1;
 
-    private Matrix4x4[] matricesUniformBlock = null;
-
     private int shaderPropID_GPUSkinning_MatrixArray = 0;
 
     public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningAnimation anim, Mesh mesh, Material mtrl)
@@ -76,34 +74,8 @@ public class GPUSkinningPlayer
         if (playingFrameIndex != frameIndex)
         {
             playingFrameIndex = frameIndex;
-
-            //
             GPUSkinningFrame frame = playingClip.frames[frameIndex];
-            Matrix4x4[] frameMatrices = frame.matrices;
-            GPUSkinningBone[] bones = anim.bones;
-            int numBones = bones.Length;
-            for (int i = 0; i < numBones; ++i)
-            {
-                GPUSkinningBone bone = bones[i];
-                GPUSkinningBone currentBone = bone;
-                bone.animationMatrix = frameMatrices[i] * bone.bindpose;
-                while (currentBone.parentBoneIndex != -1)
-                {
-                    bone.animationMatrix = frameMatrices[currentBone.parentBoneIndex] * bone.animationMatrix;
-                    currentBone = bones[currentBone.parentBoneIndex];
-                }
-            }
-
-            //
-            if (matricesUniformBlock == null)
-            {
-                matricesUniformBlock = new Matrix4x4[numBones];
-            }
-            for (int i = 0; i < numBones; ++i)
-            {
-                matricesUniformBlock[i] = bones[i].animationMatrix;
-            }
-            mtrl.SetMatrixArray(shaderPropID_GPUSkinning_MatrixArray, matricesUniformBlock);
+            mtrl.SetMatrixArray(shaderPropID_GPUSkinning_MatrixArray, frame.matrices);
         }
 
         time += timeDelta;
