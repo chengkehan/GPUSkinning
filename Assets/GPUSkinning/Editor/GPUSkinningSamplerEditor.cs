@@ -97,7 +97,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("rootBoneTransform"), new GUIContent("Root Bone"));
 
-            AnimClipsGUI(serializedObject, "animClips");
+            AnimClipsGUI();
 
             if (GUILayout.Button("Step1: Play Scene"))
 			{
@@ -287,25 +287,49 @@ public class GPUSkinningSamplerEditor : Editor
         preview.Play(options[previewClipIndex]);
     }
 
-    private void AnimClipsGUI(SerializedObject obj, string name)
+    private void AnimClipsGUI()
     {
         BeginBox();
         {
             EditorGUILayout.PrefixLabel("Sample Clips");
 
-            EditorGUILayout.PropertyField(obj.FindProperty("updateOrNew"), new GUIContent("Update Or New"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("updateOrNew"), new GUIContent("Update Or New"));
 
-            int no = obj.FindProperty(name + ".Array.size").intValue;
+            int no = serializedObject.FindProperty("animClips.Array.size").intValue;
+            int no2 = serializedObject.FindProperty("wrapModes.Array.size").intValue;
+            int no3 = serializedObject.FindProperty("isSelected.Array.size").intValue;
             int c = EditorGUILayout.IntField("Size", no);
             if (c != no)
-                obj.FindProperty(name + ".Array.size").intValue = c;
+            {
+                serializedObject.FindProperty("animClips.Array.size").intValue = c;
+            }
+            if(c != no2)
+            {
+                serializedObject.FindProperty("wrapModes.Array.size").intValue = c;
+            }
+            if(c != no3)
+            {
+                serializedObject.FindProperty("isSelected.Array.size").intValue = c;
+            }
 
             for (int i = 0; i < no; i++)
             {
-                var prop = obj.FindProperty(string.Format("{0}.Array.data[{1}]", name, i));
+                var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
+                var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
+                var prop3 = serializedObject.FindProperty(string.Format("isSelected.Array.data[{0}]", i));
                 if (prop != null)
                 {
-                    EditorGUILayout.PropertyField(prop);
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        EditorGUILayout.PropertyField(prop3);
+                        EditorGUILayout.PropertyField(prop2, new GUIContent());
+                        EditorGUILayout.PropertyField(prop, new GUIContent());
+                    }
+                    EditorGUILayout.EndHorizontal();
                 }
             }
         }

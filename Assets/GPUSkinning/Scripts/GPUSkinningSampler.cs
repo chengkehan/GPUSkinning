@@ -24,6 +24,14 @@ public class GPUSkinningSampler : MonoBehaviour
     public AnimationClip[] animClips = null;
 
     [HideInInspector]
+    [SerializeField]
+    public GPUSkinningWrapMode[] wrapModes = null;
+
+    [HideInInspector]
+    [SerializeField]
+    public bool[] isSelected = null;
+
+    [HideInInspector]
     [System.NonSerialized]
     public int samplingClipIndex = -1;
 
@@ -113,7 +121,7 @@ public class GPUSkinningSampler : MonoBehaviour
         }
 
         animClip = animClips[samplingClipIndex];
-        if (animClip == null)
+        if (animClip == null || !isSelected[samplingClipIndex])
 		{
             isSampling = false;
 			return;
@@ -183,6 +191,7 @@ public class GPUSkinningSampler : MonoBehaviour
         gpuSkinningClip.name = animClip.name;
         gpuSkinningClip.fps = (int)animClip.frameRate;
         gpuSkinningClip.length = animClip.length;
+        gpuSkinningClip.wrapMode = wrapModes[samplingClipIndex];
         gpuSkinningClip.frames = new GPUSkinningFrame[(int)(gpuSkinningClip.fps * gpuSkinningClip.length)];
 
         if(gpuSkinningAnimation.clips == null)
