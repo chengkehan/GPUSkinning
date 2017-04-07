@@ -23,6 +23,14 @@ public class GPUSkinningPlayer
 
     private int shaderPropID_GPUSkinning_MatrixArray = 0;
 
+    public float NormalizedTime
+    {
+        get
+        {
+            return playingClip == null || playingFrameIndex == -1 ? 0 : (float)playingFrameIndex / (playingClip.frames.Length - 1);
+        }
+    }
+
     public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningAnimation anim, Mesh mesh, Material mtrl)
     {
         go = attachToThisGo;
@@ -55,7 +63,13 @@ public class GPUSkinningPlayer
         {
             if(clips[i].name == clipName)
             {
-                playingClip = clips[i];
+                if (playingClip != clips[i] || 
+                    (playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once && Mathf.Approximately(NormalizedTime, 1.0f)))
+                {
+                    playingClip = clips[i];
+                    time = 0;
+                    playingFrameIndex = -1;
+                }
                 return;
             }
         }
@@ -68,7 +82,22 @@ public class GPUSkinningPlayer
             return;
         }
 
-        int frameIndex = (int)((time * playingClip.fps) % (playingClip.length * playingClip.fps));
+        int frameIndex = 0;
+        if (playingClip.wrapMode == GPUSkinningWrapMode.Loop)
+        {
+            frameIndex = GetFrameIndex();
+        }
+        else
+        {
+            if(time >= playingClip.length)
+            {
+                frameIndex = playingClip.frames.Length - 1;
+            }
+            else
+            {
+                frameIndex = GetFrameIndex();
+            }
+        }
         if (playingFrameIndex != frameIndex)
         {
             playingFrameIndex = frameIndex;
@@ -77,5 +106,10 @@ public class GPUSkinningPlayer
         }
 
         time += timeDelta;
+    }
+
+    private int GetFrameIndex()
+    {
+        return (int)((time * playingClip.fps) % (playingClip.length * playingClip.fps));
     }
 }

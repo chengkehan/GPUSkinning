@@ -194,6 +194,9 @@ public class GPUSkinningSamplerEditor : Editor
                     }
                     GetLastGUIRect(ref interactionRect);
                     Interaction(interactionRect);
+
+                    EditorGUI.ProgressBar(new Rect(interactionRect.x, interactionRect.y + interactionRect.height, interactionRect.width, 5), preview.player.NormalizedTime, string.Empty);
+
                     GUILayout.FlexibleSpace();
                 }
                 EditorGUILayout.EndHorizontal();
@@ -279,12 +282,23 @@ public class GPUSkinningSamplerEditor : Editor
         EditorGUILayout.BeginHorizontal();
         {
             EditorGUILayout.Space();
+            EditorGUI.BeginChangeCheck();
             previewClipIndex = EditorGUILayout.Popup(string.Empty, previewClipIndex, options);
+            if(EditorGUI.EndChangeCheck())
+            {
+                preview.Play(options[previewClipIndex]);
+            }
+            if (anim.clips[previewClipIndex].wrapMode == GPUSkinningWrapMode.Once)
+            {
+                if (GUILayout.Button("Play", GUILayout.Width(50)))
+                {
+                    preview.Play(options[previewClipIndex]);
+                }
+            }
             EditorGUILayout.Space();
         }
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
-        preview.Play(options[previewClipIndex]);
     }
 
     private void AnimClipsGUI()

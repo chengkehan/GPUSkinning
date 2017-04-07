@@ -127,7 +127,14 @@ public class GPUSkinningSampler : MonoBehaviour
 			return;
 		}
 
-		if(rootBoneTransform == null)
+        int numFrames = (int)(gpuSkinningClip.fps * gpuSkinningClip.length);
+        if(numFrames == 0)
+        {
+            isSampling = false;
+            return;
+        }
+
+        if (rootBoneTransform == null)
 		{
 			ShowDialog("Missing RootBoneTransform");
 			return;
@@ -192,7 +199,7 @@ public class GPUSkinningSampler : MonoBehaviour
         gpuSkinningClip.fps = (int)animClip.frameRate;
         gpuSkinningClip.length = animClip.length;
         gpuSkinningClip.wrapMode = wrapModes[samplingClipIndex];
-        gpuSkinningClip.frames = new GPUSkinningFrame[(int)(gpuSkinningClip.fps * gpuSkinningClip.length)];
+        gpuSkinningClip.frames = new GPUSkinningFrame[numFrames];
 
         if(gpuSkinningAnimation.clips == null)
         {

@@ -11,7 +11,7 @@ public class GPUSkinningPreview : MonoBehaviour
 
     public string clipName = null;
 
-    private GPUSkinningPlayer player = null;
+    public GPUSkinningPlayer player = null;
 
     public void Init()
     {
