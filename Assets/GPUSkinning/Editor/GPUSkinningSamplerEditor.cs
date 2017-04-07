@@ -116,14 +116,12 @@ public class GPUSkinningSamplerEditor : Editor
 
 				if(sampler.isSampling)
 				{
-					Rect rect = GUILayoutUtility.GetLastRect();
-					EditorGUI.ProgressBar(new Rect(rect.x, rect.y + rect.height+5, rect.width, 20), (float)(sampler.samplingFrameIndex+1) / sampler.samplingTotalFrams, "Sampling");
-					EditorGUILayout.Space();
-					EditorGUILayout.Space();
-					EditorGUILayout.Space();
-					EditorGUILayout.Space();
-					EditorGUILayout.Space();
+                    EditorUtility.DisplayProgressBar("Sampling", sampler.animClip.name, (float)(sampler.samplingFrameIndex + 1) / sampler.samplingTotalFrams);
 				}
+                else
+                {
+                    EditorUtility.ClearProgressBar();
+                }
 			}
 		}
 		EndBox();

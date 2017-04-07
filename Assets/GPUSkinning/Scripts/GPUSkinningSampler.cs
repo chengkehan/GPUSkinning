@@ -285,7 +285,6 @@ public class GPUSkinningSampler : MonoBehaviour
 
         if (samplingFrameIndex >= totalFrams)
         {
-            ShowDialog("Sampling Complete");
             isSampling = false;
 
             string savePath = null;
