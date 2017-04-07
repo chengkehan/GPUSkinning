@@ -288,10 +288,20 @@ public class GPUSkinningSampler : MonoBehaviour
             ShowDialog("Sampling Complete");
             isSampling = false;
 
-			string savePath = EditorUtility.SaveFolderPanel("GPUSkinning Sampler Save", GetUserPreferDir(), animName);
+            string savePath = null;
+            if (anim == null)
+            {
+                savePath = EditorUtility.SaveFolderPanel("GPUSkinning Sampler Save", GetUserPreferDir(), animName);
+            }
+            else
+            {
+                string animPath = AssetDatabase.GetAssetPath(anim);
+                savePath = new FileInfo(animPath).Directory.FullName.Replace('\\', '/');
+            }
+
 			if(!string.IsNullOrEmpty(savePath))
 			{
-				if(!savePath.Contains(Application.dataPath))
+				if(!savePath.Contains(Application.dataPath.Replace('\\', '/')))
 				{
 					ShowDialog("Must be select directory in project");
 				}
