@@ -127,7 +127,7 @@ public class GPUSkinningSampler : MonoBehaviour
 			return;
 		}
 
-        int numFrames = (int)(gpuSkinningClip.fps * gpuSkinningClip.length);
+        int numFrames = (int)(animClip.frameRate * animClip.length);
         if(numFrames == 0)
         {
             isSampling = false;
@@ -374,17 +374,20 @@ public class GPUSkinningSampler : MonoBehaviour
                     WriteTempData(TEMP_SAVED_ANIM_PATH, savedAnimPath);
                     anim = gpuSkinningAnimation;
 
-                    Mesh newMesh = CreateNewMesh();
-                    if(savedMesh != null)
+                    if (samplingClipIndex == 0)
                     {
-                        newMesh.bounds = savedMesh.bounds;
-                    }
-					string savedMeshPath = dir + "/GPUSKinning_Mesh_" + animName + ".asset";
-					AssetDatabase.CreateAsset(newMesh, savedMeshPath);
-                    WriteTempData(TEMP_SAVED_MESH_PATH, savedMeshPath);
-                    savedMesh = newMesh;
+                        Mesh newMesh = CreateNewMesh();
+                        if (savedMesh != null)
+                        {
+                            newMesh.bounds = savedMesh.bounds;
+                        }
+                        string savedMeshPath = dir + "/GPUSKinning_Mesh_" + animName + ".asset";
+                        AssetDatabase.CreateAsset(newMesh, savedMeshPath);
+                        WriteTempData(TEMP_SAVED_MESH_PATH, savedMeshPath);
+                        savedMesh = newMesh;
 
-					CreateShaderAndMaterial(dir);
+                        CreateShaderAndMaterial(dir);
+                    }
 
 					AssetDatabase.Refresh();
 					AssetDatabase.SaveAssets();
