@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using System.Reflection;
 using System.Collections;
+using System.Collections.Generic;
 
 [CustomEditor(typeof(GPUSkinningSampler))]
 public class GPUSkinningSamplerEditor : Editor 
@@ -101,18 +103,16 @@ public class GPUSkinningSamplerEditor : Editor
 			{
                 DestroyPreview();
                 EditorApplication.isPlaying = true;
-			}
+            }
 
 			if(Application.isPlaying)
 			{
 				if(GUILayout.Button("Step2: Start Sample"))
 				{
                     DestroyPreview();
-                    if (sampler != null)
-					{
-                        sampler.BeginSample();
-						sampler.StartSample();
-					}
+                    LockInspector(true);
+                    sampler.BeginSample();
+					sampler.StartSample();
 				}
 			}
 		}
@@ -500,12 +500,26 @@ public class GPUSkinningSamplerEditor : Editor
                 sampler.EndSample();
                 EditorApplication.isPlaying = false;
                 EditorUtility.ClearProgressBar();
+                LockInspector(false);
             }
         }
         
         if (sampler.isSampling)
         {
-            EditorUtility.DisplayProgressBar("Sampling", sampler.animClip.name, (float)(sampler.samplingFrameIndex + 1) / sampler.samplingTotalFrams);
+            string msg = sampler.animClip.name + "(" + (sampler.samplingClipIndex + 1) + "/" + sampler.animClips.Length +")";
+            EditorUtility.DisplayProgressBar("Sampling, DONOT stop playing", msg, (float)(sampler.samplingFrameIndex + 1) / sampler.samplingTotalFrams);
+        }
+    }
+
+    private void LockInspector(bool isLocked)
+    {
+        System.Type type = Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.InspectorWindow");
+        FieldInfo field = type.GetField("m_AllInspectors", BindingFlags.Static | BindingFlags.NonPublic);
+        System.Collections.ArrayList windows = new System.Collections.ArrayList(field.GetValue(null) as System.Collections.ICollection);
+        foreach (var window in windows)
+        {
+            PropertyInfo property = type.GetProperty("isLocked");
+            property.SetValue(window, isLocked, null);
         }
     }
 
@@ -614,6 +628,7 @@ public class GPUSkinningSamplerEditor : Editor
 	private void OnDestroy()
     {
         EditorApplication.update -= UpdateHandler;
+        EditorUtility.ClearProgressBar();
         DestroyPreview();
 	}
 
