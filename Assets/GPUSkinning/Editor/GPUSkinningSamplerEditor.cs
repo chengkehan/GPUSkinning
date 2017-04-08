@@ -53,13 +53,20 @@ public class GPUSkinningSamplerEditor : Editor
 			return;
 		}
 
-		if(sampler.anim != null)
-		{
-			sampler.animName = sampler.anim.name;
-		}
+        OnGUI_Sampler(sampler);
 
-		BeginBox();
-		{
+        OnGUI_Preview(sampler);
+
+        if (preview != null)
+        {
+            Repaint();
+        }
+	}
+
+    private void OnGUI_Sampler(GPUSkinningSampler sampler)
+    {
+        BeginBox();
+        {
             EditorGUILayout.PropertyField(serializedObject.FindProperty("animName"), new GUIContent("Animation Name"));
 
             GUI.enabled = false;
@@ -97,51 +104,103 @@ public class GPUSkinningSamplerEditor : Editor
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("rootBoneTransform"), new GUIContent("Root Bone"));
 
-            AnimClipsGUI();
+            OnGUI_AnimClips();
 
             if (GUILayout.Button("Step1: Play Scene"))
-			{
+            {
                 DestroyPreview();
                 EditorApplication.isPlaying = true;
             }
 
-			if(Application.isPlaying)
-			{
-				if(GUILayout.Button("Step2: Start Sample"))
-				{
+            if (Application.isPlaying)
+            {
+                if (GUILayout.Button("Step2: Start Sample"))
+                {
                     DestroyPreview();
                     LockInspector(true);
                     sampler.BeginSample();
-					sampler.StartSample();
-				}
-			}
-		}
-		EndBox();
+                    sampler.StartSample();
+                }
+            }
+        }
+        EndBox();
+    }
 
-		BeginBox();
-		{
-			if(GUILayout.Button("Preview/Edit"))
-			{
+    private void OnGUI_AnimClips()
+    {
+        BeginBox();
+        {
+            EditorGUILayout.PrefixLabel("Sample Clips");
+
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("updateOrNew"), new GUIContent("Update Or New"));
+
+            int no = serializedObject.FindProperty("animClips.Array.size").intValue;
+            int no2 = serializedObject.FindProperty("wrapModes.Array.size").intValue;
+            int no3 = serializedObject.FindProperty("isSelected.Array.size").intValue;
+            int c = EditorGUILayout.IntField("Size", no);
+            if (c != no)
+            {
+                serializedObject.FindProperty("animClips.Array.size").intValue = c;
+            }
+            if (c != no2)
+            {
+                serializedObject.FindProperty("wrapModes.Array.size").intValue = c;
+            }
+            if (c != no3)
+            {
+                serializedObject.FindProperty("isSelected.Array.size").intValue = c;
+            }
+
+            for (int i = 0; i < no; i++)
+            {
+                var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
+                var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
+                var prop3 = serializedObject.FindProperty(string.Format("isSelected.Array.data[{0}]", i));
+                if (prop != null)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        EditorGUILayout.PropertyField(prop3);
+                        EditorGUILayout.PropertyField(prop2, new GUIContent());
+                        EditorGUILayout.PropertyField(prop, new GUIContent());
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
+        }
+        EndBox();
+    }
+
+    private void OnGUI_Preview(GPUSkinningSampler sampler)
+    {
+        BeginBox();
+        {
+            if (GUILayout.Button("Preview/Edit"))
+            {
                 anim = sampler.anim;
                 mesh = sampler.savedMesh;
                 mtrl = sampler.savedMtrl;
-                if(mesh != null)
+                if (mesh != null)
                 {
                     bounds = mesh.bounds;
                 }
-				if(anim == null || mesh == null || mtrl == null)
-				{
-					EditorUtility.DisplayDialog("GPUSkinning", "Missing Sampling Resources", "OK");
-				}
-				else
-				{
-					if(rt == null)
-					{
+                if (anim == null || mesh == null || mtrl == null)
+                {
+                    EditorUtility.DisplayDialog("GPUSkinning", "Missing Sampling Resources", "OK");
+                }
+                else
+                {
+                    if (rt == null)
+                    {
                         linearToGammeMtrl = new Material(Shader.Find("GPUSkinning/GPUSkinningSamplerEditor_LinearToGamma"));
                         linearToGammeMtrl.hideFlags = HideFlags.HideAndDontSave;
 
                         rt = new RenderTexture(1024, 1024, 32, RenderTextureFormat.Default, RenderTextureReadWrite.Default);
-						rt.hideFlags = HideFlags.HideAndDontSave;
+                        rt.hideFlags = HideFlags.HideAndDontSave;
 
                         if (PlayerSettings.colorSpace == ColorSpace.Linear)
                         {
@@ -150,9 +209,9 @@ public class GPUSkinningSamplerEditor : Editor
                         }
 
                         GameObject camGo = new GameObject("GPUSkinningSamplerEditor_CameraGo");
-						camGo.hideFlags = HideFlags.HideAndDontSave;
-						cam = camGo.AddComponent<Camera>();
-						cam.hideFlags = HideFlags.HideAndDontSave;
+                        camGo.hideFlags = HideFlags.HideAndDontSave;
+                        cam = camGo.AddComponent<Camera>();
+                        cam.hideFlags = HideFlags.HideAndDontSave;
                         cam.farClipPlane = 100;
                         cam.targetTexture = rt;
                         cam.enabled = false;
@@ -171,8 +230,8 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.clipName = anim.clips == null || anim.clips.Length == 0 ? null : anim.clips[previewClipIndex].name;
                         preview.Init();
                     }
-				}
-			}
+                }
+            }
             GetLastGUIRect(ref previewEditBtnRect);
 
             if (rt != null)
@@ -193,7 +252,7 @@ public class GPUSkinningSamplerEditor : Editor
                         GUILayout.Box(rt, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
                     }
                     GetLastGUIRect(ref interactionRect);
-                    Interaction(interactionRect);
+                    PreviewInteraction(interactionRect);
 
                     EditorGUI.ProgressBar(new Rect(interactionRect.x, interactionRect.y + interactionRect.height, interactionRect.width, 5), preview.player.NormalizedTime, string.Empty);
 
@@ -201,7 +260,7 @@ public class GPUSkinningSamplerEditor : Editor
                 }
                 EditorGUILayout.EndHorizontal();
 
-                PreviewClipsSelectionGUI();
+                OnGUI_PreviewClipsOptions();
 
                 EditorGUILayout.BeginHorizontal();
                 {
@@ -267,18 +326,13 @@ public class GPUSkinningSamplerEditor : Editor
                 }
                 EditorGUILayout.EndHorizontal();
             }
-		}
-		EndBox();
+        }
+        EndBox();
 
         serializedObject.ApplyModifiedProperties();
+    }
 
-        if (preview != null)
-        {
-            Repaint();
-        }
-	}
-
-    private void PreviewClipsSelectionGUI()
+    private void OnGUI_PreviewClipsOptions()
     {
         if(anim.clips == null || anim.clips.Length == 0 || preview == null)
         {
@@ -314,56 +368,7 @@ public class GPUSkinningSamplerEditor : Editor
         EditorGUILayout.Space();
     }
 
-    private void AnimClipsGUI()
-    {
-        BeginBox();
-        {
-            EditorGUILayout.PrefixLabel("Sample Clips");
-
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("updateOrNew"), new GUIContent("Update Or New"));
-
-            int no = serializedObject.FindProperty("animClips.Array.size").intValue;
-            int no2 = serializedObject.FindProperty("wrapModes.Array.size").intValue;
-            int no3 = serializedObject.FindProperty("isSelected.Array.size").intValue;
-            int c = EditorGUILayout.IntField("Size", no);
-            if (c != no)
-            {
-                serializedObject.FindProperty("animClips.Array.size").intValue = c;
-            }
-            if(c != no2)
-            {
-                serializedObject.FindProperty("wrapModes.Array.size").intValue = c;
-            }
-            if(c != no3)
-            {
-                serializedObject.FindProperty("isSelected.Array.size").intValue = c;
-            }
-
-            for (int i = 0; i < no; i++)
-            {
-                var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
-                var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
-                var prop3 = serializedObject.FindProperty(string.Format("isSelected.Array.data[{0}]", i));
-                if (prop != null)
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    {
-                        EditorGUILayout.Space();
-                        EditorGUILayout.Space();
-                        EditorGUILayout.Space();
-                        EditorGUILayout.Space();
-                        EditorGUILayout.PropertyField(prop3);
-                        EditorGUILayout.PropertyField(prop2, new GUIContent());
-                        EditorGUILayout.PropertyField(prop, new GUIContent());
-                    }
-                    EditorGUILayout.EndHorizontal();
-                }
-            }
-        }
-        EndBox();
-    }
-
-    private void Interaction(Rect rect)
+    private void PreviewInteraction(Rect rect)
     {
         if (cam != null)
         {
@@ -411,7 +416,7 @@ public class GPUSkinningSamplerEditor : Editor
         }
     }
 
-    private void DrawArrows()
+    private void PreviewDrawArrows()
     {
         if(arrowGos == null)
         {
@@ -456,7 +461,7 @@ public class GPUSkinningSamplerEditor : Editor
         }
     }
 
-    private void DrawBounds()
+    private void PreviewDrawBounds()
     {
         if(boundsGos == null)
         {
@@ -529,8 +534,8 @@ public class GPUSkinningSamplerEditor : Editor
         
         if(preview != null)
         {
-            DrawBounds();
-            DrawArrows();
+            PreviewDrawBounds();
+            PreviewDrawArrows();
 
             preview.DoUpdate(deltaTime);
             cam.Render();
