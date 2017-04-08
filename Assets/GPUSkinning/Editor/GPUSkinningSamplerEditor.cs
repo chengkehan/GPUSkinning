@@ -211,7 +211,17 @@ public class GPUSkinningSamplerEditor : Editor
                         EditorGUILayout.Space();
                         EditorGUILayout.BeginVertical();
                         {
-                            GUILayout.Label("Bounds");
+                            EditorGUILayout.BeginHorizontal();
+                            {
+                                GUILayout.Label("Bounds");
+                                GUILayout.FlexibleSpace();
+                                if (GUILayout.Button("Calculate Auto", GUILayout.Width(100)))
+                                {
+
+                                }
+                                GUILayout.FlexibleSpace();
+                            }
+                            EditorGUILayout.EndHorizontal();
                             EditorGUILayout.Space();
 
                             isBoundsVisible = EditorGUILayout.Toggle("Visible", isBoundsVisible);
@@ -262,7 +272,10 @@ public class GPUSkinningSamplerEditor : Editor
 
         serializedObject.ApplyModifiedProperties();
 
-        Repaint();
+        if (preview != null)
+        {
+            Repaint();
+        }
 	}
 
     private void PreviewClipsSelectionGUI()
