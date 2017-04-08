@@ -45,6 +45,8 @@ public class GPUSkinningSamplerEditor : Editor
 
     private Material[] arrowMtrls = null;
 
+    private float boundsAutoExt = 0.1f;
+
     public override void OnInspectorGUI ()
 	{
 		GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -273,12 +275,11 @@ public class GPUSkinningSamplerEditor : Editor
                             EditorGUILayout.BeginHorizontal();
                             {
                                 GUILayout.Label("Bounds");
-                                GUILayout.FlexibleSpace();
+                                boundsAutoExt = GUILayout.HorizontalSlider(boundsAutoExt, 0.0f, 1.0f);
                                 if (GUILayout.Button("Calculate Auto", GUILayout.Width(100)))
                                 {
-
+                                    CalculateBoundsAuto();
                                 }
-                                GUILayout.FlexibleSpace();
                             }
                             EditorGUILayout.EndHorizontal();
                             EditorGUILayout.Space();
@@ -292,15 +293,15 @@ public class GPUSkinningSamplerEditor : Editor
                             Vector3 boundsExts = bounds.extents;
                             {
                                 GUI.color = Color.red;
-                                boundsCenter.x = EditorGUILayout.Slider("center.x", boundsCenter.x, -10, 10);
-                                boundsExts.x = EditorGUILayout.Slider("extends.x", boundsExts.x, 0.1f, 10);
+                                boundsCenter.x = EditorGUILayout.Slider("center.x", boundsCenter.x, -5, 5);
+                                boundsExts.x = EditorGUILayout.Slider("extends.x", boundsExts.x, 0.1f, 5);
 
                                 GUI.color = Color.green;
-                                boundsCenter.y = EditorGUILayout.Slider("center.y", boundsCenter.y, -10, 10);
-                                boundsExts.y = EditorGUILayout.Slider("extends.y", boundsExts.y, 0.1f, 10);
+                                boundsCenter.y = EditorGUILayout.Slider("center.y", boundsCenter.y, -5, 5);
+                                boundsExts.y = EditorGUILayout.Slider("extends.y", boundsExts.y, 0.1f, 5);
                                 GUI.color = Color.blue;
-                                boundsCenter.z = EditorGUILayout.Slider("center.z", boundsCenter.z, -10, 10);
-                                boundsExts.z = EditorGUILayout.Slider("extends.z", boundsExts.z, 0.1f, 10);
+                                boundsCenter.z = EditorGUILayout.Slider("center.z", boundsCenter.z, -5, 5);
+                                boundsExts.z = EditorGUILayout.Slider("extends.z", boundsExts.z, 0.1f, 5);
                             }
                             bounds.center = boundsCenter;
                             bounds.extents = boundsExts;
@@ -526,6 +527,28 @@ public class GPUSkinningSamplerEditor : Editor
                 boundsGo.SetActive(isBoundsVisible);
             }
         }
+    }
+
+    private void CalculateBoundsAuto()
+    {
+        Matrix4x4[] matrices = anim.clips[0].frames[0].matrices;
+        GPUSkinningBone[] bones = anim.bones;
+        Vector3 min = Vector3.one * 9999;
+        Vector3 max = min * -1;
+        for(int i = 0; i < bones.Length; ++i)
+        {
+            Vector4 pos = (matrices[i] * bones[i].bindpose.inverse) * new Vector4(0, 0, 0, 1);
+            min.x = Mathf.Min(min.x, pos.x);
+            min.y = Mathf.Min(min.y, pos.y);
+            min.z = Mathf.Min(min.z, pos.z);
+            max.x = Mathf.Max(max.x, pos.x);
+            max.y = Mathf.Max(max.y, pos.y);
+            max.z = Mathf.Max(max.z, pos.z);
+        }
+        min -= Vector3.one * boundsAutoExt;
+        max += Vector3.one * boundsAutoExt;
+        bounds.min = min;
+        bounds.max = max;
     }
 
     private void UpdateHandler()
