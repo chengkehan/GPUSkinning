@@ -81,5 +81,11 @@ public class GPUSkinningPlayerMono : MonoBehaviour
             DestroyImmediate(newMtrl);
             newMtrl = null;
         }
+
+        if(player != null)
+        {
+            player.Destroy();
+            player = null;
+        }
     }
 }

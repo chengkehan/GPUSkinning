@@ -19,4 +19,21 @@ public class GPUSkinningBone
 	public string name = null;
 
     public bool isExposed = false;
+
+    [System.NonSerialized]
+    private bool bindposeInvInit = false;
+    [System.NonSerialized]
+    private Matrix4x4 bindposeInv;
+    public Matrix4x4 BindposeInv
+    {
+        get
+        {
+            if(!bindposeInvInit)
+            {
+                bindposeInv = bindpose.inverse;
+                bindposeInvInit = true;
+            }
+            return bindposeInv;
+        }
+    }
 }
