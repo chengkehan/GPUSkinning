@@ -42,11 +42,19 @@ public class GPUSkinningPlayer
         if (mr == null)
         {
             mr = go.AddComponent<MeshRenderer>();
+            if(!Application.isPlaying)
+            {
+                mr.hideFlags = HideFlags.DontSave;
+            }
         }
         mf = go.GetComponent<MeshFilter>();
         if (mf == null)
         {
             mf = go.AddComponent<MeshFilter>();
+            if(!Application.isPlaying)
+            {
+                mf.hideFlags = HideFlags.DontSave;
+            }
         }
 
         mr.sharedMaterial = mtrl;
