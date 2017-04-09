@@ -1,4 +1,4 @@
-Shader "GPUSkinning/GPUSkinning_Specular_AdamAnim"
+Shader "GPUSkinning/GPUSkinning_Specular_MannequinAnim"
 {
     Properties
     {
@@ -93,7 +93,7 @@ ENDCG
  
         #include "Assets/GPUSkinning/Resources/GPUSkinningSurface.cginc"
 
-        uniform float4x4 _GPUSkinning_MatrixArray[33];
+        uniform float4x4 _GPUSkinning_MatrixArray[68];
 
         void myvert (inout appdata_vert v, out Input o) 
         {
