@@ -14,7 +14,7 @@ public class Mannequin_Player : MonoBehaviour
 	void Start ()
     {
         player = new GPUSkinningPlayer(gameObject, anim, mesh, new Material(mtrl));
-		player.Play("Unreal Take");
+		player.Play("ThirdPersonIdle");
 	}
 
 	void Update ()
