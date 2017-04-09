@@ -49,6 +49,8 @@ public class GPUSkinningSamplerEditor : Editor
 
     private bool isBoundsFoldout = true;
 
+    private bool isJointsFoldout = true;
+
     public override void OnInspectorGUI ()
 	{
 		GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -208,7 +210,7 @@ public class GPUSkinningSamplerEditor : Editor
 
                         if (PlayerSettings.colorSpace == ColorSpace.Linear)
                         {
-                            rtGamma = new RenderTexture(1024, 1024, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Linear);
+                            rtGamma = new RenderTexture(512, 512, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Linear);
                             rtGamma.hideFlags = HideFlags.HideAndDontSave;
                         }
 
@@ -240,7 +242,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             if (rt != null)
             {
-                int previewRectSize = (int)(previewEditBtnRect.width * 0.9f);
+                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 512);
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.FlexibleSpace();
@@ -267,6 +269,10 @@ public class GPUSkinningSamplerEditor : Editor
                 OnGUI_PreviewClipsOptions();
 
                 OnGUI_EditBounds();
+
+                EditorGUILayout.Space();
+
+                OnGUI_Joints();
             }
         }
         EndBox();
@@ -351,6 +357,68 @@ public class GPUSkinningSamplerEditor : Editor
             EditorGUILayout.Space();
         }
         EditorGUILayout.EndHorizontal();
+    }
+
+    private void OnGUI_Joints()
+    {
+        EditorGUILayout.BeginHorizontal();
+        {
+            EditorGUILayout.Space();
+            BeginBox();
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.BeginVertical();
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        isJointsFoldout = EditorGUILayout.Foldout(isJointsFoldout, isJointsFoldout ? string.Empty : "Joints");
+                        SetEditorPrefsBool("isJointsFoldout", isJointsFoldout);
+                        GUILayout.FlexibleSpace();
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    if (isJointsFoldout)
+                    {
+                        OnGUI_Bone(anim.bones[anim.rootBoneIndex], 0);
+                    }
+                }
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space();
+            }
+            EndBox();
+            EditorGUILayout.Space();
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private void OnGUI_Bone(GPUSkinningBone bone, int indentLevel)
+    {
+        GUILayout.BeginHorizontal();
+        {
+            for (int i = 0; i < indentLevel; ++i)
+            {
+                GUILayout.Space(20);
+            }
+
+            EditorGUI.BeginChangeCheck();
+            bool isExposed = GUILayout.Toggle(bone.isExposed, bone.name);
+            if(EditorGUI.EndChangeCheck())
+            {
+                bone.isExposed = isExposed;
+                EditorUtility.SetDirty(anim);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+        }
+        GUILayout.EndHorizontal();
+
+        int numChildren = bone.childrenBonesIndices == null ? 0 : bone.childrenBonesIndices.Length;
+        for (int i = 0; i < numChildren; ++i)
+        {
+            OnGUI_Bone(anim.bones[bone.childrenBonesIndices[i]], indentLevel + 1);
+        }
     }
 
     private void OnGUI_PreviewClipsOptions()
@@ -724,6 +792,7 @@ public class GPUSkinningSamplerEditor : Editor
         }
 
         isBoundsFoldout = GetEditorPrefsBool("isBoundsFoldout", true);
+        isJointsFoldout = GetEditorPrefsBool("isJointsFoldout", true);
     }
 
     private bool GetEditorPrefsBool(string key, bool defaultValue)
