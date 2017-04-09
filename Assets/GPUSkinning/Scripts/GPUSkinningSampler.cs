@@ -72,6 +72,7 @@ public class GPUSkinningSampler : MonoBehaviour
     public bool updateOrNew = true;
 
 	private Animator animator = null;
+    private RuntimeAnimatorController runtimeAnimatorController = null;
 
 	private SkinnedMeshRenderer smr = null;
 
@@ -219,7 +220,26 @@ public class GPUSkinningSampler : MonoBehaviour
             }
         }
 
+        SetCurrentAnimationClip();
+
         isSampling = true;
+    }
+
+    private void SetCurrentAnimationClip()
+    {
+        AnimatorOverrideController animatorOverrideController = new AnimatorOverrideController();
+        AnimationClip[] clips = runtimeAnimatorController.animationClips;
+        AnimationClipPair[] pairs = new AnimationClipPair[clips.Length];
+        for(int i = 0; i < clips.Length; ++i)
+        {
+            AnimationClipPair pair = new AnimationClipPair();
+            pairs[i] = pair;
+            pair.originalClip = clips[i];
+            pair.overrideClip = animClip;
+        }
+        animatorOverrideController.runtimeAnimatorController = runtimeAnimatorController;
+        animatorOverrideController.clips = pairs;
+        animator.runtimeAnimatorController = animatorOverrideController;
     }
 
     private Mesh CreateNewMesh()
@@ -328,6 +348,19 @@ public class GPUSkinningSampler : MonoBehaviour
 			ShowDialog("Cannot find Animator Component");
 			return;
 		}
+        if(animator.runtimeAnimatorController == null)
+        {
+            DestroyImmediate(this);
+            ShowDialog("Missing RuntimeAnimatorController");
+            return;
+        }
+        if(animator.runtimeAnimatorController is AnimatorOverrideController)
+        {
+            DestroyImmediate(this);
+            ShowDialog("RuntimeAnimatorController could not be a AnimatorOverrideController");
+            return;
+        }
+        runtimeAnimatorController = animator.runtimeAnimatorController;
 	}
 
 	private void Update()
