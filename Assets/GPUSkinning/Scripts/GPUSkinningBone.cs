@@ -17,4 +17,6 @@ public class GPUSkinningBone
 	public Matrix4x4 animationMatrix;
 
 	public string name = null;
+
+    public bool isExposed = false;
 }
