@@ -47,6 +47,8 @@ public class GPUSkinningSamplerEditor : Editor
 
     private float boundsAutoExt = 0.1f;
 
+    private bool isBoundsFoldout = true;
+
     public override void OnInspectorGUI ()
 	{
 		GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -264,73 +266,91 @@ public class GPUSkinningSamplerEditor : Editor
 
                 OnGUI_PreviewClipsOptions();
 
-                EditorGUILayout.BeginHorizontal();
-                {
-                    EditorGUILayout.Space();
-                    BeginBox();
-                    {
-                        EditorGUILayout.Space();
-                        EditorGUILayout.BeginVertical();
-                        {
-                            EditorGUILayout.BeginHorizontal();
-                            {
-                                GUILayout.Label("Bounds");
-                                boundsAutoExt = GUILayout.HorizontalSlider(boundsAutoExt, 0.0f, 1.0f);
-                                if (GUILayout.Button("Calculate Auto", GUILayout.Width(100)))
-                                {
-                                    CalculateBoundsAuto();
-                                }
-                            }
-                            EditorGUILayout.EndHorizontal();
-                            EditorGUILayout.Space();
-
-                            isBoundsVisible = EditorGUILayout.Toggle("Visible", isBoundsVisible);
-
-                            EditorGUILayout.Space();
-
-                            Color tempGUIColor = GUI.color;
-                            Vector3 boundsCenter = bounds.center;
-                            Vector3 boundsExts = bounds.extents;
-                            {
-                                GUI.color = Color.red;
-                                boundsCenter.x = EditorGUILayout.Slider("center.x", boundsCenter.x, -5, 5);
-                                boundsExts.x = EditorGUILayout.Slider("extends.x", boundsExts.x, 0.1f, 5);
-
-                                GUI.color = Color.green;
-                                boundsCenter.y = EditorGUILayout.Slider("center.y", boundsCenter.y, -5, 5);
-                                boundsExts.y = EditorGUILayout.Slider("extends.y", boundsExts.y, 0.1f, 5);
-                                GUI.color = Color.blue;
-                                boundsCenter.z = EditorGUILayout.Slider("center.z", boundsCenter.z, -5, 5);
-                                boundsExts.z = EditorGUILayout.Slider("extends.z", boundsExts.z, 0.1f, 5);
-                            }
-                            bounds.center = boundsCenter;
-                            bounds.extents = boundsExts;
-                            GUI.color = tempGUIColor;
-
-                            EditorGUILayout.Space();
-
-                            if (GUILayout.Button("Apply"))
-                            {
-                                mesh.bounds = bounds;
-                                anim.bounds = bounds;
-                                EditorUtility.SetDirty(mesh);
-                                EditorUtility.SetDirty(anim);
-                                AssetDatabase.SaveAssets();
-                                AssetDatabase.Refresh();
-                            }
-                        }
-                        EditorGUILayout.EndVertical();
-                        EditorGUILayout.Space();
-                    }
-                    EndBox();
-                    EditorGUILayout.Space();
-                }
-                EditorGUILayout.EndHorizontal();
+                OnGUI_EditBounds();
             }
         }
         EndBox();
 
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private void OnGUI_EditBounds()
+    {
+        EditorGUILayout.BeginHorizontal();
+        {
+            EditorGUILayout.Space();
+            BeginBox();
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.BeginVertical();
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        isBoundsFoldout = EditorGUILayout.Foldout(isBoundsFoldout, isBoundsFoldout ? string.Empty : "Bounds");
+                        SetEditorPrefsBool("isBoundsFoldout", isBoundsFoldout);
+                        GUILayout.FlexibleSpace();
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    if (isBoundsFoldout)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        {
+                            GUILayout.Label("Bounds");
+                            boundsAutoExt = GUILayout.HorizontalSlider(boundsAutoExt, 0.0f, 1.0f);
+                            if (GUILayout.Button("Calculate Auto", GUILayout.Width(100)))
+                            {
+                                CalculateBoundsAuto();
+                            }
+                        }
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.Space();
+
+                        isBoundsVisible = EditorGUILayout.Toggle("Visible", isBoundsVisible);
+
+                        EditorGUILayout.Space();
+
+                        Color tempGUIColor = GUI.color;
+                        Vector3 boundsCenter = bounds.center;
+                        Vector3 boundsExts = bounds.extents;
+                        {
+                            GUI.color = Color.red;
+                            boundsCenter.x = EditorGUILayout.Slider("center.x", boundsCenter.x, -5, 5);
+                            boundsExts.x = EditorGUILayout.Slider("extends.x", boundsExts.x, 0.1f, 5);
+
+                            GUI.color = Color.green;
+                            boundsCenter.y = EditorGUILayout.Slider("center.y", boundsCenter.y, -5, 5);
+                            boundsExts.y = EditorGUILayout.Slider("extends.y", boundsExts.y, 0.1f, 5);
+                            GUI.color = Color.blue;
+                            boundsCenter.z = EditorGUILayout.Slider("center.z", boundsCenter.z, -5, 5);
+                            boundsExts.z = EditorGUILayout.Slider("extends.z", boundsExts.z, 0.1f, 5);
+                        }
+                        bounds.center = boundsCenter;
+                        bounds.extents = boundsExts;
+                        GUI.color = tempGUIColor;
+
+                        EditorGUILayout.Space();
+
+                        if (GUILayout.Button("Apply"))
+                        {
+                            mesh.bounds = bounds;
+                            anim.bounds = bounds;
+                            EditorUtility.SetDirty(mesh);
+                            EditorUtility.SetDirty(anim);
+                            AssetDatabase.SaveAssets();
+                            AssetDatabase.Refresh();
+                        }
+                    }
+                }
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space();
+            }
+            EndBox();
+            EditorGUILayout.Space();
+        }
+        EditorGUILayout.EndHorizontal();
     }
 
     private void OnGUI_PreviewClipsOptions()
@@ -702,6 +722,18 @@ public class GPUSkinningSamplerEditor : Editor
             GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_MTRL_PATH);
             GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_SHADER_PATH);
         }
+
+        isBoundsFoldout = GetEditorPrefsBool("isBoundsFoldout", true);
+    }
+
+    private bool GetEditorPrefsBool(string key, bool defaultValue)
+    {
+        return EditorPrefs.GetBool("GPUSkinningSamplerEditorPrefs_" + key, defaultValue);
+    }
+
+    private void SetEditorPrefsBool(string key, bool value)
+    {
+        EditorPrefs.SetBool("GPUSkinningSamplerEditorPrefs_" + key, value);
     }
 
 	private void OnDestroy()
