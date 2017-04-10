@@ -18,6 +18,8 @@ public class GPUSkinningBone
 
 	public string name = null;
 
+    public string guid = null; 
+
     public bool isExposed = false;
 
     [System.NonSerialized]

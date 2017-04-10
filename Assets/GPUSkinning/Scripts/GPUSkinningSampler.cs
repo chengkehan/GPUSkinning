@@ -181,7 +181,10 @@ public class GPUSkinningSampler : MonoBehaviour
 
 		List<GPUSkinningBone> bones_result = new List<GPUSkinningBone>();
 		CollectBones(bones_result, smr.bones, mesh.bindposes, null, rootBoneTransform, 0);
-		gpuSkinningAnimation.bones = bones_result.ToArray();
+        GPUSkinningBone[] newBones = bones_result.ToArray();
+        GenerateBonesGUID(newBones);
+        if (anim != null) RestoreCustomBoneData(anim.bones, newBones);
+        gpuSkinningAnimation.bones = newBones;
         gpuSkinningAnimation.rootBoneIndex = 0;
 
         int numClips = gpuSkinningAnimation.clips == null ? 0 : gpuSkinningAnimation.clips.Length;
@@ -223,6 +226,32 @@ public class GPUSkinningSampler : MonoBehaviour
         SetCurrentAnimationClip();
 
         isSampling = true;
+    }
+
+    private void RestoreCustomBoneData(GPUSkinningBone[] bonesOrig, GPUSkinningBone[] bonesNew)
+    {
+        for(int i = 0; i < bonesNew.Length; ++i)
+        {
+            for(int j = 0; j < bonesOrig.Length; ++j)
+            {
+                if(bonesNew[i].guid == bonesOrig[i].guid)
+                {
+                    bonesNew[i].isExposed = bonesOrig[i].isExposed;
+                    break;
+                }
+            }
+        }
+    }
+
+    private void GenerateBonesGUID(GPUSkinningBone[] bones)
+    {
+        int numBones = bones == null ? 0 : bones.Length;
+        for(int i = 0; i < numBones; ++i)
+        {
+            string boneHierarchyPath = GPUSkinningUtil.BoneHierarchyPath(anim, i);
+            string guid = GPUSkinningUtil.MD5(boneHierarchyPath);
+            bones[i].guid = guid;
+        }
     }
 
     private void SetCurrentAnimationClip()
