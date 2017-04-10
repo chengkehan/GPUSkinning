@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[ExecuteInEditMode]
 public class GPUSkinningPlayerMono : MonoBehaviour
 {
     [HideInInspector]
@@ -33,7 +34,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
             return;
         }
 
-        if(anim != null && mesh != null && mtrl != null)
+        if (anim != null && mesh != null && mtrl != null)
         {
             newMtrl = new Material(mtrl);
             if (!Application.isPlaying)
@@ -53,9 +54,9 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 #if UNITY_EDITOR
     public void Update_Editor(float deltaTime)
     {
-        if(player != null)
+        if(player != null && !Application.isPlaying)
         {
-            player.Update(deltaTime);
+            player.Update_Editor(deltaTime);
         }
     }
 
@@ -66,11 +67,30 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     }
 #endif
 
+    private void Start()
+    {
+        Init();
+#if UNITY_EDITOR
+        Update_Editor(0); 
+#endif
+    }
+
     private void Update()
     {
         if (player != null)
         {
+#if UNITY_EDITOR
+            if(Application.isPlaying)
+            {
+                player.Update(Time.deltaTime);
+            }
+            else
+            {
+                player.Update_Editor(0);
+            }
+#else
             player.Update(Time.deltaTime);
+#endif
         }
     }
 
@@ -80,12 +100,6 @@ public class GPUSkinningPlayerMono : MonoBehaviour
         {
             DestroyImmediate(newMtrl);
             newMtrl = null;
-        }
-
-        if(player != null)
-        {
-            player.Destroy();
-            player = null;
         }
     }
 }

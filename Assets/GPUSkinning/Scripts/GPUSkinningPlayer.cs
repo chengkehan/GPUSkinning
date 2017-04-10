@@ -24,7 +24,14 @@ public class GPUSkinningPlayer
 
     private int shaderPropID_GPUSkinning_MatrixArray = 0;
 
-    private List<Joint> joints = null;
+    private List<GPUSkinningPlayerJoint> joints = null;
+    public List<GPUSkinningPlayerJoint> Joints
+    {
+        get
+        {
+            return joints;
+        }
+    }
 
     public float NormalizedTime
     {
@@ -45,19 +52,11 @@ public class GPUSkinningPlayer
         if (mr == null)
         {
             mr = go.AddComponent<MeshRenderer>();
-            if(!Application.isPlaying)
-            {
-                mr.hideFlags = HideFlags.DontSave;
-            }
         }
         mf = go.GetComponent<MeshFilter>();
         if (mf == null)
         {
             mf = go.AddComponent<MeshFilter>();
-            if(!Application.isPlaying)
-            {
-                mf.hideFlags = HideFlags.DontSave;
-            }
         }
 
         mr.sharedMaterial = mtrl;
@@ -88,7 +87,19 @@ public class GPUSkinningPlayer
         }
     }
 
+#if UNITY_EDITOR
+    public void Update_Editor(float timeDelta)
+    {
+        Update_Internal(timeDelta, true);
+    }
+#endif
+
     public void Update(float timeDelta)
+    {
+        Update_Internal(timeDelta, false);
+    }
+
+    private void Update_Internal(float timeDelta, bool isEnforced)
     {
         if (playingClip == null)
         {
@@ -102,7 +113,7 @@ public class GPUSkinningPlayer
         }
         else
         {
-            if(time >= playingClip.length)
+            if (time >= playingClip.length)
             {
                 frameIndex = playingClip.frames.Length - 1;
             }
@@ -111,7 +122,7 @@ public class GPUSkinningPlayer
                 frameIndex = GetFrameIndex();
             }
         }
-        if (playingFrameIndex != frameIndex)
+        if (playingFrameIndex != frameIndex || isEnforced)
         {
             playingFrameIndex = frameIndex;
             GPUSkinningFrame frame = playingClip.frames[frameIndex];
@@ -120,20 +131,6 @@ public class GPUSkinningPlayer
         }
 
         time += timeDelta;
-    }
-
-    public void Destroy()
-    {
-        if(joints != null)
-        {
-            for(int i = 0; i < joints.Count; ++i)
-            {
-                Joint joint = joints[i];
-                joints[i] = null;
-                Object.DestroyImmediate(joint.transform.gameObject);
-            }
-            joints = null;
-        }
     }
 
     private int GetFrameIndex()
@@ -153,47 +150,104 @@ public class GPUSkinningPlayer
         int numJoints = joints.Count;
         for(int i = 0; i < numJoints; ++i)
         {
-            Joint joint = joints[i];
-            joint.transform.localPosition = (frame.matrices[joint.boneIndex] * bones[joint.boneIndex].BindposeInv).MultiplyPoint(Vector3.zero);
+            GPUSkinningPlayerJoint joint = joints[i];
+            if (joint.Transform != null)
+            {
+                joint.Transform.localPosition = (frame.matrices[joint.BoneIndex] * bones[joint.BoneIndex].BindposeInv).MultiplyPoint(Vector3.zero);
+            }
+            else
+            {
+                joints.RemoveAt(i);
+                --i;
+                --numJoints;
+            }
         }
     }
 
     private void CreateJoints()
     {
-        GPUSkinningBone[] bones = anim.bones;
-        int numBones = bones == null ? 0 : bones.Length;
-        for(int i = 0; i < numBones; ++i)
+        if (joints == null)
         {
-            GPUSkinningBone bone = bones[i];
-            if(bone.isExposed)
+            GPUSkinningPlayerJoint[] existingJoints = go.GetComponentsInChildren<GPUSkinningPlayerJoint>();
+
+            GPUSkinningBone[] bones = anim.bones;
+            int numBones = bones == null ? 0 : bones.Length;
+            for (int i = 0; i < numBones; ++i)
             {
-                if(joints == null)
+                GPUSkinningBone bone = bones[i];
+                if (bone.isExposed)
                 {
-                    joints = new List<Joint>();
+                    if (joints == null)
+                    {
+                        joints = new List<GPUSkinningPlayerJoint>();
+                    }
+
+                    bool inTheExistingJoints = false;
+                    if (existingJoints != null)
+                    {
+                        for (int j = 0; j < existingJoints.Length; ++j)
+                        {
+                            if(existingJoints[j] != null && existingJoints[j].BoneGUID == bone.guid)
+                            {
+                                existingJoints[j].Init(i, bone.guid);
+                                joints.Add(existingJoints[j]);
+                                existingJoints[j] = null;
+                                inTheExistingJoints = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(!inTheExistingJoints)
+                    {
+                        GameObject jointGo = new GameObject(bone.name);
+                        jointGo.transform.parent = go.transform;
+                        jointGo.transform.localPosition = Vector3.zero;
+                        jointGo.transform.localScale = Vector3.one;
+
+                        GPUSkinningPlayerJoint joint = jointGo.AddComponent<GPUSkinningPlayerJoint>();
+                        joints.Add(joint);
+                        joint.Init(i, bone.guid);
+                    }
                 }
+            }
 
-                Joint joint = new Joint();
-                joints.Add(joint);
-
-                joint.boneIndex = i;
-
-                GameObject jointGo = new GameObject(bone.name);
-                joint.transform = jointGo.transform;
-                joint.transform.parent = go.transform;
-                joint.transform.localPosition = Vector3.zero;
-                joint.transform.localScale = Vector3.one;
-                if(!Application.isPlaying)
+            if (!Application.isPlaying)
+            {
+#if UNITY_EDITOR
+                UnityEditor.EditorApplication.CallbackFunction DelayCall = null;
+                DelayCall = () => 
                 {
-                    jointGo.hideFlags = HideFlags.DontSave;
-                }
+                    UnityEditor.EditorApplication.delayCall -= DelayCall;
+                    DeleteInvalidJoints(existingJoints);
+                };
+                UnityEditor.EditorApplication.delayCall += DelayCall;
+#endif
+            }
+            else
+            {
+                DeleteInvalidJoints(existingJoints);
             }
         }
     }
 
-    private class Joint
+    private void DeleteInvalidJoints(GPUSkinningPlayerJoint[] joints)
     {
-        public int boneIndex = 0;
-
-        public Transform transform = null;
+        if (joints != null)
+        {
+            for (int i = 0; i < joints.Length; ++i)
+            {
+                if (joints[i] != null)
+                {
+                    for (int j = 0; j < joints[i].transform.childCount; ++j)
+                    {
+                        Transform child = joints[i].transform.GetChild(j);
+                        child.parent = go.transform;
+                        child.localPosition = Vector3.zero;
+                    }
+                    Object.DestroyImmediate(joints[i].transform.gameObject);
+                }
+            }
+        }
     }
 }
