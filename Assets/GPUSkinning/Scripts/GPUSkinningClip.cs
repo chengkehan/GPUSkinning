@@ -13,4 +13,6 @@ public class GPUSkinningClip
     public GPUSkinningWrapMode wrapMode = GPUSkinningWrapMode.Once;
 
     public GPUSkinningFrame[] frames = null;
+
+    public int pixelSegmentation = 0;
 }

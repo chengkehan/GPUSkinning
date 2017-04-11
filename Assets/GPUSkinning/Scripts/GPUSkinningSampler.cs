@@ -37,6 +37,10 @@ public class GPUSkinningSampler : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
+    public TextAsset texture = null;
+
+    [HideInInspector]
+    [SerializeField]
 	public GPUSkinningQuality skinQuality = GPUSkinningQuality.Bone2;
 
     [HideInInspector]
@@ -96,6 +100,7 @@ public class GPUSkinningSampler : MonoBehaviour
 	public const string TEMP_SAVED_MTRL_PATH = "GPUSkinning_Temp_Save_Mtrl_Path";
 	public const string TEMP_SAVED_MESH_PATH = "GPUSkinning_Temp_Save_Mesh_Path";
     public const string TEMP_SAVED_SHADER_PATH = "GPUSkinning_Temp_Save_Shader_Path";
+    public const string TEMP_SAVED_TEXTURE_PATH = "GPUSkinning_Temp_Save_Texture_Path";
 
     public void BeginSample()
     {
@@ -375,6 +380,70 @@ public class GPUSkinningSampler : MonoBehaviour
 		}
 	}
 
+    private void SetSthAboutTexture(GPUSkinningAnimation gpuSkinningAnim)
+    {
+        int numPixels = 0;
+
+        GPUSkinningClip[] clips = anim.clips;
+        int numClips = clips.Length;
+        for (int clipIndex = 0; clipIndex < numClips; ++clipIndex)
+        {
+            GPUSkinningClip clip = clips[clipIndex];
+            clip.pixelSegmentation = numPixels;
+
+            GPUSkinningFrame[] frames = clip.frames;
+            int numFrames = frames.Length;
+            numPixels += anim.bones.Length * 3/*treat 3 pixels as a float3x4*/ * numFrames;
+        }
+
+        CalculateTextureSize(numPixels, out gpuSkinningAnim.textureWidth, out gpuSkinningAnim.textureHeight);
+    }
+
+    private void CreateTextureMatrix(string dir, GPUSkinningAnimation gpuSkinningAnim)
+    {
+        Texture2D texture = new Texture2D(gpuSkinningAnim.textureWidth, gpuSkinningAnim.textureHeight, TextureFormat.RGBAHalf, false, true);
+        Color[] pixels = texture.GetPixels();
+        int pixelIndex = 0;
+        for (int clipIndex = 0; clipIndex < gpuSkinningAnim.clips.Length; ++clipIndex)
+        {
+            GPUSkinningClip clip = gpuSkinningAnim.clips[clipIndex];
+            GPUSkinningFrame[] frames = clip.frames;
+            int numFrames = frames.Length;
+            for (int frameIndex = 0; frameIndex < numFrames; ++frameIndex)
+            {
+                GPUSkinningFrame frame = frames[frameIndex];
+                Matrix4x4[] matrices = frame.matrices;
+                int numMatrices = matrices.Length;
+                for (int matrixIndex = 0; matrixIndex < numMatrices; ++matrixIndex)
+                {
+                    Matrix4x4 matrix = matrices[matrixIndex];
+                    pixels[pixelIndex++] = new Color(matrix.m00, matrix.m01, matrix.m02, matrix.m03);
+                    pixels[pixelIndex++] = new Color(matrix.m10, matrix.m11, matrix.m12, matrix.m13);
+                    pixels[pixelIndex++] = new Color(matrix.m20, matrix.m21, matrix.m22, matrix.m23);
+                }
+            }
+        }
+        texture.SetPixels(pixels);
+        texture.Apply();
+
+        string savedPath = dir + "/GPUSKinning_Texture_" + animName + ".bytes";
+        File.WriteAllBytes(savedPath, texture.GetRawTextureData());
+        WriteTempData(TEMP_SAVED_TEXTURE_PATH, savedPath);
+    }
+
+    private void CalculateTextureSize(int numPixels, out int texWidth, out int texHeight)
+    {
+        texWidth = 1;
+        texHeight = 1;
+        while (true)
+        {
+            if (texWidth * texHeight >= numPixels) break;
+            texWidth *= 2;
+            if (texWidth * texHeight >= numPixels) break;
+            texHeight *= 2;
+        }
+    }
+
     public void MappingAnimationClips()
     {
         if(animation == null)
@@ -507,13 +576,16 @@ public class GPUSkinningSampler : MonoBehaviour
 					string dir = "Assets" + savePath.Substring(Application.dataPath.Length);
 
 					string savedAnimPath = dir + "/GPUSKinning_Anim_" + animName + ".asset";
-					EditorUtility.SetDirty(gpuSkinningAnimation);
+                    SetSthAboutTexture(gpuSkinningAnimation);
+                    EditorUtility.SetDirty(gpuSkinningAnimation);
                     if (anim != gpuSkinningAnimation)
                     {
                         AssetDatabase.CreateAsset(gpuSkinningAnimation, savedAnimPath);
                     }
                     WriteTempData(TEMP_SAVED_ANIM_PATH, savedAnimPath);
                     anim = gpuSkinningAnimation;
+
+                    CreateTextureMatrix(dir, anim);
 
                     if (samplingClipIndex == 0)
                     {

@@ -13,6 +13,8 @@ public class GPUSkinningSamplerEditor : Editor
 
 	private Material mtrl = null;
 
+    private TextAsset texture = null;
+
 	private RenderTexture rt = null;
 
     private RenderTexture rtGamma = null;
@@ -101,6 +103,12 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("savedShader"), new GUIContent());
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            {
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("texture"), new GUIContent());
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -788,6 +796,11 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 serializedObject.FindProperty("savedShader").objectReferenceValue = obj;
             }
+            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_TEXTURE_PATH));
+            if(obj != null && obj is TextAsset)
+            {
+                serializedObject.FindProperty("texture").objectReferenceValue = obj;
+            }
 
             serializedObject.ApplyModifiedProperties();
 
@@ -795,6 +808,7 @@ public class GPUSkinningSamplerEditor : Editor
             GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_MESH_PATH);
             GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_MTRL_PATH);
             GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_SHADER_PATH);
+            GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_TEXTURE_PATH);
         }
 
         isBoundsFoldout = GetEditorPrefsBool("isBoundsFoldout", true);
