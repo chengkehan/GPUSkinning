@@ -59,6 +59,8 @@ public class GPUSkinningSamplerEditor : Editor
 			return;
 		}
 
+        sampler.MappingAnimationClips();
+
         OnGUI_Sampler(sampler);
 
         OnGUI_Preview(sampler);
@@ -110,7 +112,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("rootBoneTransform"), new GUIContent("Root Bone"));
 
-            OnGUI_AnimClips();
+            OnGUI_AnimClips(sampler);
 
             if (GUILayout.Button("Step1: Play Scene"))
             {
@@ -132,7 +134,7 @@ public class GPUSkinningSamplerEditor : Editor
         EndBox();
     }
 
-    private void OnGUI_AnimClips()
+    private void OnGUI_AnimClips(GPUSkinningSampler sampler)
     {
         BeginBox();
         {
@@ -140,6 +142,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("updateOrNew"), new GUIContent("Update Or New"));
 
+            GUI.enabled = sampler.animation == null;
             int no = serializedObject.FindProperty("animClips.Array.size").intValue;
             int no2 = serializedObject.FindProperty("wrapModes.Array.size").intValue;
             int no3 = serializedObject.FindProperty("isSelected.Array.size").intValue;
@@ -156,6 +159,7 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 serializedObject.FindProperty("isSelected.Array.size").intValue = c;
             }
+            GUI.enabled = true;
 
             for (int i = 0; i < no; i++)
             {
@@ -172,7 +176,9 @@ public class GPUSkinningSamplerEditor : Editor
                         EditorGUILayout.Space();
                         EditorGUILayout.PropertyField(prop3);
                         EditorGUILayout.PropertyField(prop2, new GUIContent());
+                        GUI.enabled = sampler.animation == null;
                         EditorGUILayout.PropertyField(prop, new GUIContent());
+                        GUI.enabled = true;
                     }
                     EditorGUILayout.EndHorizontal();
                 }

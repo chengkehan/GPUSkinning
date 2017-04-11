@@ -71,6 +71,10 @@ public class GPUSkinningSampler : MonoBehaviour
     [SerializeField]
     public bool updateOrNew = true;
 
+    [HideInInspector]
+    [System.NonSerialized]
+    public Animation animation = null;
+
 	private Animator animator = null;
     private RuntimeAnimatorController runtimeAnimatorController = null;
 
@@ -115,7 +119,19 @@ public class GPUSkinningSampler : MonoBehaviour
             return;
         }
 
-        if(animClips.Length == 0)
+        if (string.IsNullOrEmpty(animName.Trim()))
+        {
+            ShowDialog("Empty AnimName");
+            return;
+        }
+
+        if (rootBoneTransform == null)
+        {
+            ShowDialog("Missing RootBoneTransform");
+            return;
+        }
+
+        if (animClips == null || animClips.Length == 0)
         {
             ShowDialog("Missing AnimationClip");
             return;
@@ -135,12 +151,6 @@ public class GPUSkinningSampler : MonoBehaviour
             return;
         }
 
-        if (rootBoneTransform == null)
-		{
-			ShowDialog("Missing RootBoneTransform");
-			return;
-		}
-
 		smr = GetComponentInChildren<SkinnedMeshRenderer>();
 		if(smr == null)
 		{
@@ -157,12 +167,6 @@ public class GPUSkinningSampler : MonoBehaviour
 		if(mesh == null)
 		{
 			ShowDialog("Missing Mesh");
-			return;
-		}
-
-		if(anim == null && string.IsNullOrEmpty(animName.Trim()))
-		{
-			ShowDialog("Empty AnimName");
 			return;
 		}
 
@@ -234,9 +238,9 @@ public class GPUSkinningSampler : MonoBehaviour
         {
             for(int j = 0; j < bonesOrig.Length; ++j)
             {
-                if(bonesNew[i].guid == bonesOrig[i].guid)
+                if(bonesNew[i].guid == bonesOrig[j].guid)
                 {
-                    bonesNew[i].isExposed = bonesOrig[i].isExposed;
+                    bonesNew[i].isExposed = bonesOrig[j].isExposed;
                     break;
                 }
             }
@@ -248,7 +252,7 @@ public class GPUSkinningSampler : MonoBehaviour
         int numBones = bones == null ? 0 : bones.Length;
         for(int i = 0; i < numBones; ++i)
         {
-            string boneHierarchyPath = GPUSkinningUtil.BoneHierarchyPath(anim, i);
+            string boneHierarchyPath = GPUSkinningUtil.BoneHierarchyPath(bones, i);
             string guid = GPUSkinningUtil.MD5(boneHierarchyPath);
             bones[i].guid = guid;
         }
@@ -256,19 +260,22 @@ public class GPUSkinningSampler : MonoBehaviour
 
     private void SetCurrentAnimationClip()
     {
-        AnimatorOverrideController animatorOverrideController = new AnimatorOverrideController();
-        AnimationClip[] clips = runtimeAnimatorController.animationClips;
-        AnimationClipPair[] pairs = new AnimationClipPair[clips.Length];
-        for(int i = 0; i < clips.Length; ++i)
+        if (animation == null)
         {
-            AnimationClipPair pair = new AnimationClipPair();
-            pairs[i] = pair;
-            pair.originalClip = clips[i];
-            pair.overrideClip = animClip;
+            AnimatorOverrideController animatorOverrideController = new AnimatorOverrideController();
+            AnimationClip[] clips = runtimeAnimatorController.animationClips;
+            AnimationClipPair[] pairs = new AnimationClipPair[clips.Length];
+            for (int i = 0; i < clips.Length; ++i)
+            {
+                AnimationClipPair pair = new AnimationClipPair();
+                pairs[i] = pair;
+                pair.originalClip = clips[i];
+                pair.overrideClip = animClip;
+            }
+            animatorOverrideController.runtimeAnimatorController = runtimeAnimatorController;
+            animatorOverrideController.clips = pairs;
+            animator.runtimeAnimatorController = animatorOverrideController;
         }
-        animatorOverrideController.runtimeAnimatorController = runtimeAnimatorController;
-        animatorOverrideController.clips = pairs;
-        animator.runtimeAnimatorController = animatorOverrideController;
     }
 
     private Mesh CreateNewMesh()
@@ -368,28 +375,100 @@ public class GPUSkinningSampler : MonoBehaviour
 		}
 	}
 
-	private void Awake()
+    public void MappingAnimationClips()
+    {
+        if(animation == null)
+        {
+            return;
+        }
+
+        List<AnimationClip> newClips = null;
+        AnimationClip[] clips = AnimationUtility.GetAnimationClips(gameObject);
+        if (clips != null)
+        {
+            for (int i = 0; i < clips.Length; ++i)
+            {
+                AnimationClip clip = clips[i];
+                if (clip != null)
+                {
+                    if (animClips == null || System.Array.IndexOf(animClips, clip) == -1)
+                    {
+                        if (newClips == null)
+                        {
+                            newClips = new List<AnimationClip>();
+                        }
+                        newClips.Clear();
+                        if (animClips != null) newClips.AddRange(animClips);
+                        newClips.Add(clip);
+                        animClips = newClips.ToArray();
+                    }
+                }
+            }
+        }
+
+        if(animClips != null && clips != null)
+        {
+            for(int i = 0; i < animClips.Length; ++i)
+            {
+                AnimationClip clip = animClips[i];
+                if (clip != null)
+                {
+                    if(System.Array.IndexOf(clips, clip) == -1)
+                    {
+                        if(newClips == null)
+                        {
+                            newClips = new List<AnimationClip>();
+                        }
+                        newClips.Clear();
+                        newClips.AddRange(animClips);
+                        newClips.RemoveAt(i);
+                        animClips = newClips.ToArray();
+                        --i;
+                    }
+                }
+            }
+        }
+    }
+
+    private void Awake()
 	{
+        animation = GetComponent<Animation>();
 		animator = GetComponent<Animator>();
-		if(animator == null)
-		{
-			DestroyImmediate(this);
-			ShowDialog("Cannot find Animator Component");
-			return;
-		}
-        if(animator.runtimeAnimatorController == null)
+        if (animator == null && animation == null)
         {
             DestroyImmediate(this);
-            ShowDialog("Missing RuntimeAnimatorController");
+            ShowDialog("Cannot find Animator Or Animation Component");
             return;
         }
-        if(animator.runtimeAnimatorController is AnimatorOverrideController)
+        if(animator != null && animation != null)
         {
             DestroyImmediate(this);
-            ShowDialog("RuntimeAnimatorController could not be a AnimatorOverrideController");
+            ShowDialog("Animation is not coexisting with Animator");
             return;
         }
-        runtimeAnimatorController = animator.runtimeAnimatorController;
+        if (animator != null)
+        {
+            if (animator.runtimeAnimatorController == null)
+            {
+                DestroyImmediate(this);
+                ShowDialog("Missing RuntimeAnimatorController");
+                return;
+            }
+            if (animator.runtimeAnimatorController is AnimatorOverrideController)
+            {
+                DestroyImmediate(this);
+                ShowDialog("RuntimeAnimatorController could not be a AnimatorOverrideController");
+                return;
+            }
+            runtimeAnimatorController = animator.runtimeAnimatorController;
+            return;
+        }
+        if(animation != null)
+        {
+            MappingAnimationClips();
+            animation.Stop();
+            return;
+        }
 	}
 
 	private void Update()
@@ -463,9 +542,23 @@ public class GPUSkinningSampler : MonoBehaviour
         GPUSkinningFrame frame = new GPUSkinningFrame();
         gpuSkinningClip.frames[samplingFrameIndex] = frame;
         frame.matrices = new Matrix4x4[gpuSkinningAnimation.bones.Length];
-		animator.speed = 0;
-		animator.SetTime(time);
-		animator.speed = 1;
+        if (animation == null)
+        {
+            animator.speed = 0;
+            animator.SetTime(time);
+            animator.speed = 1;
+        }
+        else
+        {
+            animation.Stop();
+            AnimationState animState = animation[animClip.name];
+            if(animState != null)
+            {
+                animState.time = time;
+                animation.Sample();
+                animation.Play();
+            }
+        }
         StartCoroutine(SamplingCoroutine(frame));
         ++samplingFrameIndex;
     }

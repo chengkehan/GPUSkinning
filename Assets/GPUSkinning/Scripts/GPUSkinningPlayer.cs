@@ -151,9 +151,10 @@ public class GPUSkinningPlayer
         for(int i = 0; i < numJoints; ++i)
         {
             GPUSkinningPlayerJoint joint = joints[i];
-            if (joint.Transform != null)
+            Transform jointTransform = Application.isPlaying ? joint.Transform : joint.transform;
+            if (jointTransform != null)
             {
-                joint.Transform.localPosition = (frame.matrices[joint.BoneIndex] * bones[joint.BoneIndex].BindposeInv).MultiplyPoint(Vector3.zero);
+                jointTransform.localPosition = (frame.matrices[joint.BoneIndex] * bones[joint.BoneIndex].BindposeInv).MultiplyPoint(Vector3.zero);
             }
             else
             {
@@ -189,7 +190,11 @@ public class GPUSkinningPlayer
                         {
                             if(existingJoints[j] != null && existingJoints[j].BoneGUID == bone.guid)
                             {
-                                existingJoints[j].Init(i, bone.guid);
+                                if (existingJoints[j].BoneIndex != i)
+                                {
+                                    existingJoints[j].Init(i, bone.guid);
+                                    GPUSkinningUtil.MarkAllScenesDirty();
+                                }
                                 joints.Add(existingJoints[j]);
                                 existingJoints[j] = null;
                                 inTheExistingJoints = true;
@@ -208,6 +213,7 @@ public class GPUSkinningPlayer
                         GPUSkinningPlayerJoint joint = jointGo.AddComponent<GPUSkinningPlayerJoint>();
                         joints.Add(joint);
                         joint.Init(i, bone.guid);
+                        GPUSkinningUtil.MarkAllScenesDirty();
                     }
                 }
             }
@@ -246,6 +252,7 @@ public class GPUSkinningPlayer
                         child.localPosition = Vector3.zero;
                     }
                     Object.DestroyImmediate(joints[i].transform.gameObject);
+                    GPUSkinningUtil.MarkAllScenesDirty();
                 }
             }
         }

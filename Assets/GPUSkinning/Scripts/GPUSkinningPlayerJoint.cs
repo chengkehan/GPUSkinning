@@ -42,12 +42,12 @@ public class GPUSkinningPlayerJoint : MonoBehaviour
     private void Awake()
     {
         hideFlags = HideFlags.HideInInspector;
+        this.bone = transform;
     }
 
     public void Init(int boneIndex, string boneGUID)
     {
         this.boneIndex = boneIndex;
         this.boneGUID = boneGUID;
-        this.bone = transform;
     }
 }

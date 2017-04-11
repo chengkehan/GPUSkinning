@@ -4,6 +4,22 @@ using System.Security.Cryptography;
 
 public class GPUSkinningUtil
 {
+    public static void MarkAllScenesDirty()
+    {
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+        {
+            UnityEditor.EditorApplication.CallbackFunction DelayCall = null;
+            DelayCall = () =>
+            {
+                UnityEditor.EditorApplication.delayCall -= DelayCall;
+                UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+            };
+            UnityEditor.EditorApplication.delayCall += DelayCall;
+        }
+#endif
+    }
+
     public static string BonesHierarchyTree(GPUSkinningAnimation gpuSkinningAnimation)
     {
         if(gpuSkinningAnimation == null || gpuSkinningAnimation.bones == null)
@@ -27,27 +43,31 @@ public class GPUSkinningUtil
         }
     }
 
-    public static string BoneHierarchyPath(GPUSkinningAnimation gpuSkinningAnimation, int boneIndex)
+    public static string BoneHierarchyPath(GPUSkinningBone[] bones, int boneIndex)
     {
-        if(gpuSkinningAnimation == null || gpuSkinningAnimation.bones == null)
-        {
-            return null;
-        }
-
-        GPUSkinningBone[] bones = gpuSkinningAnimation.bones;
-        if(boneIndex < 0 || boneIndex >= bones.Length)
+        if (bones == null || boneIndex < 0 || boneIndex >= bones.Length)
         {
             return null;
         }
 
         GPUSkinningBone bone = bones[boneIndex];
         string path = bone.name;
-        while(bone.parentBoneIndex != -1)
+        while (bone.parentBoneIndex != -1)
         {
             bone = bones[bone.parentBoneIndex];
             path = bone.name + "/" + path;
         }
         return path;
+    }
+
+    public static string BoneHierarchyPath(GPUSkinningAnimation gpuSkinningAnimation, int boneIndex)
+    {
+        if(gpuSkinningAnimation == null)
+        {
+            return null;
+        }
+
+        return BoneHierarchyPath(gpuSkinningAnimation.bones, boneIndex);
     }
 
     public static string MD5(string input)
