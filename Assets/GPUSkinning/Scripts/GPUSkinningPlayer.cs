@@ -2,8 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 
+#if UNITY_EDITOR
+[UnityEditor.InitializeOnLoad]
+#endif
 public class GPUSkinningPlayer
 {
+    private static List<GPUSkinningPlayer> players = new List<GPUSkinningPlayer>();
+
     private GameObject go = null;
 
     private GPUSkinningAnimation anim = null;
@@ -40,6 +45,34 @@ public class GPUSkinningPlayer
 
     private int shaderPropID_GPUSkinning_PixelSegmentation = 0;
 
+#if UNITY_EDITOR
+    static GPUSkinningPlayer()
+    {
+        UnityEditor.EditorApplication.update -= AAAUpdate;
+        UnityEditor.EditorApplication.update += AAAUpdate;
+    }
+
+    private static void AAAUpdate()
+    {
+        if (UnityEditor.EditorApplication.isCompiling)
+        {
+            if (players != null)
+            { 
+                int numPlayers = players.Count;
+                for (int i = 0; i < numPlayers; ++i)
+                {  
+                    if (players[i] != null)
+                    {
+                        players[i].Destroy_Internal();
+                    }
+                }  
+                players.Clear();
+            }
+            UnityEditor.EditorApplication.update -= AAAUpdate;
+        }
+    }
+#endif
+
     private GPUSkinningPlayerMode mode = GPUSkinningPlayerMode.MATRIX_ARRAY;
     public GPUSkinningPlayerMode Mode
     {
@@ -73,10 +106,13 @@ public class GPUSkinningPlayer
 
     public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningAnimation anim, Mesh mesh, Material mtrl, TextAsset textureRawData)
     {
+        Debug.LogError("new");
+        players.Add(this);
+
         go = attachToThisGo;
         this.anim = anim;
         this.mesh = mesh;
-        this.mtrl = mtrl;
+        this.mtrl = new Material(mtrl);
 
         mr = go.GetComponent<MeshRenderer>();
         if (mr == null)
@@ -89,7 +125,7 @@ public class GPUSkinningPlayer
             mf = go.AddComponent<MeshFilter>();
         }
 
-        mr.sharedMaterial = mtrl;
+        mr.sharedMaterial = this.mtrl;
         mf.sharedMesh = mesh;
 
         if(textureRawData != null)
@@ -148,10 +184,23 @@ public class GPUSkinningPlayer
 
     public void Destroy()
     {
-        if(texture != null)
+        players.Remove(this);
+        Destroy_Internal();
+    }
+
+    private void Destroy_Internal()
+    {
+        Debug.LogError("des ");
+        if (texture != null)
         {
             Object.DestroyImmediate(texture);
             texture = null;
+        }
+
+        if (mtrl != null)
+        {
+            Object.DestroyImmediate(mtrl);
+            mtrl = null;
         }
     }
 
@@ -186,6 +235,19 @@ public class GPUSkinningPlayer
             return;
         }
 
+#if UNITY_EDITOR
+        bool isMeshRenderEnabled = mtrl != null;
+        if(mr != null && mr.enabled != isMeshRenderEnabled)
+        {
+            mr.enabled = isMeshRenderEnabled; 
+        }
+#endif
+
+        if(mtrl == null)
+        {
+            return;    
+        }
+
         int frameIndex = 0;
         if (playingClip.wrapMode == GPUSkinningWrapMode.Loop)
         {
@@ -206,7 +268,7 @@ public class GPUSkinningPlayer
         {
             playingFrameIndex = frameIndex;
             GPUSkinningFrame frame = playingClip.frames[frameIndex];
-            if (mode == GPUSkinningPlayerMode.MATRIX_ARRAY || (mode == GPUSkinningPlayerMode.TEXTURE_MATRIX && texture == null))
+            if (mode == GPUSkinningPlayerMode.MATRIX_ARRAY)
             {
                 mtrl.SetMatrixArray(shaderPropID_GPUSkinning_MatrixArray, frame.matrices);
             }

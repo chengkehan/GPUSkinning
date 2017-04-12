@@ -23,7 +23,7 @@ public class GPUSkinningSamplerEditor : Editor
 
 	private Camera cam = null;
 
-    private GPUSkinningPreview preview = null;
+    private GPUSkinningPlayerMono preview = null;
 
     private int previewClipIndex = 0;
 
@@ -245,13 +245,13 @@ public class GPUSkinningSamplerEditor : Editor
                         GameObject previewGo = new GameObject("GPUSkinningPreview_Go");
                         previewGo.hideFlags = HideFlags.HideAndDontSave;
                         previewGo.transform.position = new Vector3(100, 100, 103);
-                        preview = previewGo.AddComponent<GPUSkinningPreview>();
+                        preview = previewGo.AddComponent<GPUSkinningPlayerMono>();
                         preview.hideFlags = HideFlags.HideAndDontSave;
                         preview.anim = anim;
                         preview.mesh = mesh;
                         preview.mtrl = mtrl;
-                        preview.texture = texture;
-                        preview.clipName = anim.clips == null || anim.clips.Length == 0 ? null : anim.clips[previewClipIndex].name;
+                        //preview.texture = texture;
+                        //preview.clipName = anim.clips == null || anim.clips.Length == 0 ? null : anim.clips[previewClipIndex].name;
                         preview.Init();
                     }
                 }
@@ -278,7 +278,7 @@ public class GPUSkinningSamplerEditor : Editor
                     GetLastGUIRect(ref interactionRect);
                     PreviewInteraction(interactionRect);
 
-                    EditorGUI.ProgressBar(new Rect(interactionRect.x, interactionRect.y + interactionRect.height, interactionRect.width, 5), preview.player.NormalizedTime, string.Empty);
+                    EditorGUI.ProgressBar(new Rect(interactionRect.x, interactionRect.y + interactionRect.height, interactionRect.width, 5), preview.Player.NormalizedTime, string.Empty);
 
                     GUILayout.FlexibleSpace();
                 }
@@ -312,7 +312,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             if(preview != null)
             {
-                preview.player.Mode = playerMode;
+                preview.Player.Mode = playerMode;
             }
         }
         EditorGUILayout.EndHorizontal();
@@ -480,13 +480,13 @@ public class GPUSkinningSamplerEditor : Editor
             previewClipIndex = EditorGUILayout.Popup(string.Empty, previewClipIndex, options);
             if(EditorGUI.EndChangeCheck())
             {
-                preview.Play(options[previewClipIndex]);
+                preview.Player.Play(options[previewClipIndex]);
             }
             if (anim.clips[previewClipIndex].wrapMode == GPUSkinningWrapMode.Once)
             {
                 if (GUILayout.Button("Play", GUILayout.Width(50)))
                 {
-                    preview.Play(options[previewClipIndex]);
+                    preview.Player.Play(options[previewClipIndex]);
                 }
             }
             EditorGUILayout.Space();
@@ -686,7 +686,7 @@ public class GPUSkinningSamplerEditor : Editor
             PreviewDrawBounds();
             PreviewDrawArrows();
 
-            preview.DoUpdate(deltaTime);
+            preview.Update_Editor(deltaTime);
             cam.Render();
         }
 

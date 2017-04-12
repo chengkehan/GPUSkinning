@@ -16,7 +16,6 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     [HideInInspector]
     [SerializeField]
     public Material mtrl = null;
-    private Material newMtrl = null;
 
     private GPUSkinningPlayer player = null;
     public GPUSkinningPlayer Player
@@ -36,13 +35,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
         if (anim != null && mesh != null && mtrl != null)
         {
-            newMtrl = new Material(mtrl);
-            if (!Application.isPlaying)
-            {
-                newMtrl.hideFlags = HideFlags.DontSave;
-            }
-
-            player = new GPUSkinningPlayer(gameObject, anim, mesh, newMtrl, null);
+            player = new GPUSkinningPlayer(gameObject, anim, mesh, mtrl, null);
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {
@@ -96,12 +89,6 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
     private void OnDestroy()
     {
-        if(newMtrl != null)
-        {
-            DestroyImmediate(newMtrl);
-            newMtrl = null;
-        }
-
         if(player != null)
         {
             player.Destroy();
