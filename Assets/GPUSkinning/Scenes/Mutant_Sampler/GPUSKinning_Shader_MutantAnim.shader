@@ -33,26 +33,17 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 		v2f o;
 
 #ifdef GPU_SKINNING_MATRIX_ARRAY
-		float4x4 mat0 = _GPUSkinning_MatrixArray[v.uv2.x];
-		float4x4 mat1 = _GPUSkinning_MatrixArray[v.uv2.z];
-		float4x4 mat2 = _GPUSkinning_MatrixArray[v.uv3.x];
-		float4x4 mat3 = _GPUSkinning_MatrixArray[v.uv3.z];
+		matrixArray(v.uv2, v.uv3);
 #endif
 
 #ifdef GPU_SKINNING_TEXTURE_MATRIX
-		int frameStartIndex = getFrameStartIndex();
-		float4x4 mat0 = getMatrix(frameStartIndex, v.uv2.x);
-		float4x4 mat1 = getMatrix(frameStartIndex, v.uv2.z);
-		float4x4 mat2 = getMatrix(frameStartIndex, v.uv3.x);
-		float4x4 mat3 = getMatrix(frameStartIndex, v.uv3.z);
+		textureMatrix(v.uv2, v.uv3);
 #endif
 
 		
 
 		
-		float4 pos =
-			mul(mat0, v.vertex) * v.uv2.y +
-			mul(mat1, v.vertex) * v.uv2.w;
+		float4 pos = skin2(v.vertex, v.uv2, v.uv3);
 		
 
 		

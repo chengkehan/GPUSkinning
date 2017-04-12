@@ -106,18 +106,11 @@ ENDCG
 		   // Skinning
 		   {
 #ifdef GPU_SKINNING_MATRIX_ARRAY
-				float4x4 mat0 = _GPUSkinning_MatrixArray[v.uv1.x];
-				float4x4 mat1 = _GPUSkinning_MatrixArray[v.uv1.z];
-				float4x4 mat2 = _GPUSkinning_MatrixArray[v.uv2.x];
-				float4x4 mat3 = _GPUSkinning_MatrixArray[v.uv2.z];
+				matrixArray(v.uv1, v.uv2);
 #endif
 
 #ifdef GPU_SKINNING_TEXTURE_MATRIX
-				int frameStartIndex = getFrameStartIndex();
-				float4x4 mat0 = getMatrix(frameStartIndex, v.uv1.x);
-				float4x4 mat1 = getMatrix(frameStartIndex, v.uv1.z);
-				float4x4 mat2 = getMatrix(frameStartIndex, v.uv2.x);
-				float4x4 mat3 = getMatrix(frameStartIndex, v.uv2.z);
+				textureMatrix(v.uv1, v.uv2);
 #endif
 
 				float4 normal = float4(v.normal, 0);
@@ -128,23 +121,9 @@ ENDCG
 				
 
 				
-				float4 pos =
-					mul(mat0, v.vertex) * v.uv1.y +
-					mul(mat1, v.vertex) * v.uv1.w + 
-					mul(mat2, v.vertex) * v.uv2.y + 
-					mul(mat3, v.vertex) * v.uv2.w;
-
-				normal =
-					mul(mat0, normal) * v.uv1.y +
-					mul(mat1, normal) * v.uv1.w + 
-					mul(mat2, normal) * v.uv2.y + 
-					mul(mat3, normal) * v.uv2.w;
-
-				tangent =
-					mul(mat0, tangent) * v.uv1.y +
-					mul(mat1, tangent) * v.uv1.w + 
-					mul(mat2, tangent) * v.uv2.y + 
-					mul(mat3, tangent) * v.uv2.w;
+				float4 pos = skin4(v.vertex, v.uv1, v.uv2);
+				normal = skin4(normal, v.uv1, v.uv2);
+				tangent = skin4(tangent, v.uv1, v.uv2);
 				
 
 				v.vertex = pos;
