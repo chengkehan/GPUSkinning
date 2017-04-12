@@ -384,7 +384,7 @@ public class GPUSkinningSampler : MonoBehaviour
     {
         int numPixels = 0;
 
-        GPUSkinningClip[] clips = anim.clips;
+        GPUSkinningClip[] clips = gpuSkinningAnim.clips;
         int numClips = clips.Length;
         for (int clipIndex = 0; clipIndex < numClips; ++clipIndex)
         {
@@ -393,7 +393,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
             GPUSkinningFrame[] frames = clip.frames;
             int numFrames = frames.Length;
-            numPixels += anim.bones.Length * 3/*treat 3 pixels as a float3x4*/ * numFrames;
+            numPixels += gpuSkinningAnim.bones.Length * 3/*treat 3 pixels as a float3x4*/ * numFrames;
         }
 
         CalculateTextureSize(numPixels, out gpuSkinningAnim.textureWidth, out gpuSkinningAnim.textureHeight);
