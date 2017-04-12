@@ -12,6 +12,8 @@ public class GPUSkinningPlayer
 
     private Material mtrl = null;
 
+    private Texture2D texture = null;
+
     private MeshRenderer mr = null;
 
     private MeshFilter mf = null;
@@ -23,6 +25,34 @@ public class GPUSkinningPlayer
     private int playingFrameIndex = -1;
 
     private int shaderPropID_GPUSkinning_MatrixArray = 0;
+
+    private int shaderPropID_GPUSkinning_TextureMatrix = 0;
+
+    private int shaderPropID_GPUSkinning_NumPixelsPerFrame = 0;
+
+    private int shaderPropID_GPUSkinning_TextureSize = 0;
+
+    private int shaderPropID_GPUSkinning_ClipLength = 0;
+
+    private int shaderPropID_GPUSkinning_ClipFPS = 0;
+
+    private int shaderPorpID_GPUSkinning_Time = 0;
+
+    private int shaderPropID_GPUSkinning_PixelSegmentation = 0;
+
+    private GPUSkinningPlayerMode mode = GPUSkinningPlayerMode.MATRIX_ARRAY;
+    public GPUSkinningPlayerMode Mode
+    {
+        set
+        {
+            mode = value;
+            UpdateMode(false);
+        }
+        get
+        {
+            return mode;
+        }
+    }
 
     private List<GPUSkinningPlayerJoint> joints = null;
     public List<GPUSkinningPlayerJoint> Joints
@@ -41,7 +71,7 @@ public class GPUSkinningPlayer
         }
     }
 
-    public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningAnimation anim, Mesh mesh, Material mtrl)
+    public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningAnimation anim, Mesh mesh, Material mtrl, TextAsset textureRawData)
     {
         go = attachToThisGo;
         this.anim = anim;
@@ -62,9 +92,26 @@ public class GPUSkinningPlayer
         mr.sharedMaterial = mtrl;
         mf.sharedMesh = mesh;
 
+        if(textureRawData != null)
+        {
+            texture = new Texture2D(anim.textureWidth, anim.textureHeight, TextureFormat.RGBAHalf, false, true);
+            texture.filterMode = FilterMode.Point;
+            texture.LoadRawTextureData(textureRawData.bytes);
+            texture.Apply(false, true);
+        }
+
         shaderPropID_GPUSkinning_MatrixArray = Shader.PropertyToID("_GPUSkinning_MatrixArray");
+        shaderPropID_GPUSkinning_TextureMatrix = Shader.PropertyToID("_GPUSkinning_TextureMatrix");
+        shaderPropID_GPUSkinning_NumPixelsPerFrame = Shader.PropertyToID("_GPUSkinning_NumPixelsPerFrame");
+        shaderPropID_GPUSkinning_TextureSize = Shader.PropertyToID("_GPUSkinning_TextureSize");
+        shaderPropID_GPUSkinning_ClipLength = Shader.PropertyToID("_GPUSkinning_ClipLength");
+        shaderPropID_GPUSkinning_ClipFPS = Shader.PropertyToID("_GPUSkinning_ClipFPS");
+        shaderPorpID_GPUSkinning_Time = Shader.PropertyToID("_GPUSkinning_Time");
+        shaderPropID_GPUSkinning_PixelSegmentation = Shader.PropertyToID("_GPUSkinning_PixelSegmentation");
 
         CreateJoints();
+
+        UpdateMode(true);
     }
 
     public void Play(string clipName)
@@ -99,6 +146,39 @@ public class GPUSkinningPlayer
         Update_Internal(timeDelta, false);
     }
 
+    public void Destroy()
+    {
+        if(texture != null)
+        {
+            Object.DestroyImmediate(texture);
+            texture = null;
+        }
+    }
+
+    private void UpdateMode(bool isEnforced)
+    {
+        if(mtrl != null)
+        {
+            if(mode == GPUSkinningPlayerMode.MATRIX_ARRAY)
+            {
+                if (mtrl.IsKeywordEnabled("GPU_SKINNING_TEXTURE_MATRIX") || isEnforced)
+                {
+                    mtrl.EnableKeyword("GPU_SKINNING_MATRIX_ARRAY");
+                    mtrl.DisableKeyword("GPU_SKINNING_TEXTURE_MATRIX");
+                }
+            }
+            else
+            {
+                
+                if (mtrl.IsKeywordEnabled("GPU_SKINNING_MATRIX_ARRAY") || isEnforced)
+                {
+                    mtrl.DisableKeyword("GPU_SKINNING_MATRIX_ARRAY");
+                    mtrl.EnableKeyword("GPU_SKINNING_TEXTURE_MATRIX");
+                }
+            }
+        }
+    }
+
     private void Update_Internal(float timeDelta, bool isEnforced)
     {
         if (playingClip == null)
@@ -126,7 +206,20 @@ public class GPUSkinningPlayer
         {
             playingFrameIndex = frameIndex;
             GPUSkinningFrame frame = playingClip.frames[frameIndex];
-            mtrl.SetMatrixArray(shaderPropID_GPUSkinning_MatrixArray, frame.matrices);
+            if (mode == GPUSkinningPlayerMode.MATRIX_ARRAY || (mode == GPUSkinningPlayerMode.TEXTURE_MATRIX && texture == null))
+            {
+                mtrl.SetMatrixArray(shaderPropID_GPUSkinning_MatrixArray, frame.matrices);
+            }
+            else
+            {
+                mtrl.SetTexture(shaderPropID_GPUSkinning_TextureMatrix, texture);
+                mtrl.SetFloat(shaderPropID_GPUSkinning_NumPixelsPerFrame, anim.bones.Length * 3/*treat 3 pixels as a float3x4*/);
+                mtrl.SetVector(shaderPropID_GPUSkinning_TextureSize, new Vector4(anim.textureWidth, anim.textureHeight, 0, 0));
+                mtrl.SetFloat(shaderPropID_GPUSkinning_ClipLength, playingClip.length);
+                mtrl.SetFloat(shaderPropID_GPUSkinning_ClipFPS, playingClip.fps);
+                mtrl.SetFloat(shaderPorpID_GPUSkinning_Time, time);
+                mtrl.SetFloat(shaderPropID_GPUSkinning_PixelSegmentation, playingClip.pixelSegmentation);
+            }
             UpdateJoints(frame);
         }
 

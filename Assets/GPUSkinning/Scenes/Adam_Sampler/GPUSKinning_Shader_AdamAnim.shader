@@ -91,7 +91,10 @@ ENDCG
         // #pragma surface surfSpecular StandardSpecular vertex:vert finalcolor:finalSpecular fullforwardshadows alpha:fade // Fade
         // #pragma surface surfSpecular StandardSpecular vertex:vert finalcolor:finalSpecular fullforwardshadows alpha:premul // Transparent
  
+		#pragma multi_compile GPU_SKINNING_MATRIX_ARRAY GPU_SKINNING_TEXTURE_MATRIX
+
         #include "Assets/GPUSkinning/Resources/GPUSkinningSurface.cginc"
+		#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"
 
         uniform float4x4 _GPUSkinning_MatrixArray[33];
 
@@ -102,6 +105,21 @@ ENDCG
 
 		   // Skinning
 		   {
+#ifdef GPU_SKINNING_MATRIX_ARRAY
+				float4x4 mat0 = _GPUSkinning_MatrixArray[v.uv1.x];
+				float4x4 mat1 = _GPUSkinning_MatrixArray[v.uv1.z];
+				float4x4 mat2 = _GPUSkinning_MatrixArray[v.uv2.x];
+				float4x4 mat3 = _GPUSkinning_MatrixArray[v.uv2.z];
+#endif
+
+#ifdef GPU_SKINNING_TEXTURE_MATRIX
+				int frameStartIndex = getFrameStartIndex();
+				float4x4 mat0 = getMatrix(frameStartIndex, v.uv1.x);
+				float4x4 mat1 = getMatrix(frameStartIndex, v.uv1.z);
+				float4x4 mat2 = getMatrix(frameStartIndex, v.uv2.x);
+				float4x4 mat3 = getMatrix(frameStartIndex, v.uv2.z);
+#endif
+
 				float4 normal = float4(v.normal, 0);
 				float4 tangent = float4(v.tangent.xyz, 0);
 
@@ -111,22 +129,22 @@ ENDCG
 
 				
 				float4 pos =
-					mul(_GPUSkinning_MatrixArray[v.uv1.x], v.vertex) * v.uv1.y +
-					mul(_GPUSkinning_MatrixArray[v.uv1.z], v.vertex) * v.uv1.w + 
-					mul(_GPUSkinning_MatrixArray[v.uv2.x], v.vertex) * v.uv2.y + 
-					mul(_GPUSkinning_MatrixArray[v.uv2.z], v.vertex) * v.uv2.w;
+					mul(mat0, v.vertex) * v.uv1.y +
+					mul(mat1, v.vertex) * v.uv1.w + 
+					mul(mat2, v.vertex) * v.uv2.y + 
+					mul(mat3, v.vertex) * v.uv2.w;
 
 				normal =
-					mul(_GPUSkinning_MatrixArray[v.uv1.x], normal) * v.uv1.y +
-					mul(_GPUSkinning_MatrixArray[v.uv1.z], normal) * v.uv1.w + 
-					mul(_GPUSkinning_MatrixArray[v.uv2.x], normal) * v.uv2.y + 
-					mul(_GPUSkinning_MatrixArray[v.uv2.z], normal) * v.uv2.w;
+					mul(mat0, normal) * v.uv1.y +
+					mul(mat1, normal) * v.uv1.w + 
+					mul(mat2, normal) * v.uv2.y + 
+					mul(mat3, normal) * v.uv2.w;
 
 				tangent =
-					mul(_GPUSkinning_MatrixArray[v.uv1.x], tangent) * v.uv1.y +
-					mul(_GPUSkinning_MatrixArray[v.uv1.z], tangent) * v.uv1.w + 
-					mul(_GPUSkinning_MatrixArray[v.uv2.x], tangent) * v.uv2.y + 
-					mul(_GPUSkinning_MatrixArray[v.uv2.z], tangent) * v.uv2.w;
+					mul(mat0, tangent) * v.uv1.y +
+					mul(mat1, tangent) * v.uv1.w + 
+					mul(mat2, tangent) * v.uv2.y + 
+					mul(mat3, tangent) * v.uv2.w;
 				
 
 				v.vertex = pos;

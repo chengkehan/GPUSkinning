@@ -1,4 +1,7 @@
-﻿#include "UnityStandardInput.cginc"
+﻿#ifndef GPUSKINNING_SURFACE
+#define GPUSKINNING_SURFACE
+
+#include "UnityStandardInput.cginc"
  
 // just for NormalizePerPixelNormal()
 #include "UnityStandardCore.cginc"
@@ -72,3 +75,5 @@ void finalSpecular (Input IN, SurfaceOutputStandardSpecular o, inout fixed4 colo
 {
    color = OutputForward(color, color.a);
 }
+
+#endif

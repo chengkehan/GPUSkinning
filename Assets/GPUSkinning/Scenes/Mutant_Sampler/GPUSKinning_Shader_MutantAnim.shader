@@ -7,6 +7,7 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 
 	CGINCLUDE
 	#include "UnityCG.cginc"
+	#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"
 
 	uniform float4x4 _GPUSkinning_MatrixArray[26];
 
@@ -31,12 +32,27 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 	{
 		v2f o;
 
+#ifdef GPU_SKINNING_MATRIX_ARRAY
+		float4x4 mat0 = _GPUSkinning_MatrixArray[v.uv2.x];
+		float4x4 mat1 = _GPUSkinning_MatrixArray[v.uv2.z];
+		float4x4 mat2 = _GPUSkinning_MatrixArray[v.uv3.x];
+		float4x4 mat3 = _GPUSkinning_MatrixArray[v.uv3.z];
+#endif
+
+#ifdef GPU_SKINNING_TEXTURE_MATRIX
+		int frameStartIndex = getFrameStartIndex();
+		float4x4 mat0 = getMatrix(frameStartIndex, v.uv2.x);
+		float4x4 mat1 = getMatrix(frameStartIndex, v.uv2.z);
+		float4x4 mat2 = getMatrix(frameStartIndex, v.uv3.x);
+		float4x4 mat3 = getMatrix(frameStartIndex, v.uv3.z);
+#endif
+
 		
 
 		
 		float4 pos =
-			mul(_GPUSkinning_MatrixArray[v.uv2.x], v.vertex) * v.uv2.y +
-			mul(_GPUSkinning_MatrixArray[v.uv2.z], v.vertex) * v.uv2.w;
+			mul(mat0, v.vertex) * v.uv2.y +
+			mul(mat1, v.vertex) * v.uv2.w;
 		
 
 		
@@ -63,6 +79,7 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
+			#pragma multi_compile GPU_SKINNING_MATRIX_ARRAY GPU_SKINNING_TEXTURE_MATRIX
 			ENDCG
 		}
 	}

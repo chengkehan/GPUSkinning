@@ -53,6 +53,8 @@ public class GPUSkinningSamplerEditor : Editor
 
     private bool isJointsFoldout = true;
 
+    private GPUSkinningPlayerMode playerMode = GPUSkinningPlayerMode.MATRIX_ARRAY;
+
     public override void OnInspectorGUI ()
 	{
 		GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -204,11 +206,12 @@ public class GPUSkinningSamplerEditor : Editor
                 anim = sampler.anim;
                 mesh = sampler.savedMesh;
                 mtrl = sampler.savedMtrl;
+                texture = sampler.texture;
                 if (mesh != null)
                 {
                     bounds = mesh.bounds;
                 }
-                if (anim == null || mesh == null || mtrl == null)
+                if (anim == null || mesh == null || mtrl == null || texture == null)
                 {
                     EditorUtility.DisplayDialog("GPUSkinning", "Missing Sampling Resources", "OK");
                 }
@@ -247,6 +250,7 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.anim = anim;
                         preview.mesh = mesh;
                         preview.mtrl = mtrl;
+                        preview.texture = texture;
                         preview.clipName = anim.clips == null || anim.clips.Length == 0 ? null : anim.clips[previewClipIndex].name;
                         preview.Init();
                     }
@@ -282,6 +286,8 @@ public class GPUSkinningSamplerEditor : Editor
 
                 OnGUI_PreviewClipsOptions();
 
+                OnGUI_PlayerMode();
+
                 OnGUI_EditBounds();
 
                 EditorGUILayout.Space();
@@ -292,6 +298,24 @@ public class GPUSkinningSamplerEditor : Editor
         EndBox();
 
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private void OnGUI_PlayerMode()
+    {
+        EditorGUILayout.BeginHorizontal();
+        {
+            GUILayout.FlexibleSpace();
+            int index = playerMode == GPUSkinningPlayerMode.MATRIX_ARRAY ? 0 : 1;
+            index = GUILayout.Toolbar(index, new string[] { GPUSkinningPlayerMode.MATRIX_ARRAY.ToString(), GPUSkinningPlayerMode.TEXTURE_MATRIX.ToString() });
+            playerMode = index == 0 ? GPUSkinningPlayerMode.MATRIX_ARRAY : GPUSkinningPlayerMode.TEXTURE_MATRIX;
+            GUILayout.FlexibleSpace();
+
+            if(preview != null)
+            {
+                preview.player.Mode = playerMode;
+            }
+        }
+        EditorGUILayout.EndHorizontal();
     }
 
     private void OnGUI_EditBounds()

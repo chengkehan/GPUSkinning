@@ -9,6 +9,8 @@ public class GPUSkinningPreview : MonoBehaviour
 
     public Material mtrl = null;
 
+    public TextAsset texture = null;
+
     public string clipName = null;
 
     public GPUSkinningPlayer player = null;
@@ -17,7 +19,7 @@ public class GPUSkinningPreview : MonoBehaviour
     {
         if(player == null)
         {
-            player = new GPUSkinningPlayer(gameObject, anim, mesh, new Material(mtrl));
+            player = new GPUSkinningPlayer(gameObject, anim, mesh, new Material(mtrl), texture);
             player.Play(clipName);
         }
     }
@@ -35,6 +37,15 @@ public class GPUSkinningPreview : MonoBehaviour
         if (player != null)
         {
             player.Update(deltaTime);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if(player != null)
+        {
+            player.Destroy();
+            player = null;
         }
     }
 }

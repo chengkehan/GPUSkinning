@@ -42,7 +42,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
                 newMtrl.hideFlags = HideFlags.DontSave;
             }
 
-            player = new GPUSkinningPlayer(gameObject, anim, mesh, newMtrl);
+            player = new GPUSkinningPlayer(gameObject, anim, mesh, newMtrl, null);
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {
@@ -100,6 +100,12 @@ public class GPUSkinningPlayerMono : MonoBehaviour
         {
             DestroyImmediate(newMtrl);
             newMtrl = null;
+        }
+
+        if(player != null)
+        {
+            player.Destroy();
+            player = null;
         }
     }
 }

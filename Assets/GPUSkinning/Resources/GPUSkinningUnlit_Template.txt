@@ -7,6 +7,7 @@
 
 	CGINCLUDE
 	#include "UnityCG.cginc"
+	#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"
 
 	uniform float4x4 _GPUSkinning_MatrixArray[_$NumBones$_];
 
@@ -31,23 +32,38 @@
 	{
 		v2f o;
 
+#ifdef GPU_SKINNING_MATRIX_ARRAY
+		float4x4 mat0 = _GPUSkinning_MatrixArray[v.uv2.x];
+		float4x4 mat1 = _GPUSkinning_MatrixArray[v.uv2.z];
+		float4x4 mat2 = _GPUSkinning_MatrixArray[v.uv3.x];
+		float4x4 mat3 = _GPUSkinning_MatrixArray[v.uv3.z];
+#endif
+
+#ifdef GPU_SKINNING_TEXTURE_MATRIX
+		int frameStartIndex = getFrameStartIndex();
+		float4x4 mat0 = getMatrix(frameStartIndex, v.uv2.x);
+		float4x4 mat1 = getMatrix(frameStartIndex, v.uv2.z);
+		float4x4 mat2 = getMatrix(frameStartIndex, v.uv3.x);
+		float4x4 mat3 = getMatrix(frameStartIndex, v.uv3.z);
+#endif
+
 		_$Bone1
 		float4 pos =
-			mul(_GPUSkinning_MatrixArray[v.uv2.x], v.vertex) * v.uv2.y;
+			mul(mat0, v.vertex) * v.uv2.y;
 		Bone1$_
 
 		_$Bone2
 		float4 pos =
-			mul(_GPUSkinning_MatrixArray[v.uv2.x], v.vertex) * v.uv2.y +
-			mul(_GPUSkinning_MatrixArray[v.uv2.z], v.vertex) * v.uv2.w;
+			mul(mat0, v.vertex) * v.uv2.y +
+			mul(mat1, v.vertex) * v.uv2.w;
 		Bone2$_
 
 		_$Bone4
 		float4 pos =
-			mul(_GPUSkinning_MatrixArray[v.uv2.x], v.vertex) * v.uv2.y +
-			mul(_GPUSkinning_MatrixArray[v.uv2.z], v.vertex) * v.uv2.w + 
-			mul(_GPUSkinning_MatrixArray[v.uv3.x], v.vertex) * v.uv3.y + 
-			mul(_GPUSkinning_MatrixArray[v.uv3.z], v.vertex) * v.uv3.w;
+			mul(mat0, v.vertex) * v.uv2.y +
+			mul(mat1, v.vertex) * v.uv2.w + 
+			mul(mat2, v.vertex) * v.uv3.y + 
+			mul(mat3, v.vertex) * v.uv3.w;
 		Bone4$_
 
 		o.vertex = UnityObjectToClipPos(pos);
@@ -72,6 +88,7 @@
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
+			#pragma multi_compile GPU_SKINNING_MATRIX_ARRAY GPU_SKINNING_TEXTURE_MATRIX
 			ENDCG
 		}
 	}
