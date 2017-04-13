@@ -7,6 +7,48 @@ using System.Collections.Generic;
 #endif
 public class GPUSkinningPlayer
 {
+#if UNITY_EDITOR
+    static GPUSkinningPlayer()
+    {
+        UnityEditor.EditorApplication.update -= EditorUpdate;
+        UnityEditor.EditorApplication.update += EditorUpdate;
+    }
+
+    private static void EditorUpdate()
+    {
+        if (UnityEditor.EditorApplication.isCompiling)
+        {
+            if (players != null)
+            {
+                int numPlayers = players.Count;
+                for (int i = 0; i < numPlayers; ++i)
+                {
+                    if (players[i] != null)
+                    {
+                        players[i].Destroy_Internal();
+                    }
+                }
+                players.Clear();
+            }
+            {
+                GameObject[] selectedGos = UnityEditor.Selection.gameObjects;
+                if (selectedGos != null)
+                {
+                    foreach (var selectedGo in selectedGos)
+                    {
+                        if (selectedGo != null && selectedGo.GetComponent<GPUSkinningPlayerMono>() != null)
+                        {
+                            UnityEditor.Selection.activeGameObject = null;
+                            break;
+                        }
+                    }
+                }
+            }
+            UnityEditor.EditorApplication.update -= EditorUpdate;
+        }
+    }
+#endif
+
     private static List<GPUSkinningPlayer> players = new List<GPUSkinningPlayer>();
 
     private GameObject go = null;
@@ -27,6 +69,8 @@ public class GPUSkinningPlayer
 
     private GPUSkinningClip playingClip = null;
 
+    private bool isPlaying = false;
+
     private int playingFrameIndex = -1;
 
     private int shaderPropID_GPUSkinning_MatrixArray = 0;
@@ -45,34 +89,6 @@ public class GPUSkinningPlayer
 
     private int shaderPropID_GPUSkinning_PixelSegmentation = 0;
 
-#if UNITY_EDITOR
-    static GPUSkinningPlayer()
-    {
-        UnityEditor.EditorApplication.update -= AAAUpdate;
-        UnityEditor.EditorApplication.update += AAAUpdate;
-    }
-
-    private static void AAAUpdate()
-    {
-        if (UnityEditor.EditorApplication.isCompiling)
-        {
-            if (players != null)
-            { 
-                int numPlayers = players.Count;
-                for (int i = 0; i < numPlayers; ++i)
-                {  
-                    if (players[i] != null)
-                    {
-                        players[i].Destroy_Internal();
-                    }
-                }  
-                players.Clear();
-            }
-            UnityEditor.EditorApplication.update -= AAAUpdate;
-        }
-    }
-#endif
-
     private GPUSkinningPlayerMode mode = GPUSkinningPlayerMode.MATRIX_ARRAY;
     public GPUSkinningPlayerMode Mode
     {
@@ -84,6 +100,14 @@ public class GPUSkinningPlayer
         get
         {
             return mode;
+        }
+    }
+
+    public bool IsPlaying
+    {
+        get
+        {
+            return isPlaying;
         }
     }
 
@@ -107,7 +131,7 @@ public class GPUSkinningPlayer
     public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningAnimation anim, Mesh mesh, Material mtrl, TextAsset textureRawData)
     {
         Debug.LogError("new");
-        players.Add(this);
+        players.Add(this); 
 
         go = attachToThisGo;
         this.anim = anim;
@@ -161,6 +185,7 @@ public class GPUSkinningPlayer
                 if (playingClip != clips[i] || 
                     (playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once && Mathf.Approximately(NormalizedTime, 1.0f)))
                 {
+                    isPlaying = true;
                     playingClip = clips[i];
                     time = 0;
                     playingFrameIndex = -1;
@@ -168,6 +193,11 @@ public class GPUSkinningPlayer
                 return;
             }
         }
+    }
+
+    public void Stop()
+    {
+        isPlaying = false;
     }
 
 #if UNITY_EDITOR
@@ -191,6 +221,9 @@ public class GPUSkinningPlayer
     private void Destroy_Internal()
     {
         Debug.LogError("des ");
+
+        isPlaying = false;
+
         if (texture != null)
         {
             Object.DestroyImmediate(texture);
@@ -230,18 +263,18 @@ public class GPUSkinningPlayer
 
     private void Update_Internal(float timeDelta, bool isEnforced)
     {
-        if (playingClip == null)
+#if UNITY_EDITOR
+        bool isMeshRenderEnabled = mtrl != null;
+        if (mr != null && mr.enabled != isMeshRenderEnabled)
+        {
+            mr.enabled = isMeshRenderEnabled;
+        }
+#endif
+
+        if (!isPlaying || playingClip == null)
         {
             return;
         }
-
-#if UNITY_EDITOR
-        bool isMeshRenderEnabled = mtrl != null;
-        if(mr != null && mr.enabled != isMeshRenderEnabled)
-        {
-            mr.enabled = isMeshRenderEnabled; 
-        }
-#endif
 
         if(mtrl == null)
         {

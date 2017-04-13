@@ -156,6 +156,7 @@ public class GPUSkinningSamplerEditor : Editor
             int no = serializedObject.FindProperty("animClips.Array.size").intValue;
             int no2 = serializedObject.FindProperty("wrapModes.Array.size").intValue;
             int no3 = serializedObject.FindProperty("isSelected.Array.size").intValue;
+            int no4 = serializedObject.FindProperty("fpsList.Array.size").intValue;
             int c = EditorGUILayout.IntField("Size", no);
             if (c != no)
             {
@@ -169,6 +170,10 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 serializedObject.FindProperty("isSelected.Array.size").intValue = c;
             }
+            if(c != no4)
+            {
+                serializedObject.FindProperty("fpsList.Array.size").intValue = c;
+            }
             GUI.enabled = true;
 
             for (int i = 0; i < no; i++)
@@ -176,6 +181,7 @@ public class GPUSkinningSamplerEditor : Editor
                 var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
                 var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
                 var prop3 = serializedObject.FindProperty(string.Format("isSelected.Array.data[{0}]", i));
+                var prop4 = serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i));
                 if (prop != null)
                 {
                     EditorGUILayout.BeginHorizontal();
@@ -184,11 +190,14 @@ public class GPUSkinningSamplerEditor : Editor
                         EditorGUILayout.Space();
                         EditorGUILayout.Space();
                         EditorGUILayout.Space();
-                        EditorGUILayout.PropertyField(prop3);
+                        EditorGUILayout.PropertyField(prop3); 
+                        EditorGUILayout.PropertyField(prop4, new GUIContent());
                         EditorGUILayout.PropertyField(prop2, new GUIContent());
                         GUI.enabled = sampler.animation == null;
                         EditorGUILayout.PropertyField(prop, new GUIContent());
                         GUI.enabled = true;
+
+                        prop4.intValue = Mathf.Clamp(prop4.intValue, 0, 60);
                     }
                     EditorGUILayout.EndHorizontal();
                 }
@@ -250,8 +259,7 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.anim = anim;
                         preview.mesh = mesh;
                         preview.mtrl = mtrl;
-                        //preview.texture = texture;
-                        //preview.clipName = anim.clips == null || anim.clips.Length == 0 ? null : anim.clips[previewClipIndex].name;
+                        preview.texture = texture;
                         preview.Init();
                     }
                 }

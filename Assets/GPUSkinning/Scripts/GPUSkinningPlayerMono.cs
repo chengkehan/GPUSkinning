@@ -17,6 +17,10 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     [SerializeField]
     public Material mtrl = null;
 
+    [HideInInspector]
+    [SerializeField]
+    public TextAsset texture = null;
+
     private GPUSkinningPlayer player = null;
     public GPUSkinningPlayer Player
     {
@@ -35,7 +39,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
         if (anim != null && mesh != null && mtrl != null)
         {
-            player = new GPUSkinningPlayer(gameObject, anim, mesh, mtrl, null);
+            player = new GPUSkinningPlayer(gameObject, anim, mesh, mtrl, texture);
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {

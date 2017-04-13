@@ -29,6 +29,10 @@ public class GPUSkinningSampler : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
+    public int[] fpsList = null;
+
+    [HideInInspector]
+    [SerializeField]
     public bool[] isSelected = null;
 
     [HideInInspector]
@@ -149,7 +153,7 @@ public class GPUSkinningSampler : MonoBehaviour
 			return;
 		}
 
-        int numFrames = (int)(animClip.frameRate * animClip.length);
+        int numFrames = (int)(GetClipFPS(animClip, samplingClipIndex) * animClip.length);
         if(numFrames == 0)
         {
             isSampling = false;
@@ -209,7 +213,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
         gpuSkinningClip = new GPUSkinningClip();
         gpuSkinningClip.name = animClip.name;
-        gpuSkinningClip.fps = (int)animClip.frameRate;
+        gpuSkinningClip.fps = GetClipFPS(animClip, samplingClipIndex);
         gpuSkinningClip.length = animClip.length;
         gpuSkinningClip.wrapMode = wrapModes[samplingClipIndex];
         gpuSkinningClip.frames = new GPUSkinningFrame[numFrames];
@@ -235,6 +239,11 @@ public class GPUSkinningSampler : MonoBehaviour
         SetCurrentAnimationClip();
 
         isSampling = true;
+    }
+
+    private int GetClipFPS(AnimationClip clip, int clipIndex)
+    {
+        return fpsList[clipIndex] == 0 ? (int)clip.frameRate : fpsList[clipIndex];
     }
 
     private void RestoreCustomBoneData(GPUSkinningBone[] bonesOrig, GPUSkinningBone[] bonesNew)
