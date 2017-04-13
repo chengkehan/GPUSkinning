@@ -128,7 +128,7 @@ public class GPUSkinningPlayer
         }
     }
 
-    public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningAnimation anim, Mesh mesh, Material mtrl, TextAsset textureRawData)
+    public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningAnimation anim, Mesh mesh, Material mtrl, Texture2D texture)
     {
         Debug.LogError("new");
         players.Add(this); 
@@ -136,7 +136,7 @@ public class GPUSkinningPlayer
         go = attachToThisGo;
         this.anim = anim;
         this.mesh = mesh;
-        this.mtrl = new Material(mtrl);
+        this.mtrl = mtrl;
 
         mr = go.GetComponent<MeshRenderer>();
         if (mr == null)
@@ -152,13 +152,7 @@ public class GPUSkinningPlayer
         mr.sharedMaterial = this.mtrl;
         mf.sharedMesh = mesh;
 
-        if(textureRawData != null)
-        {
-            texture = new Texture2D(anim.textureWidth, anim.textureHeight, TextureFormat.RGBAHalf, false, true);
-            texture.filterMode = FilterMode.Point;
-            texture.LoadRawTextureData(textureRawData.bytes);
-            texture.Apply(false, true);
-        }
+        this.texture = texture;
 
         shaderPropID_GPUSkinning_MatrixArray = Shader.PropertyToID("_GPUSkinning_MatrixArray");
         shaderPropID_GPUSkinning_TextureMatrix = Shader.PropertyToID("_GPUSkinning_TextureMatrix");
@@ -223,18 +217,6 @@ public class GPUSkinningPlayer
         Debug.LogError("des ");
 
         isPlaying = false;
-
-        if (texture != null)
-        {
-            Object.DestroyImmediate(texture);
-            texture = null;
-        }
-
-        if (mtrl != null)
-        {
-            Object.DestroyImmediate(mtrl);
-            mtrl = null;
-        }
     }
 
     private void UpdateMode(bool isEnforced)

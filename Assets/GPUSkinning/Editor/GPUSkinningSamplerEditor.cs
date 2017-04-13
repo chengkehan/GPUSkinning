@@ -259,7 +259,7 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.anim = anim;
                         preview.mesh = mesh;
                         preview.mtrl = mtrl;
-                        preview.texture = texture;
+                        preview.textureRawData = texture;
                         preview.Init();
                     }
                 }

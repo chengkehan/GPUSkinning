@@ -37,6 +37,13 @@ public class GPUSkinningPlayerMonoEditor : Editor
             player.Init();
         }
 
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("textureRawData"));
+        if (EditorGUI.EndChangeCheck())
+        {
+            player.Init();
+        }
+
         serializedObject.ApplyModifiedProperties();
     }
 

@@ -19,7 +19,11 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
-    public TextAsset texture = null;
+    public TextAsset textureRawData = null;
+
+    private Material newMtrl = null;
+
+    private Texture2D texture = null;
 
     private GPUSkinningPlayer player = null;
     public GPUSkinningPlayer Player
@@ -37,9 +41,22 @@ public class GPUSkinningPlayerMono : MonoBehaviour
             return;
         }
 
-        if (anim != null && mesh != null && mtrl != null)
+        if (anim != null && mesh != null && mtrl != null && textureRawData != null)
         {
-            player = new GPUSkinningPlayer(gameObject, anim, mesh, mtrl, texture);
+            newMtrl = new Material(mtrl);
+
+            texture = new Texture2D(anim.textureWidth, anim.textureHeight, TextureFormat.RGBAHalf, false, true);
+            texture.filterMode = FilterMode.Point;
+            texture.LoadRawTextureData(textureRawData.bytes);
+            texture.Apply(false, true);
+
+            if(!Application.isPlaying)
+            {
+                newMtrl.hideFlags = HideFlags.DontSave;
+                texture.hideFlags = HideFlags.DontSave;
+            }
+
+            player = new GPUSkinningPlayer(gameObject, anim, mesh, newMtrl, texture);
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {
@@ -97,6 +114,18 @@ public class GPUSkinningPlayerMono : MonoBehaviour
         {
             player.Destroy();
             player = null;
+        }
+
+        if(newMtrl != null)
+        {
+            DestroyImmediate(newMtrl);
+            newMtrl = null;
+        }
+
+        if(texture != null)
+        {
+            DestroyImmediate(texture);
+            texture = null;
         }
     }
 }
