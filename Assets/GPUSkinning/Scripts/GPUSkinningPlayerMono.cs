@@ -110,11 +110,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
     private void OnDestroy()
     {
-        if(player != null)
-        {
-            player.Destroy();
-            player = null;
-        }
+        player = null;
 
         if(newMtrl != null)
         {

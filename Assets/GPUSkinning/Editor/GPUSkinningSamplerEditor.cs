@@ -687,6 +687,17 @@ public class GPUSkinningSamplerEditor : Editor
 
     private void UpdateHandler()
     {
+        GPUSkinningSampler sampler = target as GPUSkinningSampler;
+
+        if (EditorApplication.isCompiling)
+        {
+            if (Selection.activeGameObject == sampler.gameObject)
+            {
+                Selection.activeGameObject = null;
+                return; 
+            }
+        }
+
         float deltaTime = Time.realtimeSinceStartup - time;
         
         if(preview != null)
@@ -699,8 +710,6 @@ public class GPUSkinningSamplerEditor : Editor
         }
 
         time = Time.realtimeSinceStartup;
-
-        GPUSkinningSampler sampler = target as GPUSkinningSampler;
 
         if(!sampler.isSampling && sampler.IsSamplingProgress())
         {

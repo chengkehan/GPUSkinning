@@ -2,55 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
-#if UNITY_EDITOR
-[UnityEditor.InitializeOnLoad]
-#endif
 public class GPUSkinningPlayer
 {
-#if UNITY_EDITOR
-    static GPUSkinningPlayer()
-    {
-        UnityEditor.EditorApplication.update -= EditorUpdate;
-        UnityEditor.EditorApplication.update += EditorUpdate;
-    }
-
-    private static void EditorUpdate()
-    {
-        if (UnityEditor.EditorApplication.isCompiling)
-        {
-            if (players != null)
-            {
-                int numPlayers = players.Count;
-                for (int i = 0; i < numPlayers; ++i)
-                {
-                    if (players[i] != null)
-                    {
-                        players[i].Destroy_Internal();
-                    }
-                }
-                players.Clear();
-            }
-            {
-                GameObject[] selectedGos = UnityEditor.Selection.gameObjects;
-                if (selectedGos != null)
-                {
-                    foreach (var selectedGo in selectedGos)
-                    {
-                        if (selectedGo != null && selectedGo.GetComponent<GPUSkinningPlayerMono>() != null)
-                        {
-                            UnityEditor.Selection.activeGameObject = null;
-                            break;
-                        }
-                    }
-                }
-            }
-            UnityEditor.EditorApplication.update -= EditorUpdate;
-        }
-    }
-#endif
-
-    private static List<GPUSkinningPlayer> players = new List<GPUSkinningPlayer>();
-
     private GameObject go = null;
 
     private GPUSkinningAnimation anim = null;
@@ -130,9 +83,6 @@ public class GPUSkinningPlayer
 
     public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningAnimation anim, Mesh mesh, Material mtrl, Texture2D texture)
     {
-        Debug.LogError("new");
-        players.Add(this); 
-
         go = attachToThisGo;
         this.anim = anim;
         this.mesh = mesh;
@@ -204,19 +154,6 @@ public class GPUSkinningPlayer
     public void Update(float timeDelta)
     {
         Update_Internal(timeDelta, false);
-    }
-
-    public void Destroy()
-    {
-        players.Remove(this);
-        Destroy_Internal();
-    }
-
-    private void Destroy_Internal()
-    {
-        Debug.LogError("des ");
-
-        isPlaying = false;
     }
 
     private void UpdateMode(bool isEnforced)
