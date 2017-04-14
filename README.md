@@ -4,6 +4,10 @@
 
 TODO: More Features
 
+* Memory Optimization
+
+* Individual Difference Animation
+
 * GPU Instancing
 
 * Skinning Instancing
