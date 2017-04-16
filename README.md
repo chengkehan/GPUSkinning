@@ -1,6 +1,6 @@
 ## GPUSkinning to improve performance.
 
-### v0.2.1
+### v0.2.1 ( [dev](https://github.com/chengkehan/GPUSkinning/tree/v0.2.1-dev) )
 
 TODO: More Features
 
