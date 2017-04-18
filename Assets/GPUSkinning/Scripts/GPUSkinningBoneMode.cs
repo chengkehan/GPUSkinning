@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum GPUSkinningPlayerMode
+public enum GPUSkinningBoneMode
 {
     MATRIX_ARRAY, 
     TEXTURE_MATRIX

@@ -53,7 +53,7 @@ public class GPUSkinningSamplerEditor : Editor
 
     private bool isJointsFoldout = true;
 
-    private GPUSkinningPlayerMode playerMode = GPUSkinningPlayerMode.MATRIX_ARRAY;
+    private GPUSkinningBoneMode boneMode = GPUSkinningBoneMode.MATRIX_ARRAY;
 
     public override void OnInspectorGUI ()
 	{
@@ -294,7 +294,7 @@ public class GPUSkinningSamplerEditor : Editor
 
                 OnGUI_PreviewClipsOptions();
 
-                OnGUI_PlayerMode();
+                OnGUI_BoneMode();
 
                 OnGUI_EditBounds();
 
@@ -308,19 +308,19 @@ public class GPUSkinningSamplerEditor : Editor
         serializedObject.ApplyModifiedProperties();
     }
 
-    private void OnGUI_PlayerMode()
+    private void OnGUI_BoneMode()
     {
         EditorGUILayout.BeginHorizontal();
         {
             GUILayout.FlexibleSpace();
-            int index = playerMode == GPUSkinningPlayerMode.MATRIX_ARRAY ? 0 : 1;
-            index = GUILayout.Toolbar(index, new string[] { GPUSkinningPlayerMode.MATRIX_ARRAY.ToString(), GPUSkinningPlayerMode.TEXTURE_MATRIX.ToString() });
-            playerMode = index == 0 ? GPUSkinningPlayerMode.MATRIX_ARRAY : GPUSkinningPlayerMode.TEXTURE_MATRIX;
+            int index = boneMode == GPUSkinningBoneMode.MATRIX_ARRAY ? 0 : 1;
+            index = GUILayout.Toolbar(index, new string[] { GPUSkinningBoneMode.MATRIX_ARRAY.ToString(), GPUSkinningBoneMode.TEXTURE_MATRIX.ToString() });
+            boneMode = index == 0 ? GPUSkinningBoneMode.MATRIX_ARRAY : GPUSkinningBoneMode.TEXTURE_MATRIX;
             GUILayout.FlexibleSpace();
 
             if(preview != null)
             {
-                preview.Player.Mode = playerMode;
+                preview.Player.BoneMode = boneMode;
             }
         }
         EditorGUILayout.EndHorizontal();

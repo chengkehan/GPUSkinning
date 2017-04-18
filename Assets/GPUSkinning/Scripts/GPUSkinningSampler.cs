@@ -184,6 +184,15 @@ public class GPUSkinningSampler : MonoBehaviour
 		gpuSkinningAnimation = anim == null ? ScriptableObject.CreateInstance<GPUSkinningAnimation>() : anim;
 		gpuSkinningAnimation.name = animName;
 
+        if(anim == null)
+        {
+            gpuSkinningAnimation.guid = System.Guid.NewGuid().ToString();
+        }
+        else
+        {
+            gpuSkinningAnimation.guid = anim.guid;
+        }
+
         if(samplingClipIndex == 0)
         {
             if(!updateOrNew)

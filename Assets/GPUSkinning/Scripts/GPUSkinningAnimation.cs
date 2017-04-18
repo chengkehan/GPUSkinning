@@ -3,6 +3,8 @@ using System.Collections;
 
 public class GPUSkinningAnimation : ScriptableObject
 {
+    public string guid = null;
+
 	public string name = null;
 
     public GPUSkinningBone[] bones = null;

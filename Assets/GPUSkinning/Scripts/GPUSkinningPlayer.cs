@@ -6,15 +6,14 @@ public class GPUSkinningPlayer
 {
     private GameObject go = null;
 
-    private GPUSkinningAnimation anim = null;
-
-    private Mesh mesh = null;
-
-    private Material mtrl = null;
-
-    private Texture2D texture = null;
-
     private MeshRenderer mr = null;
+    public MeshRenderer MeshRenderer
+    {
+        get
+        {
+            return mr;
+        }
+    }
 
     private MeshFilter mf = null;
 
@@ -22,37 +21,33 @@ public class GPUSkinningPlayer
 
     private GPUSkinningClip playingClip = null;
 
+    private GPUSkinningPlayerResources res = null;
+
     private bool isPlaying = false;
 
     private int playingFrameIndex = -1;
 
-    private int shaderPropID_GPUSkinning_MatrixArray = 0;
-
-    private int shaderPropID_GPUSkinning_TextureMatrix = 0;
-
-    private int shaderPropID_GPUSkinning_NumPixelsPerFrame = 0;
-
-    private int shaderPropID_GPUSkinning_TextureSize = 0;
-
-    private int shaderPropID_GPUSkinning_ClipLength = 0;
-
-    private int shaderPropID_GPUSkinning_ClipFPS = 0;
-
-    private int shaderPorpID_GPUSkinning_Time = 0;
-
-    private int shaderPropID_GPUSkinning_PixelSegmentation = 0;
-
-    private GPUSkinningPlayerMode mode = GPUSkinningPlayerMode.MATRIX_ARRAY;
-    public GPUSkinningPlayerMode Mode
+    public GPUSkinningIndividualDifferenceMode IndividualDifferenceMode
     {
         set
         {
-            mode = value;
-            UpdateMode(false);
+            res.IndividualDefferenceMode = value;
         }
         get
         {
-            return mode;
+            return res.IndividualDefferenceMode;
+        }
+    }
+
+    public GPUSkinningBoneMode BoneMode
+    {
+        set
+        {
+            res.SetBoneMode(value, false);
+        }
+        get
+        {
+            return res.GetBoneMode();
         }
     }
 
@@ -81,12 +76,10 @@ public class GPUSkinningPlayer
         }
     }
 
-    public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningAnimation anim, Mesh mesh, Material mtrl, Texture2D texture)
+    public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningPlayerResources res)
     {
         go = attachToThisGo;
-        this.anim = anim;
-        this.mesh = mesh;
-        this.mtrl = mtrl;
+        this.res = res;
 
         mr = go.GetComponent<MeshRenderer>();
         if (mr == null)
@@ -99,28 +92,17 @@ public class GPUSkinningPlayer
             mf = go.AddComponent<MeshFilter>();
         }
 
-        mr.sharedMaterial = this.mtrl;
-        mf.sharedMesh = mesh;
-
-        this.texture = texture;
-
-        shaderPropID_GPUSkinning_MatrixArray = Shader.PropertyToID("_GPUSkinning_MatrixArray");
-        shaderPropID_GPUSkinning_TextureMatrix = Shader.PropertyToID("_GPUSkinning_TextureMatrix");
-        shaderPropID_GPUSkinning_NumPixelsPerFrame = Shader.PropertyToID("_GPUSkinning_NumPixelsPerFrame");
-        shaderPropID_GPUSkinning_TextureSize = Shader.PropertyToID("_GPUSkinning_TextureSize");
-        shaderPropID_GPUSkinning_ClipLength = Shader.PropertyToID("_GPUSkinning_ClipLength");
-        shaderPropID_GPUSkinning_ClipFPS = Shader.PropertyToID("_GPUSkinning_ClipFPS");
-        shaderPorpID_GPUSkinning_Time = Shader.PropertyToID("_GPUSkinning_Time");
-        shaderPropID_GPUSkinning_PixelSegmentation = Shader.PropertyToID("_GPUSkinning_PixelSegmentation");
+        mr.sharedMaterial = res.mtrl.Material;
+        mf.sharedMesh = res.mesh;
 
         CreateJoints();
 
-        UpdateMode(true);
+        res.SetBoneMode(GPUSkinningBoneMode.MATRIX_ARRAY, true);
     }
 
     public void Play(string clipName)
     {
-        GPUSkinningClip[] clips = anim.clips;
+        GPUSkinningClip[] clips = res.anim.clips;
         int numClips = clips == null ? 0 : clips.Length;
         for(int i = 0; i < numClips; ++i)
         {
@@ -156,46 +138,14 @@ public class GPUSkinningPlayer
         Update_Internal(timeDelta, false);
     }
 
-    private void UpdateMode(bool isEnforced)
-    {
-        if(mtrl != null)
-        {
-            if(mode == GPUSkinningPlayerMode.MATRIX_ARRAY)
-            {
-                if (mtrl.IsKeywordEnabled("GPU_SKINNING_TEXTURE_MATRIX") || isEnforced)
-                {
-                    mtrl.EnableKeyword("GPU_SKINNING_MATRIX_ARRAY");
-                    mtrl.DisableKeyword("GPU_SKINNING_TEXTURE_MATRIX");
-                }
-            }
-            else
-            {
-                
-                if (mtrl.IsKeywordEnabled("GPU_SKINNING_MATRIX_ARRAY") || isEnforced)
-                {
-                    mtrl.DisableKeyword("GPU_SKINNING_MATRIX_ARRAY");
-                    mtrl.EnableKeyword("GPU_SKINNING_TEXTURE_MATRIX");
-                }
-            }
-        }
-    }
-
     private void Update_Internal(float timeDelta, bool isEnforced)
     {
-#if UNITY_EDITOR
-        bool isMeshRenderEnabled = mtrl != null;
-        if (mr != null && mr.enabled != isMeshRenderEnabled)
-        {
-            mr.enabled = isMeshRenderEnabled;
-        }
-#endif
-
         if (!isPlaying || playingClip == null)
         {
             return;
         }
 
-        if(mtrl == null)
+        if(res == null || res.mtrl == null || res.mtrl.Material == null)
         {
             return;    
         }
@@ -219,22 +169,20 @@ public class GPUSkinningPlayer
         if (playingFrameIndex != frameIndex || isEnforced)
         {
             playingFrameIndex = frameIndex;
-            GPUSkinningFrame frame = playingClip.frames[frameIndex];
-            if (mode == GPUSkinningPlayerMode.MATRIX_ARRAY)
+            if (res.mtrl.MaterialCanBeSetData() || isEnforced)
             {
-                mtrl.SetMatrixArray(shaderPropID_GPUSkinning_MatrixArray, frame.matrices);
+                res.mtrl.MarkMaterialAsSet();
+                GPUSkinningFrame frame = playingClip.frames[frameIndex];
+                if (BoneMode == GPUSkinningBoneMode.MATRIX_ARRAY)
+                {
+                    res.UpdateBoneMode_MatrixArray(frame.matrices);
+                }
+                else
+                {
+                    res.UpdateBoneMode_TextureMatrix(playingClip, time);
+                }
+                UpdateJoints(frame);
             }
-            else
-            {
-                mtrl.SetTexture(shaderPropID_GPUSkinning_TextureMatrix, texture);
-                mtrl.SetFloat(shaderPropID_GPUSkinning_NumPixelsPerFrame, anim.bones.Length * 3/*treat 3 pixels as a float3x4*/);
-                mtrl.SetVector(shaderPropID_GPUSkinning_TextureSize, new Vector4(anim.textureWidth, anim.textureHeight, 0, 0));
-                mtrl.SetFloat(shaderPropID_GPUSkinning_ClipLength, playingClip.length);
-                mtrl.SetFloat(shaderPropID_GPUSkinning_ClipFPS, playingClip.fps);
-                mtrl.SetFloat(shaderPorpID_GPUSkinning_Time, time);
-                mtrl.SetFloat(shaderPropID_GPUSkinning_PixelSegmentation, playingClip.pixelSegmentation);
-            }
-            UpdateJoints(frame);
         }
 
         time += timeDelta;
@@ -253,7 +201,7 @@ public class GPUSkinningPlayer
         }
 
         Matrix4x4[] matrices = frame.matrices;
-        GPUSkinningBone[] bones = anim.bones;
+        GPUSkinningBone[] bones = res.anim.bones;
         int numJoints = joints.Count;
         for(int i = 0; i < numJoints; ++i)
         {
@@ -278,7 +226,7 @@ public class GPUSkinningPlayer
         {
             GPUSkinningPlayerJoint[] existingJoints = go.GetComponentsInChildren<GPUSkinningPlayerJoint>();
 
-            GPUSkinningBone[] bones = anim.bones;
+            GPUSkinningBone[] bones = res.anim.bones;
             int numBones = bones == null ? 0 : bones.Length;
             for (int i = 0; i < numBones; ++i)
             {

@@ -21,9 +21,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     [SerializeField]
     public TextAsset textureRawData = null;
 
-    private Material newMtrl = null;
-
-    private Texture2D texture = null;
+    private static GPUSkinningPlayerMonoManager playerManager = new GPUSkinningPlayerMonoManager();
 
     private GPUSkinningPlayer player = null;
     public GPUSkinningPlayer Player
@@ -43,20 +41,24 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
         if (anim != null && mesh != null && mtrl != null && textureRawData != null)
         {
-            newMtrl = new Material(mtrl);
+            GPUSkinningPlayerResources res = null;
 
-            texture = new Texture2D(anim.textureWidth, anim.textureHeight, TextureFormat.RGBAHalf, false, true);
-            texture.filterMode = FilterMode.Point;
-            texture.LoadRawTextureData(textureRawData.bytes);
-            texture.Apply(false, true);
-
-            if(!Application.isPlaying)
+            if (Application.isPlaying)
             {
-                newMtrl.hideFlags = HideFlags.DontSave;
-                texture.hideFlags = HideFlags.DontSave;
+                playerManager.Register(anim, mesh, mtrl, textureRawData, this, out res);
+            }
+            else
+            {
+                res = new GPUSkinningPlayerResources();
+                res.anim = anim;
+                res.mesh = mesh;
+                res.mtrl = new GPUSkinningPlayerMaterial(new Material(mtrl));
+                res.texture = GPUSkinningUtil.CreateTexture2D(textureRawData, anim);
+                res.mtrl.Material.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor;
+                res.texture.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor;
             }
 
-            player = new GPUSkinningPlayer(gameObject, anim, mesh, newMtrl, texture);
+            player = new GPUSkinningPlayer(gameObject, res);
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {
@@ -111,17 +113,14 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     private void OnDestroy()
     {
         player = null;
+        playerManager.Unregister(this);
 
-        if(newMtrl != null)
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
         {
-            DestroyImmediate(newMtrl);
-            newMtrl = null;
+            Resources.UnloadUnusedAssets();
+            UnityEditor.EditorUtility.UnloadUnusedAssetsImmediate();
         }
-
-        if(texture != null)
-        {
-            DestroyImmediate(texture);
-            texture = null;
-        }
+#endif
     }
 }
