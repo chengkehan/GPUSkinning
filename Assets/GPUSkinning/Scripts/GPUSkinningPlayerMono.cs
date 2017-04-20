@@ -117,7 +117,11 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     private void OnDestroy()
     {
         player = null;
-        playerManager.Unregister(this);
+
+        if (Application.isPlaying)
+        {
+            playerManager.Unregister(this);
+        }
 
 #if UNITY_EDITOR
         if (!Application.isPlaying)
