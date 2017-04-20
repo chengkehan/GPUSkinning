@@ -96,7 +96,18 @@ public class GPUSkinningPlayer
                 {
                     isPlaying = true;
                     playingClip = clips[i];
-                    time = 0;
+                    if (playingClip.wrapMode == GPUSkinningWrapMode.Once)
+                    {
+                        time = 0;
+                    }
+                    else if(playingClip.wrapMode == GPUSkinningWrapMode.Loop)
+                    {
+                        time = Random.Range(0, playingClip.length);
+                    }
+                    else
+                    {
+                        throw new System.NotImplementedException();
+                    }
                 }
                 return;
             }
@@ -137,7 +148,7 @@ public class GPUSkinningPlayer
             UpdateMaterial();
             time += timeDelta;
         }
-        else
+        else if(playingClip.wrapMode == GPUSkinningWrapMode.Once)
         {
             if (time >= playingClip.length)
             {
@@ -153,6 +164,10 @@ public class GPUSkinningPlayer
                     time = playingClip.length;
                 }
             }
+        }
+        else
+        {
+            throw new System.NotImplementedException();
         }
     }
 
