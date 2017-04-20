@@ -9,8 +9,6 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 	#include "UnityCG.cginc"
 	#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"
 
-	uniform float4x4 _GPUSkinning_MatrixArray[26];
-
 	struct appdata
 	{
 		float4 vertex : POSITION;
@@ -32,13 +30,7 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 	{
 		v2f o;
 
-#ifdef GPU_SKINNING_MATRIX_ARRAY
-		matrixArray(v.uv2, v.uv3);
-#endif
-
-#ifdef GPU_SKINNING_TEXTURE_MATRIX
 		textureMatrix(v.uv2, v.uv3);
-#endif
 
 		
 
@@ -70,7 +62,6 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma multi_compile GPU_SKINNING_MATRIX_ARRAY GPU_SKINNING_TEXTURE_MATRIX
 			ENDCG
 		}
 	}

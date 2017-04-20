@@ -8,6 +8,8 @@ public class GPUSkinningPlayerMonoEditor : Editor
 {
     private float time = 0;
 
+    private string[] clipsName = null;
+
     public override void OnInspectorGUI()
     {
         GPUSkinningPlayerMono player = target as GPUSkinningPlayerMono;
@@ -42,6 +44,25 @@ public class GPUSkinningPlayerMonoEditor : Editor
         if (EditorGUI.EndChangeCheck())
         {
             player.Init();
+        }
+
+        SerializedProperty defaultPlayingClipIndex = serializedObject.FindProperty("defaultPlayingClipIndex");
+        if (clipsName == null && player.anim != null)
+        {
+            List<string> list = new List<string>();
+            for(int i = 0; i < player.anim.clips.Length; ++i)
+            {
+                list.Add(player.anim.clips[i].name);
+            }
+            clipsName = list.ToArray();
+
+            defaultPlayingClipIndex.intValue = Mathf.Clamp(defaultPlayingClipIndex.intValue, 0, player.anim.clips.Length);
+        }
+        EditorGUI.BeginChangeCheck();
+        defaultPlayingClipIndex.intValue = EditorGUILayout.Popup("Defailt Playing", defaultPlayingClipIndex.intValue, clipsName);
+        if(EditorGUI.EndChangeCheck())
+        {
+            player.Player.Play(clipsName[defaultPlayingClipIndex.intValue]);
         }
 
         serializedObject.ApplyModifiedProperties();

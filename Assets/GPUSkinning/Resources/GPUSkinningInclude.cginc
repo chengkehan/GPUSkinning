@@ -34,11 +34,6 @@ inline int getFrameStartIndex()
 	return frameStartIndex;
 }
 
-#define matrixArray(uv2, uv3) float4x4 mat0 = _GPUSkinning_MatrixArray[uv2.x]; \
-								float4x4 mat1 = _GPUSkinning_MatrixArray[uv2.z]; \
-								float4x4 mat2 = _GPUSkinning_MatrixArray[uv3.x]; \
-								float4x4 mat3 = _GPUSkinning_MatrixArray[uv3.z];
-
 #define textureMatrix(uv2, uv3) int frameStartIndex = getFrameStartIndex(); \
 								float4x4 mat0 = getMatrix(frameStartIndex, uv2.x); \
 								float4x4 mat1 = getMatrix(frameStartIndex, uv2.z); \

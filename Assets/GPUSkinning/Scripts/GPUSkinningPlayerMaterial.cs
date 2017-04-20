@@ -22,12 +22,22 @@ public class GPUSkinningPlayerMaterial
 
     public bool MaterialCanBeSetData()
     {
-        return frameCount != Time.frameCount;
+        if (Application.isPlaying)
+        {
+            return frameCount != Time.frameCount;
+        }
+        else
+        {
+            return true;
+        }
     }
 
     public void MarkMaterialAsSet()
     {
-        frameCount = Time.frameCount;
+        if (Application.isPlaying)
+        {
+            frameCount = Time.frameCount;
+        }
     }
 
     public void Destroy()

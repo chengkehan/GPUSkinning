@@ -21,6 +21,10 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     [SerializeField]
     public TextAsset textureRawData = null;
 
+    [HideInInspector]
+    [SerializeField]
+    private int defaultPlayingClipIndex = 0;
+
     private static GPUSkinningPlayerMonoManager playerManager = new GPUSkinningPlayerMonoManager();
 
     private GPUSkinningPlayer player = null;
@@ -62,7 +66,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {
-                player.Play(anim.clips[0].name);
+                player.Play(anim.clips[Mathf.Clamp(defaultPlayingClipIndex, 0, anim.clips.Length)].name);
             }
         }
     }

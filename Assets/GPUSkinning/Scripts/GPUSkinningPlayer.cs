@@ -23,34 +23,9 @@ public class GPUSkinningPlayer
 
     private GPUSkinningPlayerResources res = null;
 
+    private MaterialPropertyBlock mpb = null;
+
     private bool isPlaying = false;
-
-    private int playingFrameIndex = -1;
-
-    public GPUSkinningIndividualDifferenceMode IndividualDifferenceMode
-    {
-        set
-        {
-            res.IndividualDefferenceMode = value;
-        }
-        get
-        {
-            return res.IndividualDefferenceMode;
-        }
-    }
-
-    public GPUSkinningBoneMode BoneMode
-    {
-        set
-        {
-            res.SetBoneMode(value, false);
-        }
-        get
-        {
-            return res.GetBoneMode();
-        }
-    }
-
     public bool IsPlaying
     {
         get
@@ -72,7 +47,15 @@ public class GPUSkinningPlayer
     {
         get
         {
-            return playingClip == null || playingFrameIndex == -1 ? 0 : (float)playingFrameIndex / (playingClip.frames.Length - 1);
+            if(playingClip == null)
+            {
+                return 0;
+            }
+            else
+            {
+                int i = (int)(time / playingClip.length);
+                return (time - i * playingClip.length) / playingClip.length;
+            }
         }
     }
 
@@ -95,9 +78,9 @@ public class GPUSkinningPlayer
         mr.sharedMaterial = res.mtrl.Material;
         mf.sharedMesh = res.mesh;
 
-        CreateJoints();
+        mpb = new MaterialPropertyBlock();
 
-        res.SetBoneMode(GPUSkinningBoneMode.MATRIX_ARRAY, true);
+        ConstructJoints();
     }
 
     public void Play(string clipName)
@@ -109,12 +92,11 @@ public class GPUSkinningPlayer
             if(clips[i].name == clipName)
             {
                 if (playingClip != clips[i] || 
-                    (playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once && Mathf.Approximately(NormalizedTime, 1.0f)))
+                    (playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once && Mathf.Approximately(NormalizedTime, 0.0f)))
                 {
                     isPlaying = true;
                     playingClip = clips[i];
                     time = 0;
-                    playingFrameIndex = -1;
                 }
                 return;
             }
@@ -129,16 +111,16 @@ public class GPUSkinningPlayer
 #if UNITY_EDITOR
     public void Update_Editor(float timeDelta)
     {
-        Update_Internal(timeDelta, true);
+        Update_Internal(timeDelta);
     }
 #endif
 
     public void Update(float timeDelta)
     {
-        Update_Internal(timeDelta, false);
+        Update_Internal(timeDelta);
     }
 
-    private void Update_Internal(float timeDelta, bool isEnforced)
+    private void Update_Internal(float timeDelta)
     {
         if (!isPlaying || playingClip == null)
         {
@@ -150,42 +132,38 @@ public class GPUSkinningPlayer
             return;    
         }
 
-        int frameIndex = 0;
         if (playingClip.wrapMode == GPUSkinningWrapMode.Loop)
         {
-            frameIndex = GetFrameIndex();
+            UpdateMaterial();
+            time += timeDelta;
         }
         else
         {
             if (time >= playingClip.length)
             {
-                frameIndex = playingClip.frames.Length - 1;
+                time = playingClip.length;
+                UpdateMaterial();
             }
             else
             {
-                frameIndex = GetFrameIndex();
+                UpdateMaterial();
+                time += timeDelta;
+                if(time > playingClip.length)
+                {
+                    time = playingClip.length;
+                }
             }
         }
-        if (playingFrameIndex != frameIndex || isEnforced)
-        {
-            playingFrameIndex = frameIndex;
-            if (res.mtrl.MaterialCanBeSetData() || isEnforced)
-            {
-                res.mtrl.MarkMaterialAsSet();
-                GPUSkinningFrame frame = playingClip.frames[frameIndex];
-                if (BoneMode == GPUSkinningBoneMode.MATRIX_ARRAY)
-                {
-                    res.UpdateBoneMode_MatrixArray(frame.matrices);
-                }
-                else
-                {
-                    res.UpdateBoneMode_TextureMatrix(playingClip, time);
-                }
-                UpdateJoints(frame);
-            }
-        }
+    }
 
-        time += timeDelta;
+    private void UpdateMaterial()
+    {
+        res.UpdateMaterial();
+        res.UpdatePlayingData(mpb, playingClip, time);
+        mr.SetPropertyBlock(mpb);
+
+        GPUSkinningFrame frame = playingClip.frames[GetFrameIndex()];
+        UpdateJoints(frame);
     }
 
     private int GetFrameIndex()
@@ -220,7 +198,7 @@ public class GPUSkinningPlayer
         }
     }
 
-    private void CreateJoints()
+    private void ConstructJoints()
     {
         if (joints == null)
         {

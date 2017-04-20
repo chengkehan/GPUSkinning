@@ -9,8 +9,6 @@
 	#include "UnityCG.cginc"
 	#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"
 
-	uniform float4x4 _GPUSkinning_MatrixArray[_$NumBones$_];
-
 	struct appdata
 	{
 		float4 vertex : POSITION;
@@ -32,13 +30,7 @@
 	{
 		v2f o;
 
-#ifdef GPU_SKINNING_MATRIX_ARRAY
-		matrixArray(v.uv2, v.uv3);
-#endif
-
-#ifdef GPU_SKINNING_TEXTURE_MATRIX
 		textureMatrix(v.uv2, v.uv3);
-#endif
 
 		_$Bone1
 		float4 pos = skin1(v.vertex, v.uv2, v.uv3);
@@ -74,7 +66,6 @@
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma multi_compile GPU_SKINNING_MATRIX_ARRAY GPU_SKINNING_TEXTURE_MATRIX
 			ENDCG
 		}
 	}

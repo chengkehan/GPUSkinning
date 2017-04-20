@@ -32,10 +32,6 @@ public class GPUSkinningSampler : MonoBehaviour
     public int[] fpsList = null;
 
     [HideInInspector]
-    [SerializeField]
-    public bool[] isSelected = null;
-
-    [HideInInspector]
     [System.NonSerialized]
     public int samplingClipIndex = -1;
 
@@ -147,7 +143,7 @@ public class GPUSkinningSampler : MonoBehaviour
         }
 
         animClip = animClips[samplingClipIndex];
-        if (animClip == null || !isSelected[samplingClipIndex])
+        if (animClip == null)
 		{
             isSampling = false;
 			return;
@@ -187,18 +183,6 @@ public class GPUSkinningSampler : MonoBehaviour
         if(anim == null)
         {
             gpuSkinningAnimation.guid = System.Guid.NewGuid().ToString();
-        }
-        else
-        {
-            gpuSkinningAnimation.guid = anim.guid;
-        }
-
-        if(samplingClipIndex == 0)
-        {
-            if(!updateOrNew)
-            {
-                gpuSkinningAnimation.clips = null;
-            }
         }
 
 		List<GPUSkinningBone> bones_result = new List<GPUSkinningBone>();
@@ -690,7 +674,6 @@ public class GPUSkinningSampler : MonoBehaviour
 
 		string shaderStr = ((TextAsset)Resources.Load(shaderTemplate)).text;
 		shaderStr = shaderStr.Replace("_$AnimName$_", animName);
-		shaderStr = shaderStr.Replace("_$NumBones$_", gpuSkinningAnimation.bones.Length.ToString());
 		shaderStr = SkinQualityShaderStr(shaderStr);
 		string shaderPath = dir + "/GPUSKinning_Shader_" + animName + ".shader";
 		File.WriteAllText(shaderPath, shaderStr);

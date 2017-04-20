@@ -53,8 +53,6 @@ public class GPUSkinningSamplerEditor : Editor
 
     private bool isJointsFoldout = true;
 
-    private GPUSkinningBoneMode boneMode = GPUSkinningBoneMode.MATRIX_ARRAY;
-
     public override void OnInspectorGUI ()
 	{
 		GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -150,13 +148,10 @@ public class GPUSkinningSamplerEditor : Editor
         {
             EditorGUILayout.PrefixLabel("Sample Clips");
 
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("updateOrNew"), new GUIContent("Update Or New"));
-
             GUI.enabled = sampler.animation == null;
             int no = serializedObject.FindProperty("animClips.Array.size").intValue;
             int no2 = serializedObject.FindProperty("wrapModes.Array.size").intValue;
-            int no3 = serializedObject.FindProperty("isSelected.Array.size").intValue;
-            int no4 = serializedObject.FindProperty("fpsList.Array.size").intValue;
+            int no3 = serializedObject.FindProperty("fpsList.Array.size").intValue;
             int c = EditorGUILayout.IntField("Size", no);
             if (c != no)
             {
@@ -166,11 +161,7 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 serializedObject.FindProperty("wrapModes.Array.size").intValue = c;
             }
-            if (c != no3)
-            {
-                serializedObject.FindProperty("isSelected.Array.size").intValue = c;
-            }
-            if(c != no4)
+            if(c != no3)
             {
                 serializedObject.FindProperty("fpsList.Array.size").intValue = c;
             }
@@ -180,8 +171,7 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
                 var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
-                var prop3 = serializedObject.FindProperty(string.Format("isSelected.Array.data[{0}]", i));
-                var prop4 = serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i));
+                var prop3 = serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i));
                 if (prop != null)
                 {
                     EditorGUILayout.BeginHorizontal();
@@ -191,13 +181,12 @@ public class GPUSkinningSamplerEditor : Editor
                         EditorGUILayout.Space();
                         EditorGUILayout.Space();
                         EditorGUILayout.PropertyField(prop3); 
-                        EditorGUILayout.PropertyField(prop4, new GUIContent());
                         EditorGUILayout.PropertyField(prop2, new GUIContent());
                         GUI.enabled = sampler.animation == null;
                         EditorGUILayout.PropertyField(prop, new GUIContent());
                         GUI.enabled = true;
 
-                        prop4.intValue = Mathf.Clamp(prop4.intValue, 0, 60);
+                        prop3.intValue = Mathf.Clamp(prop3.intValue, 0, 60);
                     }
                     EditorGUILayout.EndHorizontal();
                 }
@@ -268,7 +257,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             if (rt != null)
             {
-                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 512);
+                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 50);
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.FlexibleSpace();
@@ -294,8 +283,6 @@ public class GPUSkinningSamplerEditor : Editor
 
                 OnGUI_PreviewClipsOptions();
 
-                OnGUI_BoneMode();
-
                 OnGUI_EditBounds();
 
                 EditorGUILayout.Space();
@@ -306,24 +293,6 @@ public class GPUSkinningSamplerEditor : Editor
         EndBox();
 
         serializedObject.ApplyModifiedProperties();
-    }
-
-    private void OnGUI_BoneMode()
-    {
-        EditorGUILayout.BeginHorizontal();
-        {
-            GUILayout.FlexibleSpace();
-            int index = boneMode == GPUSkinningBoneMode.MATRIX_ARRAY ? 0 : 1;
-            index = GUILayout.Toolbar(index, new string[] { GPUSkinningBoneMode.MATRIX_ARRAY.ToString(), GPUSkinningBoneMode.TEXTURE_MATRIX.ToString() });
-            boneMode = index == 0 ? GPUSkinningBoneMode.MATRIX_ARRAY : GPUSkinningBoneMode.TEXTURE_MATRIX;
-            GUILayout.FlexibleSpace();
-
-            if(preview != null)
-            {
-                preview.Player.BoneMode = boneMode;
-            }
-        }
-        EditorGUILayout.EndHorizontal();
     }
 
     private void OnGUI_EditBounds()
