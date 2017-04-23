@@ -103,7 +103,10 @@ public class GPUSkinningPlayer
 
         mpb = new MaterialPropertyBlock();
 
-        rootMotionEnabled = res.anim.rootMotionEnabled;
+        if (Application.isPlaying)
+        {
+            rootMotionEnabled = res.anim.rootMotionEnabled;
+        }
 
         ConstructJoints();
     }

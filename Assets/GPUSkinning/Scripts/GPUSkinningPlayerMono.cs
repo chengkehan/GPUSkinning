@@ -67,7 +67,11 @@ public class GPUSkinningPlayerMono : MonoBehaviour
             }
 
             player = new GPUSkinningPlayer(gameObject, res);
-            player.RootMotionEnabled = rootMotion;
+
+            if (Application.isPlaying)
+            {
+                player.RootMotionEnabled = rootMotion;
+            }
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {

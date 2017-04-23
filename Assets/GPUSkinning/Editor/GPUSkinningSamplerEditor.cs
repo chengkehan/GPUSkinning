@@ -259,8 +259,8 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.mesh = mesh;
                         preview.mtrl = mtrl;
                         preview.textureRawData = texture;
-                        preview.rootMotion = anim.rootMotionEnabled;
                         preview.Init();
+                        preview.Player.RootMotionEnabled = anim.rootMotionEnabled;
                         rootMotionEnabled = anim.rootMotionEnabled;
                     }
                 }
