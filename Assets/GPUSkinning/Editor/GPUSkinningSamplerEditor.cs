@@ -351,16 +351,20 @@ public class GPUSkinningSamplerEditor : Editor
                             EditorGUILayout.Space();
                             
                             EditorGUILayout.LabelField("Root Transform Position(X)");
-                            OnGUI_RootMotion_BakeIntoPose_Float("Bake Into Pose", ref anim.rootMotionPositionXBakeIntoPose);
+                            OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionXBakeIntoPose);
                             OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionXOffset);
 
                             EditorGUILayout.LabelField("Root Transform Position(Y)");
-                            OnGUI_RootMotion_BakeIntoPose_Float("Bake Into Pose", ref anim.rootMotionPositionYBakeIntoPose);
+                            OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionYBakeIntoPose);
                             OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionYOffset);
 
                             EditorGUILayout.LabelField("Root Transform Position(Z)");
-                            OnGUI_RootMotion_BakeIntoPose_Float("Bake Into Pose", ref anim.rootMotionPositionZBakeIntoPose);
+                            OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionZBakeIntoPose);
                             OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionZOffset);
+
+                            EditorGUILayout.LabelField("Root Transform Rotation");
+                            OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionRotationBakeIntoPose);
+                            OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionRotationOffset);
                         }
 
                     }
@@ -374,7 +378,7 @@ public class GPUSkinningSamplerEditor : Editor
         }
     }
 
-    private void OnGUI_RootMotion_BakeIntoPose_Float(string label, ref bool f)
+    private void OnGUI_RootMotion_BakeIntoPose_Bool(string label, ref bool f)
     {
         BeginIndentLevel(1);
         {

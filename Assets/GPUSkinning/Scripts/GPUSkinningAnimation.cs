@@ -27,9 +27,13 @@ public class GPUSkinningAnimation : ScriptableObject
 
     public bool rootMotionPositionZBakeIntoPose = false;
 
+    public bool rootMotionRotationBakeIntoPose = false;
+
     public float rootMotionPositionXOffset = 0;
 
     public float rootMotionPositionYOffset = 0;
 
     public float rootMotionPositionZOffset = 0;
+
+    public float rootMotionRotationOffset = 0;
 }
