@@ -238,6 +238,8 @@ public class GPUSkinningSamplerEditor : Editor
                         cam.farClipPlane = 100;
                         cam.targetTexture = rt;
                         cam.enabled = false;
+                        cam.clearFlags = CameraClearFlags.SolidColor;
+                        cam.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1);
                         camGo.transform.position = new Vector3(100, 100, 100);
 
                         previewClipIndex = 0;
