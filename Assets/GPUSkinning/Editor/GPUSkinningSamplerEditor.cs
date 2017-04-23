@@ -57,6 +57,10 @@ public class GPUSkinningSamplerEditor : Editor
 
     private bool rootMotionEnabled = false;
 
+    private GameObject[] gridGos = null;
+
+    private Material gridMtrl = null;
+
     public override void OnInspectorGUI ()
 	{
 		GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -242,13 +246,13 @@ public class GPUSkinningSamplerEditor : Editor
                         cam.enabled = false;
                         cam.clearFlags = CameraClearFlags.SolidColor;
                         cam.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1);
-                        camGo.transform.position = new Vector3(100, 100, 100);
+                        camGo.transform.position = new Vector3(999, 1002, 999);
 
                         previewClipIndex = 0;
 
                         GameObject previewGo = new GameObject("GPUSkinningPreview_Go");
                         previewGo.hideFlags = HideFlags.HideAndDontSave;
-                        previewGo.transform.position = new Vector3(100, 100, 103);
+                        previewGo.transform.position = new Vector3(999, 999, 1002);
                         preview = previewGo.AddComponent<GPUSkinningPlayerMono>();
                         preview.hideFlags = HideFlags.HideAndDontSave;
                         preview.anim = anim;
@@ -532,6 +536,27 @@ public class GPUSkinningSamplerEditor : Editor
         EditorGUILayout.Space();
     }
 
+    private void PreviewInteraction_CameraRestriction()
+    {
+        if(preview == null)
+        {
+            return;
+        }
+        Transform camTrans = cam.transform;
+        Transform modelTrans = preview.transform;
+        Vector3 lookAtPoint = modelTrans.position + camLookAtOffset;
+
+        Vector3 distV = camTrans.position - modelTrans.position;
+        if(distV.magnitude > 10)
+        {
+            distV.Normalize();
+            distV *= 10;
+            camTrans.position = modelTrans.position + distV;
+        }
+
+        camTrans.LookAt(lookAtPoint);
+    }
+
     private void PreviewInteraction(Rect rect)
     {
         if (cam != null)
@@ -546,6 +571,7 @@ public class GPUSkinningSamplerEditor : Editor
             Vector2 mousePos = e.mousePosition;
             if(mousePos.x < rect.x || mousePos.x > rect.x + rect.width || mousePos.y < rect.y || mousePos.y > rect.y + rect.height)
             {
+                //PreviewInteraction_CameraLookAtTarget();
                 return;
             }
 
@@ -571,7 +597,31 @@ public class GPUSkinningSamplerEditor : Editor
                 }
             }
 
-            camTrans.LookAt(lookAtPoint);
+            //PreviewInteraction_CameraLookAtTarget();
+        }
+    }
+
+    private void PreviewDrawGrid()
+    {
+        if(gridGos == null)
+        {
+            gridMtrl = new Material(Shader.Find("GPUSkinning/GPUSkinningSamplerEditor_Grid"));
+            gridMtrl.hideFlags = HideFlags.HideAndDontSave;
+            gridMtrl.color = Color.gray;
+
+            gridGos = new GameObject[2];
+
+            gridGos[0] = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            gridGos[0].hideFlags = HideFlags.HideAndDontSave;
+            gridGos[0].transform.localScale = new Vector3(0.001f, 1, 1000);
+            gridGos[0].transform.localPosition = preview.transform.localPosition;
+            gridGos[0].GetComponent<MeshRenderer>().sharedMaterial = gridMtrl;
+
+            gridGos[1] = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            gridGos[1].hideFlags = HideFlags.HideAndDontSave;
+            gridGos[1].transform.localScale = new Vector3(1000, 1, 0.001f);
+            gridGos[1].transform.localPosition = preview.transform.localPosition;
+            gridGos[1].GetComponent<MeshRenderer>().sharedMaterial = gridMtrl;
         }
     }
 
@@ -728,8 +778,10 @@ public class GPUSkinningSamplerEditor : Editor
         {
             PreviewDrawBounds();
             PreviewDrawArrows();
+            PreviewDrawGrid();
 
             preview.Update_Editor(deltaTime);
+            PreviewInteraction_CameraRestriction();
             cam.Render();
         }
 
@@ -824,6 +876,18 @@ public class GPUSkinningSamplerEditor : Editor
                     DestroyImmediate(mtrl);
                 }
                 arrowMtrls = null;
+            }
+
+            if(gridGos != null)
+            {
+                foreach(GameObject gridGo in gridGos)
+                {
+                    DestroyImmediate(gridGo);
+                }
+                gridGos = null;
+
+                DestroyImmediate(gridMtrl);
+                gridMtrl = null;
             }
 
             DestroyImmediate(boundsMtrl);
