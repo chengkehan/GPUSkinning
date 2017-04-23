@@ -46,7 +46,12 @@ public class GPUSkinningPlayerMonoEditor : Editor
             player.Init();
         }
 
+        EditorGUI.BeginChangeCheck();
         EditorGUILayout.PropertyField(serializedObject.FindProperty("rootMotion"));
+        if(EditorGUI.EndChangeCheck())
+        {
+            player.Player.RootMotionEnabled = serializedObject.FindProperty("rootMotion").boolValue && Application.isPlaying;
+        }
 
         SerializedProperty defaultPlayingClipIndex = serializedObject.FindProperty("defaultPlayingClipIndex");
         if (clipsName == null && player.anim != null)

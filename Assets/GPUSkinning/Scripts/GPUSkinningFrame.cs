@@ -6,6 +6,10 @@ public class GPUSkinningFrame
 {
     public Matrix4x4[] matrices = null;
 
+    public Vector3 rootPosition = Vector3.zero;
+
+    public Quaternion rootRotation = Quaternion.identity;
+
     [System.NonSerialized]
     private bool rootMotionInvInit = false;
     [System.NonSerialized]

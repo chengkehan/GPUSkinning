@@ -53,6 +53,8 @@ public class GPUSkinningSamplerEditor : Editor
 
     private bool isJointsFoldout = true;
 
+    private bool isRootMotionFoldout = true;
+
     private bool rootMotionEnabled = false;
 
     public override void OnInspectorGUI ()
@@ -253,6 +255,7 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.mesh = mesh;
                         preview.mtrl = mtrl;
                         preview.textureRawData = texture;
+                        preview.rootMotion = anim.rootMotionEnabled;
                         preview.Init();
                         rootMotionEnabled = anim.rootMotionEnabled;
                     }
@@ -296,6 +299,8 @@ public class GPUSkinningSamplerEditor : Editor
 
                 OnGUI_RootMotion();
 
+                EditorGUILayout.Space();
+
                 OnGUI_EditBounds();
 
                 EditorGUILayout.Space();
@@ -310,20 +315,44 @@ public class GPUSkinningSamplerEditor : Editor
 
     private void OnGUI_RootMotion()
     {
-        EditorGUILayout.BeginHorizontal();
+        if (anim.rootMotionEnabled)
         {
-            GUILayout.FlexibleSpace();
-
-            EditorGUI.BeginChangeCheck();
-            rootMotionEnabled = EditorGUILayout.Toggle("Root Motion", rootMotionEnabled);
-            if (EditorGUI.EndChangeCheck())
+            EditorGUILayout.BeginHorizontal();
             {
-                preview.Player.RootMotionEnabled = rootMotionEnabled;
-            }
+                EditorGUILayout.Space();
+                BeginBox();
+                {
+                    EditorGUILayout.Space();
+                    EditorGUILayout.BeginVertical();
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        {
+                            EditorGUILayout.Space();
+                            EditorGUILayout.Space();
+                            isRootMotionFoldout = EditorGUILayout.Foldout(isRootMotionFoldout, isRootMotionFoldout ? string.Empty : "Root Motion");
+                            SetEditorPrefsBool("isRootMotionFoldout", isRootMotionFoldout);
+                            GUILayout.FlexibleSpace();
+                        }
+                        EditorGUILayout.EndHorizontal();
 
-            GUILayout.FlexibleSpace();
+                        if (isRootMotionFoldout)
+                        {
+                            EditorGUI.BeginChangeCheck();
+                            rootMotionEnabled = EditorGUILayout.Toggle("Root Motion", rootMotionEnabled);
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                preview.Player.RootMotionEnabled = rootMotionEnabled;
+                            }
+                        }
+                    }
+                    EditorGUILayout.EndVertical();
+                    EditorGUILayout.Space();
+                }
+                EndBox();
+                EditorGUILayout.Space();
+            }
+            EditorGUILayout.EndHorizontal();
         }
-        EditorGUILayout.EndHorizontal();
     }
 
     private void OnGUI_EditBounds()

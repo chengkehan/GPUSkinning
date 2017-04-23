@@ -199,7 +199,6 @@ public class GPUSkinningPlayer
 
     private void UpdateMaterial()
     {
-        bool rootMotionEnabled = this.rootMotionEnabled && Application.isPlaying;
         int frameIndex = GetFrameIndex();
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
         res.UpdateMaterial();
