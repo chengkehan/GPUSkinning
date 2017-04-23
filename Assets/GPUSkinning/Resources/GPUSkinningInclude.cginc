@@ -4,10 +4,18 @@
 uniform sampler2D _GPUSkinning_TextureMatrix;
 uniform float _GPUSkinning_NumPixelsPerFrame;
 uniform float2 _GPUSkinning_TextureSize;
-uniform float _GPUSkinning_ClipLength;
-uniform float _GPUSkinning_ClipFPS;
-uniform float _GPUSkinning_Time;
-uniform float _GPUSkinning_PixelSegmentation;
+
+UNITY_INSTANCING_CBUFFER_START(GPUSkinningProperties0)
+	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_ClipLength)
+	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_ClipFPS)
+	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_Time)
+	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_PixelSegmentation)
+	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_RootMotionEnabled)
+UNITY_INSTANCING_CBUFFER_END
+
+UNITY_INSTANCING_CBUFFER_START(GPUSkinningProperties1)
+	UNITY_DEFINE_INSTANCED_PROP(float4x4, _GPUSkinning_RootMotionInv)
+UNITY_INSTANCING_CBUFFER_END
 
 inline float4 indexToUV(int index)
 {
@@ -29,10 +37,18 @@ inline float4x4 getMatrix(int frameStartIndex, float boneIndex)
 
 inline int getFrameStartIndex()
 {
-	int frameIndex = (int)fmod((_GPUSkinning_Time + 0) * _GPUSkinning_ClipFPS, _GPUSkinning_ClipLength * _GPUSkinning_ClipFPS);
-	int frameStartIndex = _GPUSkinning_PixelSegmentation + frameIndex * _GPUSkinning_NumPixelsPerFrame;
+	float time = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_Time);
+	float fps = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_ClipFPS);
+	float length = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_ClipLength);
+	float segment = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_PixelSegmentation);
+	int frameIndex = (int)fmod(time * fps, length * fps);
+	int frameStartIndex = segment + frameIndex * _GPUSkinning_NumPixelsPerFrame;
 	return frameStartIndex;
 }
+
+#define rootMotionEnabled UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_RootMotionEnabled) > 0
+
+#define rootMotionInv UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_RootMotionInv)
 
 #define textureMatrix(uv2, uv3) int frameStartIndex = getFrameStartIndex(); \
 								float4x4 mat0 = getMatrix(frameStartIndex, uv2.x); \
@@ -40,14 +56,57 @@ inline int getFrameStartIndex()
 								float4x4 mat2 = getMatrix(frameStartIndex, uv3.x); \
 								float4x4 mat3 = getMatrix(frameStartIndex, uv3.z);
 
-#define skin1(vertex, uv2, uv3) mul(mat0, vertex) * uv2.y;
+inline float4 skin1(float4 vertex, float4 uv2, float4 uv3)
+{
+	textureMatrix(uv2, uv3);
+	if (rootMotionEnabled)
+	{
+		return mul(rootMotionInv, mul(mat0, vertex)) * uv2.y;
+	}
+	else
+	{
+		return mul(mat0, vertex) * uv2.y;
+	}
+}
 
-#define skin2(vertex, uv2, uv3) mul(mat0, vertex) * uv2.y + \
-								mul(mat1, vertex) * uv2.w;
+inline float4 skin2(float4 vertex, float4 uv2, float4 uv3)
+{
+	textureMatrix(uv2, uv3);
+	if (rootMotionEnabled)
+	{
+		float4x4 rootInv = rootMotionInv;
+		return
+			mul(rootInv, mul(mat0, vertex)) * uv2.y +
+			mul(rootInv, mul(mat1, vertex)) * uv2.w;
+	}
+	else
+	{
+		return
+			mul(mat0, vertex) * uv2.y +
+			mul(mat1, vertex) * uv2.w;
+	}
+}
 
-#define skin4(vertex, uv2, uv3) mul(mat0, vertex) * uv2.y + \
-								mul(mat1, vertex) * uv2.w + \
-								mul(mat2, vertex) * uv3.y + \
-								mul(mat3, vertex) * uv3.w;
+inline float4 skin4(float4 vertex, float4 uv2, float4 uv3)
+{
+	textureMatrix(uv2, uv3);
+	if (rootMotionEnabled)
+	{
+		float4x4 rootInv = rootMotionInv;
+		return
+			mul(rootInv, mul(mat0, vertex)) * uv2.y +
+			mul(rootInv, mul(mat1, vertex)) * uv2.w +
+			mul(rootInv, mul(mat2, vertex)) * uv3.y +
+			mul(rootInv, mul(mat3, vertex)) * uv3.w;
+	}
+	else
+	{
+		return
+			mul(mat0, vertex) * uv2.y +
+			mul(mat1, vertex) * uv2.w +
+			mul(mat2, vertex) * uv3.y +
+			mul(mat3, vertex) * uv3.w;
+	}
+}
 
 #endif

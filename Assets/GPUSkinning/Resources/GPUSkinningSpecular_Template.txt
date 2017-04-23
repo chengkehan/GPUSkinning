@@ -91,6 +91,8 @@ ENDCG
         // #pragma surface surfSpecular StandardSpecular vertex:vert finalcolor:finalSpecular fullforwardshadows alpha:fade // Fade
         // #pragma surface surfSpecular StandardSpecular vertex:vert finalcolor:finalSpecular fullforwardshadows alpha:premul // Transparent
 
+		#pragma multi_compile_instancing
+
         #include "Assets/GPUSkinning/Resources/GPUSkinningSurface.cginc"
 		#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"
 
@@ -101,8 +103,6 @@ ENDCG
 
 		   // Skinning
 		   {
-				textureMatrix(v.uv1, v.uv2);
-
 				float4 normal = float4(v.normal, 0);
 				float4 tangent = float4(v.tangent.xyz, 0);
 

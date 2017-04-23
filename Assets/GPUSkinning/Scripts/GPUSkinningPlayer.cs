@@ -6,6 +6,8 @@ public class GPUSkinningPlayer
 {
     private GameObject go = null;
 
+    private Transform transform = null;
+
     private MeshRenderer mr = null;
     public MeshRenderer MeshRenderer
     {
@@ -24,6 +26,26 @@ public class GPUSkinningPlayer
     private GPUSkinningPlayerResources res = null;
 
     private MaterialPropertyBlock mpb = null;
+
+    private Matrix4x4 rootMotion;
+
+    private bool rootMotion_firstFrameFlag = false;
+
+    private int rootMotin_frameIndex = 0;
+
+    private bool rootMotionEnabled = false;
+    public bool RootMotionEnabled
+    {
+        get
+        {
+            return rootMotionEnabled;
+        }
+        set
+        {
+            rootMotion_firstFrameFlag = true;
+            rootMotionEnabled = value;
+        }
+    }
 
     private bool isPlaying = false;
     public bool IsPlaying
@@ -62,6 +84,7 @@ public class GPUSkinningPlayer
     public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningPlayerResources res)
     {
         go = attachToThisGo;
+        transform = go.transform;
         this.res = res;
 
         mr = go.GetComponent<MeshRenderer>();
@@ -96,6 +119,7 @@ public class GPUSkinningPlayer
                 {
                     isPlaying = true;
                     playingClip = clips[i];
+                    rootMotion_firstFrameFlag = true;
                     if (playingClip.wrapMode == GPUSkinningWrapMode.Once)
                     {
                         time = 0;
@@ -173,12 +197,35 @@ public class GPUSkinningPlayer
 
     private void UpdateMaterial()
     {
+        int frameIndex = GetFrameIndex();
+        GPUSkinningFrame frame = playingClip.frames[frameIndex];
         res.UpdateMaterial();
-        res.UpdatePlayingData(mpb, playingClip, time);
+        res.UpdatePlayingData(mpb, playingClip, time, frame, rootMotionEnabled);
         mr.SetPropertyBlock(mpb);
-
-        GPUSkinningFrame frame = playingClip.frames[GetFrameIndex()];
         UpdateJoints(frame);
+
+        if (rootMotionEnabled)
+        {
+            if (rootMotion_firstFrameFlag)
+            {
+                rootMotion_firstFrameFlag = false;
+                rootMotion = frame.matrices[res.anim.rootBoneIndex];
+                rootMotin_frameIndex = frameIndex;
+            }
+            else
+            {
+                Matrix4x4 newRootMotion = frame.matrices[res.anim.rootBoneIndex];
+                if (rootMotin_frameIndex < frameIndex)
+                {
+                    Vector4 newPos = newRootMotion.GetColumn(3);
+                    Vector4 pos = rootMotion.GetColumn(3);
+                    Vector4 delta = newPos - pos;
+                    transform.Translate(delta, Space.Self);
+                }
+                rootMotion = newRootMotion;
+                rootMotin_frameIndex = frameIndex;
+            }
+        }
     }
 
     private int GetFrameIndex()

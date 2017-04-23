@@ -17,6 +17,7 @@ struct appdata_vert {
    float4 uv1 : TEXCOORD1;
    float4 uv2 : TEXCOORD2;
    float4 tangent : TANGENT;
+   UNITY_VERTEX_INPUT_INSTANCE_ID
 };
  
 struct Input {
@@ -24,6 +25,7 @@ struct Input {
 };
  
 void vert (inout appdata_vert v, out Input o) {
+	UNITY_SETUP_INSTANCE_ID(v);
    UNITY_INITIALIZE_OUTPUT(Input,o);
    o.texcoords.xy = TRANSFORM_TEX(v.uv0, _MainTex); // Always source from uv0
 }

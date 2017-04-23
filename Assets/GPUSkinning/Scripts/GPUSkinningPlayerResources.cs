@@ -28,6 +28,10 @@ public class GPUSkinningPlayerResources
 
     private static int shaderPropID_GPUSkinning_PixelSegmentation = 0;
 
+    private static int shaderPropID_GPUSkinning_RootMotionInv = 0;
+
+    private static int shaderPropID_GPUSkinning_RootMotionEnabled = 0;
+
     public GPUSkinningPlayerResources()
     {
         if(shaderPropID_GPUSkinning_TextureMatrix == -1)
@@ -39,6 +43,8 @@ public class GPUSkinningPlayerResources
             shaderPropID_GPUSkinning_ClipFPS = Shader.PropertyToID("_GPUSkinning_ClipFPS");
             shaderPorpID_GPUSkinning_Time = Shader.PropertyToID("_GPUSkinning_Time");
             shaderPropID_GPUSkinning_PixelSegmentation = Shader.PropertyToID("_GPUSkinning_PixelSegmentation");
+            shaderPropID_GPUSkinning_RootMotionInv = Shader.PropertyToID("_GPUSkinning_RootMotionInv");
+            shaderPropID_GPUSkinning_RootMotionEnabled = Shader.PropertyToID("_GPUSkinning_RootMotionEnabled");
         }
     }
 
@@ -77,11 +83,16 @@ public class GPUSkinningPlayerResources
         }
     }
 
-    public void UpdatePlayingData(MaterialPropertyBlock mpb, GPUSkinningClip playingClip, float time)
+    public void UpdatePlayingData(MaterialPropertyBlock mpb, GPUSkinningClip playingClip, float time, GPUSkinningFrame frame, bool rootMotionEnabled)
     {
         mpb.SetFloat(shaderPropID_GPUSkinning_ClipLength, playingClip.length);
         mpb.SetFloat(shaderPropID_GPUSkinning_ClipFPS, playingClip.fps);
         mpb.SetFloat(shaderPorpID_GPUSkinning_Time, time);
         mpb.SetFloat(shaderPropID_GPUSkinning_PixelSegmentation, playingClip.pixelSegmentation);
+        mpb.SetFloat(shaderPropID_GPUSkinning_RootMotionEnabled, rootMotionEnabled ? 1 : -1);
+        if (rootMotionEnabled)
+        {
+            mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotionInv, frame.RootMotionInv(anim.rootBoneIndex));
+        }
     }
 }

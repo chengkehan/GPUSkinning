@@ -15,6 +15,7 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 		float2 uv : TEXCOORD0;
 		float4 uv2 : TEXCOORD1;
 		float4 uv3 : TEXCOORD2;
+		UNITY_VERTEX_INPUT_INSTANCE_ID
 	};
 
 	struct v2f
@@ -28,9 +29,9 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 
 	v2f vert(appdata v)
 	{
-		v2f o;
+		UNITY_SETUP_INSTANCE_ID(v);
 
-		textureMatrix(v.uv2, v.uv3);
+		v2f o;
 
 		
 
@@ -62,6 +63,7 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
+			#pragma multi_compile_instancing
 			ENDCG
 		}
 	}
