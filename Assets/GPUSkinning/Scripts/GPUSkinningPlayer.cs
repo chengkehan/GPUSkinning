@@ -222,6 +222,9 @@ public class GPUSkinningPlayer
                     Vector4 newPos = newRootMotion.GetColumn(3);
                     Vector4 pos = rootMotion.GetColumn(3);
                     Vector4 delta = newPos - pos;
+                    if (res.anim.rootMotionPositionXBakeIntoPose) delta.x = 0;
+                    if (res.anim.rootMotionPositionYBakeIntoPose) delta.y = 0;
+                    if (res.anim.rootMotionPositionZBakeIntoPose) delta.z = 0;
                     transform.Translate(delta, Space.Self);
                 }
                 rootMotion = newRootMotion;

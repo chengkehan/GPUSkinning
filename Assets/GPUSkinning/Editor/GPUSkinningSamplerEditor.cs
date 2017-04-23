@@ -289,7 +289,7 @@ public class GPUSkinningSamplerEditor : Editor
                         GetLastGUIRect(ref interactionRect);
                         PreviewInteraction(interactionRect);
 
-                        EditorGUILayout.HelpBox("Drag to Orbit\nCtrl + Drag to Pitch\nAlt+ Drag to Zoom", MessageType.None);
+                        EditorGUILayout.HelpBox("Drag to Orbit\nCtrl + Drag to Pitch\nAlt+ Drag to Zoom\nPress P Key to Pause", MessageType.None);
                     }
                     EditorGUILayout.EndVertical();
 
@@ -342,12 +342,27 @@ public class GPUSkinningSamplerEditor : Editor
                         if (isRootMotionFoldout)
                         {
                             EditorGUI.BeginChangeCheck();
-                            rootMotionEnabled = EditorGUILayout.Toggle("Root Motion", rootMotionEnabled);
+                            rootMotionEnabled = EditorGUILayout.Toggle("Root Motion(Preview)", rootMotionEnabled);
                             if (EditorGUI.EndChangeCheck())
                             {
                                 preview.Player.RootMotionEnabled = rootMotionEnabled;
                             }
+
+                            EditorGUILayout.Space();
+                            
+                            EditorGUILayout.LabelField("Root Transform Position(X)");
+                            OnGUI_RootMotion_BakeIntoPose_Float("Bake Into Pose", ref anim.rootMotionPositionXBakeIntoPose);
+                            OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionXOffset);
+
+                            EditorGUILayout.LabelField("Root Transform Position(Y)");
+                            OnGUI_RootMotion_BakeIntoPose_Float("Bake Into Pose", ref anim.rootMotionPositionYBakeIntoPose);
+                            OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionYOffset);
+
+                            EditorGUILayout.LabelField("Root Transform Position(Z)");
+                            OnGUI_RootMotion_BakeIntoPose_Float("Bake Into Pose", ref anim.rootMotionPositionZBakeIntoPose);
+                            OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionZOffset);
                         }
+
                     }
                     EditorGUILayout.EndVertical();
                     EditorGUILayout.Space();
@@ -357,6 +372,36 @@ public class GPUSkinningSamplerEditor : Editor
             }
             EditorGUILayout.EndHorizontal();
         }
+    }
+
+    private void OnGUI_RootMotion_BakeIntoPose_Float(string label, ref bool f)
+    {
+        BeginIndentLevel(1);
+        {
+            EditorGUI.BeginChangeCheck();
+            bool b = EditorGUILayout.Toggle(label, f);
+            if (EditorGUI.EndChangeCheck())
+            {
+                f = b;
+                ApplyAnimModification();
+            }
+        }
+        EndIndentLevel();
+    }
+
+    private void OnGUI_RootMotion_BakeIntoPose_Float(string label, ref float f)
+    {
+        BeginIndentLevel(1);
+        {
+            EditorGUI.BeginChangeCheck();
+            float v = EditorGUILayout.FloatField(label, f);
+            if (EditorGUI.EndChangeCheck())
+            {
+                f = v;
+                ApplyAnimModification();
+            }
+        }
+        EndIndentLevel();
     }
 
     private void OnGUI_EditBounds()
@@ -423,9 +468,7 @@ public class GPUSkinningSamplerEditor : Editor
                             mesh.bounds = bounds;
                             anim.bounds = bounds;
                             EditorUtility.SetDirty(mesh);
-                            EditorUtility.SetDirty(anim);
-                            AssetDatabase.SaveAssets();
-                            AssetDatabase.Refresh();
+                            ApplyAnimModification();
                         }
                     }
                 }
@@ -486,9 +529,7 @@ public class GPUSkinningSamplerEditor : Editor
             if(EditorGUI.EndChangeCheck())
             {
                 bone.isExposed = isExposed;
-                EditorUtility.SetDirty(anim);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
+                ApplyAnimModification();
             }
         }
         GUILayout.EndHorizontal();
@@ -571,7 +612,6 @@ public class GPUSkinningSamplerEditor : Editor
             Vector2 mousePos = e.mousePosition;
             if(mousePos.x < rect.x || mousePos.x > rect.x + rect.width || mousePos.y < rect.y || mousePos.y > rect.y + rect.height)
             {
-                //PreviewInteraction_CameraLookAtTarget();
                 return;
             }
 
@@ -596,8 +636,6 @@ public class GPUSkinningSamplerEditor : Editor
                     camTrans.position = lookAtPoint + v2;
                 }
             }
-
-            //PreviewInteraction_CameraLookAtTarget();
         }
     }
 
@@ -757,6 +795,16 @@ public class GPUSkinningSamplerEditor : Editor
         max += Vector3.one * boundsAutoExt;
         bounds.min = min;
         bounds.max = max;
+    }
+
+    private void ApplyAnimModification()
+    {
+        if(preview != null && anim != null)
+        {
+            EditorUtility.SetDirty(anim);
+            AssetDatabase.Refresh();
+            AssetDatabase.SaveAssets();
+        }
     }
 
     private void UpdateHandler()
@@ -972,4 +1020,16 @@ public class GPUSkinningSamplerEditor : Editor
 		EditorGUILayout.Space();
 		EditorGUILayout.EndVertical();
 	}
+
+    private int lastIndentLevel = 0;
+    private void BeginIndentLevel(int indentLevel)
+    {
+        lastIndentLevel = EditorGUI.indentLevel;
+        EditorGUI.indentLevel = indentLevel;
+    }
+
+    private void EndIndentLevel()
+    {
+        EditorGUI.indentLevel = lastIndentLevel;
+    }
 }

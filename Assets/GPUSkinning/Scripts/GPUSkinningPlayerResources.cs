@@ -92,7 +92,26 @@ public class GPUSkinningPlayerResources
         mpb.SetFloat(shaderPropID_GPUSkinning_RootMotionEnabled, rootMotionEnabled ? 1 : -1);
         if (rootMotionEnabled)
         {
-            mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotionInv, frame.RootMotionInv(anim.rootBoneIndex));
+            Matrix4x4 rootMotionInv = frame.RootMotionInv(anim.rootBoneIndex);
+
+            Matrix4x4 bakeIntoPoseMat = Matrix4x4.identity;
+            if(anim.rootMotionPositionXBakeIntoPose)
+            {
+                bakeIntoPoseMat[0, 3] = frame.rootPosition.x;
+            }
+            bakeIntoPoseMat[0, 3] += anim.rootMotionPositionXOffset;
+            if(anim.rootMotionPositionYBakeIntoPose)
+            {
+                bakeIntoPoseMat[1, 3] = frame.rootPosition.y;
+            }
+            bakeIntoPoseMat[1, 3] += anim.rootMotionPositionYOffset;
+            if(anim.rootMotionPositionZBakeIntoPose)
+            {
+                bakeIntoPoseMat[2, 3] = frame.rootPosition.z;
+            }
+            bakeIntoPoseMat[2, 3] += anim.rootMotionPositionZOffset;
+
+            mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotionInv, bakeIntoPoseMat * rootMotionInv);
         }
     }
 }
