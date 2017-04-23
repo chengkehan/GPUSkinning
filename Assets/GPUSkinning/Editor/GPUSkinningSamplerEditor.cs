@@ -53,6 +53,8 @@ public class GPUSkinningSamplerEditor : Editor
 
     private bool isJointsFoldout = true;
 
+    private bool rootMotionEnabled = false;
+
     public override void OnInspectorGUI ()
 	{
 		GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -250,6 +252,7 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.mtrl = mtrl;
                         preview.textureRawData = texture;
                         preview.Init();
+                        rootMotionEnabled = anim.rootMotionEnabled;
                     }
                 }
             }
@@ -283,6 +286,8 @@ public class GPUSkinningSamplerEditor : Editor
 
                 OnGUI_PreviewClipsOptions();
 
+                OnGUI_RootMotion();
+
                 OnGUI_EditBounds();
 
                 EditorGUILayout.Space();
@@ -293,6 +298,24 @@ public class GPUSkinningSamplerEditor : Editor
         EndBox();
 
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private void OnGUI_RootMotion()
+    {
+        EditorGUILayout.BeginHorizontal();
+        {
+            GUILayout.FlexibleSpace();
+
+            EditorGUI.BeginChangeCheck();
+            rootMotionEnabled = EditorGUILayout.Toggle("Root Motion", rootMotionEnabled);
+            if (EditorGUI.EndChangeCheck())
+            {
+                preview.Player.RootMotionEnabled = rootMotionEnabled;
+            }
+
+            GUILayout.FlexibleSpace();
+        }
+        EditorGUILayout.EndHorizontal();
     }
 
     private void OnGUI_EditBounds()

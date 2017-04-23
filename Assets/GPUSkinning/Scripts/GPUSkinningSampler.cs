@@ -185,6 +185,8 @@ public class GPUSkinningSampler : MonoBehaviour
             gpuSkinningAnimation.guid = System.Guid.NewGuid().ToString();
         }
 
+        gpuSkinningAnimation.rootMotionEnabled = animator == null ? false : animator.applyRootMotion;
+
 		List<GPUSkinningBone> bones_result = new List<GPUSkinningBone>();
 		CollectBones(bones_result, smr.bones, mesh.bindposes, null, rootBoneTransform, 0);
         GPUSkinningBone[] newBones = bones_result.ToArray();

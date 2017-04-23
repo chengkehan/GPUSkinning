@@ -18,4 +18,6 @@ public class GPUSkinningAnimation : ScriptableObject
     public int textureWidth = 0;
 
     public int textureHeight = 0;
+
+    public bool rootMotionEnabled = false;
 }

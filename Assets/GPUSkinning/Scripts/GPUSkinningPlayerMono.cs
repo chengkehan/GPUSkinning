@@ -25,6 +25,10 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     [SerializeField]
     private int defaultPlayingClipIndex = 0;
 
+    [HideInInspector]
+    [SerializeField]
+    private bool rootMotion = false;
+
     private static GPUSkinningPlayerMonoManager playerManager = new GPUSkinningPlayerMonoManager();
 
     private GPUSkinningPlayer player = null;
@@ -63,6 +67,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
             }
 
             player = new GPUSkinningPlayer(gameObject, res);
+            player.RootMotionEnabled = rootMotion;
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {
