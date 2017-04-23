@@ -264,19 +264,25 @@ public class GPUSkinningSamplerEditor : Editor
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.FlexibleSpace();
-                    if (PlayerSettings.colorSpace == ColorSpace.Linear)
+                    EditorGUILayout.BeginVertical();
                     {
-                        RenderTexture tempRT = RenderTexture.active;
-                        Graphics.Blit(rt, rtGamma, linearToGammeMtrl);
-                        RenderTexture.active = tempRT;
-                        GUILayout.Box(rtGamma, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
+                        if (PlayerSettings.colorSpace == ColorSpace.Linear)
+                        {
+                            RenderTexture tempRT = RenderTexture.active;
+                            Graphics.Blit(rt, rtGamma, linearToGammeMtrl);
+                            RenderTexture.active = tempRT;
+                            GUILayout.Box(rtGamma, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
+                        }
+                        else
+                        {
+                            GUILayout.Box(rt, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
+                        }
+                        GetLastGUIRect(ref interactionRect);
+                        PreviewInteraction(interactionRect);
+
+                        EditorGUILayout.HelpBox("Drag to Orbit\nCtrl + Drag to Pitch\nAlt+ Drag to Zoom", MessageType.None);
                     }
-                    else
-                    {
-                        GUILayout.Box(rt, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
-                    }
-                    GetLastGUIRect(ref interactionRect);
-                    PreviewInteraction(interactionRect);
+                    EditorGUILayout.EndVertical();
 
                     EditorGUI.ProgressBar(new Rect(interactionRect.x, interactionRect.y + interactionRect.height, interactionRect.width, 5), preview.Player.NormalizedTime, string.Empty);
 
@@ -514,20 +520,15 @@ public class GPUSkinningSamplerEditor : Editor
 
             EditorGUIUtility.AddCursorRect(rect, MouseCursor.Orbit);
 
-            if (e.type == EventType.ScrollWheel)
+            if(e.type == EventType.MouseDrag)
             {
-                camTrans.Translate(0, 0, -e.delta.y * 0.1f, Space.Self);
-                Vector3 v = camTrans.position - lookAtPoint;
-                if(v.magnitude < 1)
-                {
-                    camTrans.position = lookAtPoint - v.normalized;
-                }
-            }
-            else if(e.type == EventType.MouseDrag)
-            {
-                if ((e.alt && e.control) || e.button == 2)
+                if (e.control)
                 {
                     camLookAtOffset.y += e.delta.y * 0.02f;
+                }
+                else if(e.alt)
+                {
+                    camTrans.Translate(0, 0, -e.delta.y * 0.1f, Space.Self);
                 }
                 else
                 {
