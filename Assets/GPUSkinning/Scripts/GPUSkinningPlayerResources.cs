@@ -95,7 +95,11 @@ public class GPUSkinningPlayerResources
             Matrix4x4 rootMotionInv = frame.RootMotionInv(anim.rootBoneIndex);
 
             Matrix4x4 bakeIntoPoseMat = Matrix4x4.identity;
-            if(playingClip.rootMotionPositionXBakeIntoPose)
+            //if (playingClip.rootMotionRotationBakeIntoPose)
+            //{
+            //    bakeIntoPoseMat = Matrix4x4.TRS(Vector3.zero, frame.rootRotation, Vector3.one);
+            //}
+            if (playingClip.rootMotionPositionXBakeIntoPose)
             {
                 bakeIntoPoseMat[0, 3] = frame.rootPosition.x;
             }

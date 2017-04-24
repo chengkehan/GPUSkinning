@@ -27,7 +27,7 @@ public class GPUSkinningPlayer
 
     private MaterialPropertyBlock mpb = null;
 
-    private Matrix4x4 rootMotion;
+    private Vector3 rootMotionPosition;
 
     private bool rootMotion_firstFrameFlag = false;
 
@@ -209,23 +209,21 @@ public class GPUSkinningPlayer
             if (rootMotion_firstFrameFlag)
             {
                 rootMotion_firstFrameFlag = false;
-                rootMotion = frame.matrices[res.anim.rootBoneIndex];
+                rootMotionPosition = frame.rootPosition;
                 rootMotin_frameIndex = frameIndex;
             }
             else
             {
-                Matrix4x4 newRootMotion = frame.matrices[res.anim.rootBoneIndex];
+                Vector3 newRootMotionPosition = frame.rootPosition;
                 if (rootMotin_frameIndex < frameIndex)
                 {
-                    Vector4 newPos = newRootMotion.GetColumn(3);
-                    Vector4 pos = rootMotion.GetColumn(3);
-                    Vector4 delta = newPos - pos;
+                    Vector4 delta = newRootMotionPosition - rootMotionPosition;
                     if (playingClip.rootMotionPositionXBakeIntoPose) delta.x = 0;
                     if (playingClip.rootMotionPositionYBakeIntoPose) delta.y = 0;
                     if (playingClip.rootMotionPositionZBakeIntoPose) delta.z = 0;
                     transform.Translate(delta, Space.Self);
                 }
-                rootMotion = newRootMotion;
+                rootMotionPosition = newRootMotionPosition;
                 rootMotin_frameIndex = frameIndex;
             }
         }
