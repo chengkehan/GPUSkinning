@@ -27,7 +27,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
-    public bool rootMotion = false;
+    private bool rootMotionEnabled = false;
 
     private static GPUSkinningPlayerMonoManager playerManager = new GPUSkinningPlayerMonoManager();
 
@@ -67,11 +67,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
             }
 
             player = new GPUSkinningPlayer(gameObject, res);
-
-            if (Application.isPlaying)
-            {
-                player.RootMotionEnabled = rootMotion;
-            }
+            player.RootMotionEnabled = Application.isPlaying ? rootMotionEnabled : false;
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {

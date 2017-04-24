@@ -32,6 +32,10 @@ public class GPUSkinningSampler : MonoBehaviour
     public int[] fpsList = null;
 
     [HideInInspector]
+    [SerializeField]
+    public bool[] rootMotionEnabled = null; 
+
+    [HideInInspector]
     [System.NonSerialized]
     public int samplingClipIndex = -1;
 
@@ -75,9 +79,7 @@ public class GPUSkinningSampler : MonoBehaviour
     [SerializeField]
     public bool updateOrNew = true;
 
-    [HideInInspector]
-    [System.NonSerialized]
-    public Animation animation = null;
+    private Animation animation = null;
 
 	private Animator animator = null;
     private RuntimeAnimatorController runtimeAnimatorController = null;
@@ -115,6 +117,11 @@ public class GPUSkinningSampler : MonoBehaviour
     public bool IsSamplingProgress()
     {
         return samplingClipIndex != -1;
+    }
+
+    public bool IsAnimatorOrAnimation()
+    {
+        return animator != null; 
     }
 
     public void StartSample()
@@ -185,8 +192,6 @@ public class GPUSkinningSampler : MonoBehaviour
             gpuSkinningAnimation.guid = System.Guid.NewGuid().ToString();
         }
 
-        gpuSkinningAnimation.rootMotionEnabled = animator == null ? false : animator.applyRootMotion;
-
 		List<GPUSkinningBone> bones_result = new List<GPUSkinningBone>();
 		CollectBones(bones_result, smr.bones, mesh.bindposes, null, rootBoneTransform, 0);
         GPUSkinningBone[] newBones = bones_result.ToArray();
@@ -212,6 +217,7 @@ public class GPUSkinningSampler : MonoBehaviour
         gpuSkinningClip.length = animClip.length;
         gpuSkinningClip.wrapMode = wrapModes[samplingClipIndex];
         gpuSkinningClip.frames = new GPUSkinningFrame[numFrames];
+        gpuSkinningClip.rootMotionEnabled = rootMotionEnabled[samplingClipIndex];
 
         if(gpuSkinningAnimation.clips == null)
         {

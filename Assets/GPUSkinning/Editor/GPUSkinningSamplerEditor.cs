@@ -156,10 +156,11 @@ public class GPUSkinningSamplerEditor : Editor
         {
             EditorGUILayout.PrefixLabel("Sample Clips");
 
-            GUI.enabled = sampler.animation == null;
+            GUI.enabled = sampler.IsAnimatorOrAnimation();
             int no = serializedObject.FindProperty("animClips.Array.size").intValue;
             int no2 = serializedObject.FindProperty("wrapModes.Array.size").intValue;
             int no3 = serializedObject.FindProperty("fpsList.Array.size").intValue;
+            int no4 = serializedObject.FindProperty("rootMotionEnabled.Array.size").intValue;
             int c = EditorGUILayout.IntField("Size", no);
             if (c != no)
             {
@@ -173,6 +174,10 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 serializedObject.FindProperty("fpsList.Array.size").intValue = c;
             }
+            if(c != no4)
+            {
+                serializedObject.FindProperty("rootMotionEnabled.Array.size").intValue = c;
+            }
             GUI.enabled = true;
 
             for (int i = 0; i < no; i++)
@@ -180,6 +185,7 @@ public class GPUSkinningSamplerEditor : Editor
                 var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
                 var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
                 var prop3 = serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i));
+                var prop4 = serializedObject.FindProperty(string.Format("rootMotionEnabled.Array.data[{0}]", i));
                 if (prop != null)
                 {
                     EditorGUILayout.BeginHorizontal();
@@ -188,11 +194,12 @@ public class GPUSkinningSamplerEditor : Editor
                         EditorGUILayout.Space();
                         EditorGUILayout.Space();
                         EditorGUILayout.Space();
-                        EditorGUILayout.PropertyField(prop3); 
+                        EditorGUILayout.PropertyField(prop3);
                         EditorGUILayout.PropertyField(prop2, new GUIContent());
-                        GUI.enabled = sampler.animation == null;
+                        GUI.enabled = sampler.IsAnimatorOrAnimation();
                         EditorGUILayout.PropertyField(prop, new GUIContent());
                         GUI.enabled = true;
+                        prop4.boolValue = EditorGUILayout.Toggle(prop4.boolValue);
 
                         prop3.intValue = Mathf.Clamp(prop3.intValue, 0, 60);
                     }
@@ -260,8 +267,7 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.mtrl = mtrl;
                         preview.textureRawData = texture;
                         preview.Init();
-                        preview.Player.RootMotionEnabled = anim.rootMotionEnabled;
-                        rootMotionEnabled = anim.rootMotionEnabled;
+                        preview.Player.RootMotionEnabled = rootMotionEnabled;
                     }
                 }
             }
@@ -269,7 +275,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             if (rt != null)
             {
-                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 512);
+                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 80);
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.FlexibleSpace();
@@ -319,7 +325,7 @@ public class GPUSkinningSamplerEditor : Editor
 
     private void OnGUI_RootMotion()
     {
-        if (anim.rootMotionEnabled)
+        if (anim.clips[previewClipIndex].rootMotionEnabled)
         {
             EditorGUILayout.BeginHorizontal();
             {
@@ -342,7 +348,7 @@ public class GPUSkinningSamplerEditor : Editor
                         if (isRootMotionFoldout)
                         {
                             EditorGUI.BeginChangeCheck();
-                            rootMotionEnabled = EditorGUILayout.Toggle("Root Motion(Preview)", rootMotionEnabled);
+                            rootMotionEnabled = EditorGUILayout.Toggle("Apply Root Motion", rootMotionEnabled);
                             if (EditorGUI.EndChangeCheck())
                             {
                                 preview.Player.RootMotionEnabled = rootMotionEnabled;
@@ -350,21 +356,21 @@ public class GPUSkinningSamplerEditor : Editor
 
                             EditorGUILayout.Space();
                             
-                            EditorGUILayout.LabelField("Root Transform Position(X)");
-                            OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionXBakeIntoPose);
-                            OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionXOffset);
+                            //EditorGUILayout.LabelField("Root Transform Position(X)");
+                            //OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionXBakeIntoPose);
+                            //OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionXOffset);
 
-                            EditorGUILayout.LabelField("Root Transform Position(Y)");
-                            OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionYBakeIntoPose);
-                            OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionYOffset);
+                            //EditorGUILayout.LabelField("Root Transform Position(Y)");
+                            //OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionYBakeIntoPose);
+                            //OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionYOffset);
 
-                            EditorGUILayout.LabelField("Root Transform Position(Z)");
-                            OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionZBakeIntoPose);
-                            OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionZOffset);
+                            //EditorGUILayout.LabelField("Root Transform Position(Z)");
+                            //OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionZBakeIntoPose);
+                            //OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionZOffset);
 
-                            EditorGUILayout.LabelField("Root Transform Rotation");
-                            OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionRotationBakeIntoPose);
-                            OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionRotationOffset);
+                            //EditorGUILayout.LabelField("Root Transform Rotation");
+                            //OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionRotationBakeIntoPose);
+                            //OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionRotationOffset);
                         }
 
                     }
@@ -994,6 +1000,8 @@ public class GPUSkinningSamplerEditor : Editor
 
         isBoundsFoldout = GetEditorPrefsBool("isBoundsFoldout", true);
         isJointsFoldout = GetEditorPrefsBool("isJointsFoldout", true);
+
+        rootMotionEnabled = true;
     }
 
     private bool GetEditorPrefsBool(string key, bool defaultValue)

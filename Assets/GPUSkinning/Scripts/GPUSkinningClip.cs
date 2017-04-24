@@ -15,4 +15,22 @@ public class GPUSkinningClip
     public GPUSkinningFrame[] frames = null;
 
     public int pixelSegmentation = 0;
+
+    public bool rootMotionEnabled = false;
+
+    public bool rootMotionPositionXBakeIntoPose = false;
+
+    public bool rootMotionPositionYBakeIntoPose = false;
+
+    public bool rootMotionPositionZBakeIntoPose = false;
+
+    public bool rootMotionRotationBakeIntoPose = false;
+
+    public float rootMotionPositionXOffset = 0;
+
+    public float rootMotionPositionYOffset = 0;
+
+    public float rootMotionPositionZOffset = 0;
+
+    public float rootMotionRotationOffset = 0;
 }

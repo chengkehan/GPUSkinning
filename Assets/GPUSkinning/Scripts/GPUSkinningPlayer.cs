@@ -103,11 +103,6 @@ public class GPUSkinningPlayer
 
         mpb = new MaterialPropertyBlock();
 
-        if (Application.isPlaying)
-        {
-            rootMotionEnabled = res.anim.rootMotionEnabled;
-        }
-
         ConstructJoints();
     }
 
@@ -205,11 +200,11 @@ public class GPUSkinningPlayer
         int frameIndex = GetFrameIndex();
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
         res.UpdateMaterial();
-        res.UpdatePlayingData(mpb, playingClip, time, frame, rootMotionEnabled);
+        res.UpdatePlayingData(mpb, playingClip, time, frame, playingClip.rootMotionEnabled && rootMotionEnabled);
         mr.SetPropertyBlock(mpb);
         UpdateJoints(frame);
 
-        if (rootMotionEnabled)
+        if (playingClip.rootMotionEnabled && rootMotionEnabled)
         {
             if (rootMotion_firstFrameFlag)
             {
@@ -225,9 +220,9 @@ public class GPUSkinningPlayer
                     Vector4 newPos = newRootMotion.GetColumn(3);
                     Vector4 pos = rootMotion.GetColumn(3);
                     Vector4 delta = newPos - pos;
-                    if (res.anim.rootMotionPositionXBakeIntoPose) delta.x = 0;
-                    if (res.anim.rootMotionPositionYBakeIntoPose) delta.y = 0;
-                    if (res.anim.rootMotionPositionZBakeIntoPose) delta.z = 0;
+                    if (playingClip.rootMotionPositionXBakeIntoPose) delta.x = 0;
+                    if (playingClip.rootMotionPositionYBakeIntoPose) delta.y = 0;
+                    if (playingClip.rootMotionPositionZBakeIntoPose) delta.z = 0;
                     transform.Translate(delta, Space.Self);
                 }
                 rootMotion = newRootMotion;

@@ -18,22 +18,4 @@ public class GPUSkinningAnimation : ScriptableObject
     public int textureWidth = 0;
 
     public int textureHeight = 0;
-
-    public bool rootMotionEnabled = false;
-
-    public bool rootMotionPositionXBakeIntoPose = false;
-
-    public bool rootMotionPositionYBakeIntoPose = false;
-
-    public bool rootMotionPositionZBakeIntoPose = false;
-
-    public bool rootMotionRotationBakeIntoPose = false;
-
-    public float rootMotionPositionXOffset = 0;
-
-    public float rootMotionPositionYOffset = 0;
-
-    public float rootMotionPositionZOffset = 0;
-
-    public float rootMotionRotationOffset = 0;
 }
