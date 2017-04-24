@@ -325,7 +325,16 @@ public class GPUSkinningSamplerEditor : Editor
 
     private void OnGUI_RootMotion()
     {
-        if (anim.clips[previewClipIndex].rootMotionEnabled)
+        List<GPUSkinningClip> rootMotionClips = new List<GPUSkinningClip>();
+        for(int i = 0; i < anim.clips.Length; ++i)
+        {
+            if(anim.clips[i].rootMotionEnabled)
+            {
+                rootMotionClips.Add(anim.clips[i]);
+            }
+        }
+
+        if (rootMotionClips.Count > 0)
         {
             EditorGUILayout.BeginHorizontal();
             {
@@ -348,7 +357,9 @@ public class GPUSkinningSamplerEditor : Editor
                         if (isRootMotionFoldout)
                         {
                             EditorGUI.BeginChangeCheck();
+                            GUI.enabled = anim.clips[previewClipIndex].rootMotionEnabled;
                             rootMotionEnabled = EditorGUILayout.Toggle("Apply Root Motion", rootMotionEnabled);
+                            GUI.enabled = true;
                             if (EditorGUI.EndChangeCheck())
                             {
                                 preview.Player.RootMotionEnabled = rootMotionEnabled;
@@ -356,21 +367,26 @@ public class GPUSkinningSamplerEditor : Editor
 
                             EditorGUILayout.Space();
                             
-                            //EditorGUILayout.LabelField("Root Transform Position(X)");
-                            //OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionXBakeIntoPose);
-                            //OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionXOffset);
+                            for(int i = 0; i < rootMotionClips.Count; ++i)
+                            {
+                                EditorGUILayout.LabelField(rootMotionClips[i].name + ":");
 
-                            //EditorGUILayout.LabelField("Root Transform Position(Y)");
-                            //OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionYBakeIntoPose);
-                            //OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionYOffset);
+                                OnGUI_RootMotion_BakeIntoPose_Label("Root Transform Position(X)");
+                                OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref rootMotionClips[i].rootMotionPositionXBakeIntoPose);
+                                OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref rootMotionClips[i].rootMotionPositionXOffset);
 
-                            //EditorGUILayout.LabelField("Root Transform Position(Z)");
-                            //OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionPositionZBakeIntoPose);
-                            //OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionPositionZOffset);
+                                OnGUI_RootMotion_BakeIntoPose_Label("Root Transform Position(Y)");
+                                OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref rootMotionClips[i].rootMotionPositionYBakeIntoPose);
+                                OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref rootMotionClips[i].rootMotionPositionYOffset);
 
-                            //EditorGUILayout.LabelField("Root Transform Rotation");
-                            //OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref anim.rootMotionRotationBakeIntoPose);
-                            //OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref anim.rootMotionRotationOffset);
+                                OnGUI_RootMotion_BakeIntoPose_Label("Root Transform Position(Z)");
+                                OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref rootMotionClips[i].rootMotionPositionZBakeIntoPose);
+                                OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref rootMotionClips[i].rootMotionPositionZOffset);
+
+                                OnGUI_RootMotion_BakeIntoPose_Label("Root Transform Rotation");
+                                OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref rootMotionClips[i].rootMotionRotationBakeIntoPose);
+                                OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref rootMotionClips[i].rootMotionRotationOffset);
+                            }
                         }
 
                     }
@@ -384,9 +400,18 @@ public class GPUSkinningSamplerEditor : Editor
         }
     }
 
-    private void OnGUI_RootMotion_BakeIntoPose_Bool(string label, ref bool f)
+    private void OnGUI_RootMotion_BakeIntoPose_Label(string label)
     {
         BeginIndentLevel(1);
+        {
+            EditorGUILayout.LabelField(label);
+        }
+        EndIndentLevel();
+    }
+
+    private void OnGUI_RootMotion_BakeIntoPose_Bool(string label, ref bool f)
+    {
+        BeginIndentLevel(2);
         {
             EditorGUI.BeginChangeCheck();
             bool b = EditorGUILayout.Toggle(label, f);
@@ -401,7 +426,7 @@ public class GPUSkinningSamplerEditor : Editor
 
     private void OnGUI_RootMotion_BakeIntoPose_Float(string label, ref float f)
     {
-        BeginIndentLevel(1);
+        BeginIndentLevel(2);
         {
             EditorGUI.BeginChangeCheck();
             float v = EditorGUILayout.FloatField(label, f);
