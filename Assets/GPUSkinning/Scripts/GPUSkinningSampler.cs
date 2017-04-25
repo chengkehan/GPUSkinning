@@ -90,6 +90,10 @@ public class GPUSkinningSampler : MonoBehaviour
 
     private GPUSkinningClip gpuSkinningClip = null;
 
+    private Vector3 rootMotionPosition;
+
+    private Quaternion rootMotionRotation;
+
 	[HideInInspector]
 	[System.NonSerialized]
 	public int samplingTotalFrams = 0;
@@ -646,11 +650,10 @@ public class GPUSkinningSampler : MonoBehaviour
                 animation.Play();
             }
         }
-        StartCoroutine(SamplingCoroutine(frame));
-        ++samplingFrameIndex;
+        StartCoroutine(SamplingCoroutine(frame, totalFrams));
     }
 
-    private IEnumerator SamplingCoroutine(GPUSkinningFrame frame)
+    private IEnumerator SamplingCoroutine(GPUSkinningFrame frame, int totalFrames)
     {
 		yield return new WaitForEndOfFrame();
 
@@ -679,6 +682,32 @@ public class GPUSkinningSampler : MonoBehaviour
 
         frame.rootPosition = bones[gpuSkinningAnimation.rootBoneIndex].transform.localPosition;
         frame.rootRotation = bones[gpuSkinningAnimation.rootBoneIndex].transform.localRotation;
+
+        if(samplingFrameIndex == 0)
+        {
+            rootMotionPosition = bones[gpuSkinningAnimation.rootBoneIndex].transform.localPosition;
+            rootMotionRotation = bones[gpuSkinningAnimation.rootBoneIndex].transform.localRotation;
+        }
+        else
+        {
+            Vector3 newPosition = bones[gpuSkinningAnimation.rootBoneIndex].transform.localPosition;
+            Quaternion newRotation = bones[gpuSkinningAnimation.rootBoneIndex].transform.localRotation;
+            Vector3 deltaPosition = newPosition - rootMotionPosition;
+            frame.rootMotionDeltaPositionQ = Quaternion.Inverse(Quaternion.Euler(transform.forward.normalized)) * Quaternion.Euler(deltaPosition.normalized);
+            frame.rootMotionDeltaPositionL = deltaPosition.magnitude;
+            frame.rootMotionDeltaRotation = Quaternion.Inverse(rootMotionRotation) * newRotation;
+            rootMotionPosition = newPosition;
+            rootMotionRotation = newRotation;
+
+            if(samplingFrameIndex == 1)
+            {
+                gpuSkinningClip.frames[0].rootMotionDeltaPositionQ = gpuSkinningClip.frames[1].rootMotionDeltaPositionQ;
+                gpuSkinningClip.frames[0].rootMotionDeltaPositionL = gpuSkinningClip.frames[1].rootMotionDeltaPositionL;
+                gpuSkinningClip.frames[0].rootMotionDeltaRotation = gpuSkinningClip.frames[1].rootMotionDeltaRotation;
+            }
+        }
+
+        ++samplingFrameIndex;
     }
 
 	private void CreateShaderAndMaterial(string dir)

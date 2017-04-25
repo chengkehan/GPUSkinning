@@ -10,6 +10,12 @@ public class GPUSkinningFrame
 
     public Quaternion rootRotation = Quaternion.identity;
 
+    public Quaternion rootMotionDeltaPositionQ;
+
+    public float rootMotionDeltaPositionL;
+
+    public Quaternion rootMotionDeltaRotation;
+
     [System.NonSerialized]
     private bool rootMotionInvInit = false;
     [System.NonSerialized]

@@ -27,13 +27,7 @@ public class GPUSkinningPlayer
 
     private MaterialPropertyBlock mpb = null;
 
-    private Vector3 rootMotionPosition;
-
-    private Quaternion rootMotionRotation;
-
-    private bool rootMotion_firstFrameFlag = false;
-
-    private int rootMotin_frameIndex = 0;
+    private int rootMotionFrameIndex = -1;
 
     private bool rootMotionEnabled = false;
     public bool RootMotionEnabled
@@ -44,7 +38,7 @@ public class GPUSkinningPlayer
         }
         set
         {
-            rootMotion_firstFrameFlag = true;
+            rootMotionFrameIndex = -1;
             rootMotionEnabled = value;
         }
     }
@@ -121,7 +115,7 @@ public class GPUSkinningPlayer
                 {
                     isPlaying = true;
                     playingClip = clips[i];
-                    rootMotion_firstFrameFlag = true;
+                    rootMotionFrameIndex = -1;
                     if (playingClip.wrapMode == GPUSkinningWrapMode.Once)
                     {
                         time = 0;
@@ -206,37 +200,19 @@ public class GPUSkinningPlayer
         mr.SetPropertyBlock(mpb);
         UpdateJoints(frame);
 
-        if (playingClip.rootMotionEnabled && rootMotionEnabled)
+        if (playingClip.rootMotionEnabled && rootMotionEnabled && frameIndex != rootMotionFrameIndex)
         {
-            if (rootMotion_firstFrameFlag)
-            {
-                rootMotion_firstFrameFlag = false;
-                rootMotionPosition = frame.rootPosition;
-                rootMotionRotation = frame.rootRotation;
-                rootMotin_frameIndex = frameIndex;
-            }
-            else
-            {
-                Vector3 newRootMotionPosition = frame.rootPosition;
-                Quaternion newRootMotionRotation = frame.rootRotation;
-                if (rootMotin_frameIndex < frameIndex)
-                {
-                    Vector4 deltaPos = newRootMotionPosition - rootMotionPosition;
-                    if (playingClip.rootMotionPositionXBakeIntoPose) deltaPos.x = 0;
-                    if (playingClip.rootMotionPositionYBakeIntoPose) deltaPos.y = 0;
-                    if (playingClip.rootMotionPositionZBakeIntoPose) deltaPos.z = 0;
-                    transform.Translate(deltaPos, Space.Self);
+            rootMotionFrameIndex = frameIndex;
+            Quaternion rotation = transform.rotation;
+            Quaternion deltaRotation = frame.rootMotionDeltaPositionQ;
+            Vector3 deltaEuler = deltaRotation.eulerAngles;
+            deltaRotation = Quaternion.Euler(deltaEuler);
+            transform.rotation *= deltaRotation;
+            Vector3 deltaPosition = transform.forward * frame.rootMotionDeltaPositionL;
+            transform.Translate(deltaPosition, Space.World);
+            transform.rotation = rotation;
 
-                    if (!playingClip.rootMotionRotationBakeIntoPose)
-                    {
-                        Quaternion deltaRotation = Quaternion.Inverse(rootMotionRotation) * newRootMotionRotation;
-                        transform.rotation *= Quaternion.Euler(0, playingClip.rootMotionRotationOffset, 0) * deltaRotation;
-                    }
-                }
-                rootMotionRotation = newRootMotionRotation;
-                rootMotionPosition = newRootMotionPosition;
-                rootMotin_frameIndex = frameIndex;
-            }
+            transform.rotation *= frame.rootMotionDeltaRotation;
         }
     }
 

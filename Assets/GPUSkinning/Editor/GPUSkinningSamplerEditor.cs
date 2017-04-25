@@ -275,7 +275,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             if (rt != null)
             {
-                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 80);
+                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 512);
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.FlexibleSpace();
@@ -363,29 +363,6 @@ public class GPUSkinningSamplerEditor : Editor
                             if (EditorGUI.EndChangeCheck())
                             {
                                 preview.Player.RootMotionEnabled = rootMotionEnabled;
-                            }
-
-                            EditorGUILayout.Space();
-                            
-                            for(int i = 0; i < rootMotionClips.Count; ++i)
-                            {
-                                EditorGUILayout.LabelField(rootMotionClips[i].name + ":");
-
-                                OnGUI_RootMotion_BakeIntoPose_Label("Root Transform Position(X)");
-                                OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref rootMotionClips[i].rootMotionPositionXBakeIntoPose);
-                                OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref rootMotionClips[i].rootMotionPositionXOffset);
-
-                                OnGUI_RootMotion_BakeIntoPose_Label("Root Transform Position(Y)");
-                                OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref rootMotionClips[i].rootMotionPositionYBakeIntoPose);
-                                OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref rootMotionClips[i].rootMotionPositionYOffset);
-
-                                OnGUI_RootMotion_BakeIntoPose_Label("Root Transform Position(Z)");
-                                OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref rootMotionClips[i].rootMotionPositionZBakeIntoPose);
-                                OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref rootMotionClips[i].rootMotionPositionZOffset);
-
-                                OnGUI_RootMotion_BakeIntoPose_Label("Root Transform Rotation");
-                                OnGUI_RootMotion_BakeIntoPose_Bool("Bake Into Pose", ref rootMotionClips[i].rootMotionRotationBakeIntoPose);
-                                OnGUI_RootMotion_BakeIntoPose_Float("Offset", ref rootMotionClips[i].rootMotionRotationOffset);
                             }
                         }
 
