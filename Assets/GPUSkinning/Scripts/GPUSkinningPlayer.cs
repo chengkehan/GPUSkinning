@@ -205,8 +205,6 @@ public class GPUSkinningPlayer
             rootMotionFrameIndex = frameIndex;
             Quaternion rotation = transform.rotation;
             Quaternion deltaRotation = frame.rootMotionDeltaPositionQ;
-            Vector3 deltaEuler = deltaRotation.eulerAngles;
-            deltaRotation = Quaternion.Euler(deltaEuler);
             transform.rotation *= deltaRotation;
             Vector3 deltaPosition = transform.forward * frame.rootMotionDeltaPositionL;
             transform.Translate(deltaPosition, Space.World);
