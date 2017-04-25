@@ -29,6 +29,8 @@ public class GPUSkinningPlayer
 
     private Vector3 rootMotionPosition;
 
+    private Quaternion rootMotionRotation;
+
     private bool rootMotion_firstFrameFlag = false;
 
     private int rootMotin_frameIndex = 0;
@@ -210,6 +212,7 @@ public class GPUSkinningPlayer
             {
                 rootMotion_firstFrameFlag = false;
                 rootMotionPosition = frame.rootPosition;
+                rootMotionRotation = frame.rootRotation;
                 rootMotin_frameIndex = frameIndex;
             }
             else
@@ -218,8 +221,6 @@ public class GPUSkinningPlayer
                 Quaternion newRootMotionRotation = frame.rootRotation;
                 if (rootMotin_frameIndex < frameIndex)
                 {
-                    
-
                     Vector4 deltaPos = newRootMotionPosition - rootMotionPosition;
                     if (playingClip.rootMotionPositionXBakeIntoPose) deltaPos.x = 0;
                     if (playingClip.rootMotionPositionYBakeIntoPose) deltaPos.y = 0;
@@ -228,9 +229,11 @@ public class GPUSkinningPlayer
 
                     if (!playingClip.rootMotionRotationBakeIntoPose)
                     {
-                        transform.rotation = Quaternion.Euler(0, playingClip.rootMotionRotationOffset, 0) * newRootMotionRotation;
+                        Quaternion deltaRotation = Quaternion.Inverse(rootMotionRotation) * newRootMotionRotation;
+                        transform.rotation *= Quaternion.Euler(0, playingClip.rootMotionRotationOffset, 0) * deltaRotation;
                     }
                 }
+                rootMotionRotation = newRootMotionRotation;
                 rootMotionPosition = newRootMotionPosition;
                 rootMotin_frameIndex = frameIndex;
             }
