@@ -14,7 +14,7 @@ UNITY_INSTANCING_CBUFFER_START(GPUSkinningProperties0)
 UNITY_INSTANCING_CBUFFER_END
 
 UNITY_INSTANCING_CBUFFER_START(GPUSkinningProperties1)
-	UNITY_DEFINE_INSTANCED_PROP(float4x4, _GPUSkinning_RootMotionInv)
+	UNITY_DEFINE_INSTANCED_PROP(float4x4, _GPUSkinning_RootMotion)
 UNITY_INSTANCING_CBUFFER_END
 
 inline float4 indexToUV(int index)
@@ -48,7 +48,7 @@ inline int getFrameStartIndex()
 
 #define rootMotionEnabled UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_RootMotionEnabled) > 0
 
-#define rootMotionInv UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_RootMotionInv)
+#define rootMotion UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_RootMotion)
 
 #define textureMatrix(uv2, uv3) int frameStartIndex = getFrameStartIndex(); \
 								float4x4 mat0 = getMatrix(frameStartIndex, uv2.x); \
@@ -61,7 +61,7 @@ inline float4 skin1(float4 vertex, float4 uv2, float4 uv3)
 	textureMatrix(uv2, uv3);
 	if (rootMotionEnabled)
 	{
-		return mul(rootMotionInv, mul(mat0, vertex)) * uv2.y;
+		return mul(rootMotion, mul(mat0, vertex)) * uv2.y;
 	}
 	else
 	{
@@ -74,10 +74,10 @@ inline float4 skin2(float4 vertex, float4 uv2, float4 uv3)
 	textureMatrix(uv2, uv3);
 	if (rootMotionEnabled)
 	{
-		float4x4 rootInv = rootMotionInv;
+		float4x4 root = rootMotion;
 		return
-			mul(rootInv, mul(mat0, vertex)) * uv2.y +
-			mul(rootInv, mul(mat1, vertex)) * uv2.w;
+			mul(root, mul(mat0, vertex)) * uv2.y +
+			mul(root, mul(mat1, vertex)) * uv2.w;
 	}
 	else
 	{
@@ -92,12 +92,12 @@ inline float4 skin4(float4 vertex, float4 uv2, float4 uv3)
 	textureMatrix(uv2, uv3);
 	if (rootMotionEnabled)
 	{
-		float4x4 rootInv = rootMotionInv;
+		float4x4 root = rootMotion;
 		return
-			mul(rootInv, mul(mat0, vertex)) * uv2.y +
-			mul(rootInv, mul(mat1, vertex)) * uv2.w +
-			mul(rootInv, mul(mat2, vertex)) * uv3.y +
-			mul(rootInv, mul(mat3, vertex)) * uv3.w;
+			mul(root, mul(mat0, vertex)) * uv2.y +
+			mul(root, mul(mat1, vertex)) * uv2.w +
+			mul(root, mul(mat2, vertex)) * uv3.y +
+			mul(root, mul(mat3, vertex)) * uv3.w;
 	}
 	else
 	{

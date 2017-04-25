@@ -28,7 +28,7 @@ public class GPUSkinningPlayerResources
 
     private static int shaderPropID_GPUSkinning_PixelSegmentation = 0;
 
-    private static int shaderPropID_GPUSkinning_RootMotionInv = 0;
+    private static int shaderPropID_GPUSkinning_RootMotion = 0;
 
     private static int shaderPropID_GPUSkinning_RootMotionEnabled = 0;
 
@@ -43,7 +43,7 @@ public class GPUSkinningPlayerResources
             shaderPropID_GPUSkinning_ClipFPS = Shader.PropertyToID("_GPUSkinning_ClipFPS");
             shaderPorpID_GPUSkinning_Time = Shader.PropertyToID("_GPUSkinning_Time");
             shaderPropID_GPUSkinning_PixelSegmentation = Shader.PropertyToID("_GPUSkinning_PixelSegmentation");
-            shaderPropID_GPUSkinning_RootMotionInv = Shader.PropertyToID("_GPUSkinning_RootMotionInv");
+            shaderPropID_GPUSkinning_RootMotion = Shader.PropertyToID("_GPUSkinning_RootMotion");
             shaderPropID_GPUSkinning_RootMotionEnabled = Shader.PropertyToID("_GPUSkinning_RootMotionEnabled");
         }
     }
@@ -115,7 +115,7 @@ public class GPUSkinningPlayerResources
             }
             bakeIntoPoseMat[2, 3] += playingClip.rootMotionPositionZOffset;
 
-            mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotionInv, bakeIntoPoseMat * rootMotionInv);
+            mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotion, bakeIntoPoseMat * rootMotionInv);
         }
     }
 }
