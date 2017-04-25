@@ -219,6 +219,11 @@ public class GPUSkinningSampler : MonoBehaviour
         gpuSkinningClip.frames = new GPUSkinningFrame[numFrames];
         gpuSkinningClip.rootMotionEnabled = rootMotionEnabled[samplingClipIndex];
 
+        if(animator != null)
+        {
+            animator.applyRootMotion = gpuSkinningClip.rootMotionEnabled;
+        }
+
         if(gpuSkinningAnimation.clips == null)
         {
             gpuSkinningAnimation.clips = new GPUSkinningClip[] { gpuSkinningClip };
