@@ -60,11 +60,14 @@ public class GPUSkinningPlayerMonoEditor : Editor
 
             defaultPlayingClipIndex.intValue = Mathf.Clamp(defaultPlayingClipIndex.intValue, 0, player.anim.clips.Length);
         }
-        EditorGUI.BeginChangeCheck();
-        defaultPlayingClipIndex.intValue = EditorGUILayout.Popup("Default Playing", defaultPlayingClipIndex.intValue, clipsName);
-        if(EditorGUI.EndChangeCheck())
+        if (clipsName != null)
         {
-            player.Player.Play(clipsName[defaultPlayingClipIndex.intValue]);
+            EditorGUI.BeginChangeCheck();
+            defaultPlayingClipIndex.intValue = EditorGUILayout.Popup("Default Playing", defaultPlayingClipIndex.intValue, clipsName);
+            if (EditorGUI.EndChangeCheck())
+            {
+                player.Player.Play(clipsName[defaultPlayingClipIndex.intValue]);
+            }
         }
 
         serializedObject.ApplyModifiedProperties();

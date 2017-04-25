@@ -200,7 +200,7 @@ public class GPUSkinningPlayer
         int frameIndex = GetFrameIndex();
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
         res.UpdateMaterial();
-        res.UpdatePlayingData(mpb, playingClip, time, frame, playingClip.rootMotionEnabled && rootMotionEnabled);
+        res.UpdatePlayingData(mpb, playingClip, frameIndex, frame, playingClip.rootMotionEnabled && rootMotionEnabled);
         mr.SetPropertyBlock(mpb);
         UpdateJoints(frame);
 
@@ -239,7 +239,7 @@ public class GPUSkinningPlayer
 
     private int GetFrameIndex()
     {
-        return (int)((time * playingClip.fps) % (playingClip.length * playingClip.fps));
+        return (int)(time * playingClip.fps) % (int)(playingClip.length * playingClip.fps);
     }
 
     private void UpdateJoints(GPUSkinningFrame frame)

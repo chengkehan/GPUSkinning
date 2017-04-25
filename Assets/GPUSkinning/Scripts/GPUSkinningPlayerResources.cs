@@ -20,11 +20,7 @@ public class GPUSkinningPlayerResources
 
     private static int shaderPropID_GPUSkinning_TextureSize = 0;
 
-    private static int shaderPropID_GPUSkinning_ClipLength = 0;
-
-    private static int shaderPropID_GPUSkinning_ClipFPS = 0;
-
-    private static int shaderPorpID_GPUSkinning_Time = 0;
+    private static int shaderPorpID_GPUSkinning_FrameIndex = 0;
 
     private static int shaderPropID_GPUSkinning_PixelSegmentation = 0;
 
@@ -39,9 +35,7 @@ public class GPUSkinningPlayerResources
             shaderPropID_GPUSkinning_TextureMatrix = Shader.PropertyToID("_GPUSkinning_TextureMatrix");
             shaderPropID_GPUSkinning_NumPixelsPerFrame = Shader.PropertyToID("_GPUSkinning_NumPixelsPerFrame");
             shaderPropID_GPUSkinning_TextureSize = Shader.PropertyToID("_GPUSkinning_TextureSize");
-            shaderPropID_GPUSkinning_ClipLength = Shader.PropertyToID("_GPUSkinning_ClipLength");
-            shaderPropID_GPUSkinning_ClipFPS = Shader.PropertyToID("_GPUSkinning_ClipFPS");
-            shaderPorpID_GPUSkinning_Time = Shader.PropertyToID("_GPUSkinning_Time");
+            shaderPorpID_GPUSkinning_FrameIndex = Shader.PropertyToID("_GPUSkinning_FrameIndex");
             shaderPropID_GPUSkinning_PixelSegmentation = Shader.PropertyToID("_GPUSkinning_PixelSegmentation");
             shaderPropID_GPUSkinning_RootMotion = Shader.PropertyToID("_GPUSkinning_RootMotion");
             shaderPropID_GPUSkinning_RootMotionEnabled = Shader.PropertyToID("_GPUSkinning_RootMotionEnabled");
@@ -83,11 +77,9 @@ public class GPUSkinningPlayerResources
         }
     }
 
-    public void UpdatePlayingData(MaterialPropertyBlock mpb, GPUSkinningClip playingClip, float time, GPUSkinningFrame frame, bool rootMotionEnabled)
+    public void UpdatePlayingData(MaterialPropertyBlock mpb, GPUSkinningClip playingClip, int frameIndex, GPUSkinningFrame frame, bool rootMotionEnabled)
     {
-        mpb.SetFloat(shaderPropID_GPUSkinning_ClipLength, playingClip.length);
-        mpb.SetFloat(shaderPropID_GPUSkinning_ClipFPS, playingClip.fps);
-        mpb.SetFloat(shaderPorpID_GPUSkinning_Time, time);
+        mpb.SetFloat(shaderPorpID_GPUSkinning_FrameIndex, frameIndex);
         mpb.SetFloat(shaderPropID_GPUSkinning_PixelSegmentation, playingClip.pixelSegmentation);
         mpb.SetFloat(shaderPropID_GPUSkinning_RootMotionEnabled, rootMotionEnabled ? 1 : -1);
         if (rootMotionEnabled)

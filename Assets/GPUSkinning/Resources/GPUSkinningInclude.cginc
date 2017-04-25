@@ -6,9 +6,7 @@ uniform float _GPUSkinning_NumPixelsPerFrame;
 uniform float2 _GPUSkinning_TextureSize;
 
 UNITY_INSTANCING_CBUFFER_START(GPUSkinningProperties0)
-	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_ClipLength)
-	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_ClipFPS)
-	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_Time)
+	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_FrameIndex)
 	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_PixelSegmentation)
 	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_RootMotionEnabled)
 UNITY_INSTANCING_CBUFFER_END
@@ -17,16 +15,16 @@ UNITY_INSTANCING_CBUFFER_START(GPUSkinningProperties1)
 	UNITY_DEFINE_INSTANCED_PROP(float4x4, _GPUSkinning_RootMotion)
 UNITY_INSTANCING_CBUFFER_END
 
-inline float4 indexToUV(int index)
+inline float4 indexToUV(float index)
 {
 	int row = (int)(index / _GPUSkinning_TextureSize.x);
-	int col = index - row * _GPUSkinning_TextureSize.x;
+	float col = index - row * _GPUSkinning_TextureSize.x;
 	return float4(col / _GPUSkinning_TextureSize.x, row / _GPUSkinning_TextureSize.y, 0, 0);
 }
 
 inline float4x4 getMatrix(int frameStartIndex, float boneIndex)
 {
-	int matStartIndex = frameStartIndex + boneIndex * 3;
+	float matStartIndex = frameStartIndex + boneIndex * 3;
 	float4 row0 = tex2Dlod(_GPUSkinning_TextureMatrix, indexToUV(matStartIndex));
 	float4 row1 = tex2Dlod(_GPUSkinning_TextureMatrix, indexToUV(matStartIndex + 1));
 	float4 row2 = tex2Dlod(_GPUSkinning_TextureMatrix, indexToUV(matStartIndex + 2));
@@ -35,14 +33,11 @@ inline float4x4 getMatrix(int frameStartIndex, float boneIndex)
 	return mat;
 }
 
-inline int getFrameStartIndex()
+inline float getFrameStartIndex()
 {
-	float time = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_Time);
-	float fps = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_ClipFPS);
-	float length = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_ClipLength);
 	float segment = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_PixelSegmentation);
-	int frameIndex = (int)fmod(time * fps, length * fps);
-	int frameStartIndex = segment + frameIndex * _GPUSkinning_NumPixelsPerFrame;
+	float frameIndex = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_FrameIndex);
+	float frameStartIndex = segment + frameIndex * _GPUSkinning_NumPixelsPerFrame;
 	return frameStartIndex;
 }
 
@@ -50,7 +45,7 @@ inline int getFrameStartIndex()
 
 #define rootMotion UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_RootMotion)
 
-#define textureMatrix(uv2, uv3) int frameStartIndex = getFrameStartIndex(); \
+#define textureMatrix(uv2, uv3) float frameStartIndex = getFrameStartIndex(); \
 								float4x4 mat0 = getMatrix(frameStartIndex, uv2.x); \
 								float4x4 mat1 = getMatrix(frameStartIndex, uv2.z); \
 								float4x4 mat2 = getMatrix(frameStartIndex, uv3.x); \
