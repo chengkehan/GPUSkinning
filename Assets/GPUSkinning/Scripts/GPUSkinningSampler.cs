@@ -680,9 +680,6 @@ public class GPUSkinningSampler : MonoBehaviour
             while (true);
         }
 
-        frame.rootPosition = bones[gpuSkinningAnimation.rootBoneIndex].transform.localPosition;
-        frame.rootRotation = bones[gpuSkinningAnimation.rootBoneIndex].transform.localRotation;
-
         if(samplingFrameIndex == 0)
         {
             rootMotionPosition = bones[gpuSkinningAnimation.rootBoneIndex].transform.localPosition;

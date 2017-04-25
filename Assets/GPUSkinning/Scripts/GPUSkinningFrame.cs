@@ -6,10 +6,6 @@ public class GPUSkinningFrame
 {
     public Matrix4x4[] matrices = null;
 
-    public Vector3 rootPosition = Vector3.zero;
-
-    public Quaternion rootRotation = Quaternion.identity;
-
     public Quaternion rootMotionDeltaPositionQ;
 
     public float rootMotionDeltaPositionL;
