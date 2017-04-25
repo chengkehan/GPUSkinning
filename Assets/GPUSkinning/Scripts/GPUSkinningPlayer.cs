@@ -215,13 +215,21 @@ public class GPUSkinningPlayer
             else
             {
                 Vector3 newRootMotionPosition = frame.rootPosition;
+                Quaternion newRootMotionRotation = frame.rootRotation;
                 if (rootMotin_frameIndex < frameIndex)
                 {
-                    Vector4 delta = newRootMotionPosition - rootMotionPosition;
-                    if (playingClip.rootMotionPositionXBakeIntoPose) delta.x = 0;
-                    if (playingClip.rootMotionPositionYBakeIntoPose) delta.y = 0;
-                    if (playingClip.rootMotionPositionZBakeIntoPose) delta.z = 0;
-                    transform.Translate(delta, Space.Self);
+                    
+
+                    Vector4 deltaPos = newRootMotionPosition - rootMotionPosition;
+                    if (playingClip.rootMotionPositionXBakeIntoPose) deltaPos.x = 0;
+                    if (playingClip.rootMotionPositionYBakeIntoPose) deltaPos.y = 0;
+                    if (playingClip.rootMotionPositionZBakeIntoPose) deltaPos.z = 0;
+                    transform.Translate(deltaPos, Space.Self);
+
+                    if (!playingClip.rootMotionRotationBakeIntoPose)
+                    {
+                        transform.rotation = Quaternion.Euler(0, playingClip.rootMotionRotationOffset, 0) * newRootMotionRotation;
+                    }
                 }
                 rootMotionPosition = newRootMotionPosition;
                 rootMotin_frameIndex = frameIndex;
