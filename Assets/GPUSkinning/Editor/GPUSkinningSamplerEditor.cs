@@ -180,32 +180,75 @@ public class GPUSkinningSamplerEditor : Editor
             }
             GUI.enabled = true;
 
-            for (int i = 0; i < no; i++)
-            {
-                var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
-                var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
-                var prop3 = serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i));
-                var prop4 = serializedObject.FindProperty(string.Format("rootMotionEnabled.Array.data[{0}]", i));
-                if (prop != null)
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    {
-                        EditorGUILayout.Space();
-                        EditorGUILayout.Space();
-                        EditorGUILayout.Space();
-                        EditorGUILayout.Space();
-                        EditorGUILayout.PropertyField(prop3);
-                        EditorGUILayout.PropertyField(prop2, new GUIContent());
-                        GUI.enabled = sampler.IsAnimatorOrAnimation();
-                        EditorGUILayout.PropertyField(prop, new GUIContent());
-                        GUI.enabled = true;
-                        prop4.boolValue = EditorGUILayout.Toggle(prop4.boolValue);
 
-                        prop3.intValue = Mathf.Clamp(prop3.intValue, 0, 60);
+            EditorGUILayout.BeginHorizontal();
+            {
+                for (int j = -1; j < 4; ++j)
+                {
+                    EditorGUILayout.BeginVertical();
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        {
+                            if(j == -1)
+                            {
+                                GUILayout.Label("   ");
+                            }
+                            if(j == 0)
+                            {
+                                GUILayout.Label("FPS");
+                            }
+                            if(j == 1)
+                            {
+                                GUILayout.Label("Wrap Mode");
+                            }
+                            if(j == 2)
+                            {
+                                GUILayout.Label("Anim Clip");
+                            }
+                            if(j == 3)
+                            {
+                                GUILayout.Label("Root Motion");
+                            }
+                        }
+                        EditorGUILayout.EndHorizontal();
+                        for (int i = 0; i < no; i++)
+                        {
+                            var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
+                            var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
+                            var prop3 = serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i));
+                            var prop4 = serializedObject.FindProperty(string.Format("rootMotionEnabled.Array.data[{0}]", i));
+                            if (prop != null)
+                            {
+                                if(j == -1)
+                                {
+                                    GUILayout.Label((i + 1) + ":    ");
+                                }
+                                if(j == 0)
+                                {
+                                    EditorGUILayout.PropertyField(prop3, new GUIContent());
+                                    prop3.intValue = Mathf.Clamp(prop3.intValue, 0, 60);
+                                }
+                                if(j == 1)
+                                {
+                                    EditorGUILayout.PropertyField(prop2, new GUIContent());
+                                }
+                                if(j == 2)
+                                {
+                                    GUI.enabled = sampler.IsAnimatorOrAnimation();
+                                    EditorGUILayout.PropertyField(prop, new GUIContent());
+                                    GUI.enabled = true;
+                                }
+                                if(j == 3)
+                                {
+                                    prop4.boolValue = EditorGUILayout.Toggle(prop4.boolValue);
+                                }
+                            }
+                        }
                     }
-                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.EndVertical();
                 }
             }
+            EditorGUILayout.EndHorizontal();
         }
         EndBox();
     }
