@@ -48,17 +48,18 @@ public class GPUSkinningPlayerMonoEditor : Editor
 
         EditorGUILayout.PropertyField(serializedObject.FindProperty("rootMotionEnabled"), new GUIContent("Apply Root Motion"));
 
+        GPUSkinningAnimation anim = serializedObject.FindProperty("anim").objectReferenceValue as GPUSkinningAnimation;
         SerializedProperty defaultPlayingClipIndex = serializedObject.FindProperty("defaultPlayingClipIndex");
-        if (clipsName == null && player.anim != null)
+        if (clipsName == null && anim != null)
         {
             List<string> list = new List<string>();
-            for(int i = 0; i < player.anim.clips.Length; ++i)
+            for(int i = 0; i < anim.clips.Length; ++i)
             {
-                list.Add(player.anim.clips[i].name);
+                list.Add(anim.clips[i].name);
             }
             clipsName = list.ToArray();
 
-            defaultPlayingClipIndex.intValue = Mathf.Clamp(defaultPlayingClipIndex.intValue, 0, player.anim.clips.Length);
+            defaultPlayingClipIndex.intValue = Mathf.Clamp(defaultPlayingClipIndex.intValue, 0, anim.clips.Length);
         }
         if (clipsName != null)
         {

@@ -305,11 +305,7 @@ public class GPUSkinningSamplerEditor : Editor
                         previewGo.transform.position = new Vector3(999, 999, 1002);
                         preview = previewGo.AddComponent<GPUSkinningPlayerMono>();
                         preview.hideFlags = HideFlags.HideAndDontSave;
-                        preview.anim = anim;
-                        preview.mesh = mesh;
-                        preview.mtrl = mtrl;
-                        preview.textureRawData = texture;
-                        preview.Init();
+                        preview.Init(anim, mesh, mtrl, texture);
                         preview.Player.RootMotionEnabled = rootMotionEnabled;
                     }
                 }

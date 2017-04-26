@@ -7,19 +7,19 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 {
     [HideInInspector]
     [SerializeField]
-    public GPUSkinningAnimation anim = null;
+    private GPUSkinningAnimation anim = null;
 
     [HideInInspector]
     [SerializeField]
-    public Mesh mesh = null;
+    private Mesh mesh = null;
 
     [HideInInspector]
     [SerializeField]
-    public Material mtrl = null;
+    private Material mtrl = null;
 
     [HideInInspector]
     [SerializeField]
-    public TextAsset textureRawData = null;
+    private TextAsset textureRawData = null;
 
     [HideInInspector]
     [SerializeField]
@@ -38,6 +38,20 @@ public class GPUSkinningPlayerMono : MonoBehaviour
         {
             return player;
         }
+    }
+
+    public void Init(GPUSkinningAnimation anim, Mesh mesh, Material mtrl, TextAsset textureRawData)
+    {
+        if(player != null)
+        {
+            return;
+        }
+
+        this.anim = anim;
+        this.mesh = mesh;
+        this.mtrl = mtrl;
+        this.textureRawData = textureRawData;
+        Init();
     }
 
     public void Init()
@@ -122,6 +136,10 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     private void OnDestroy()
     {
         player = null;
+        anim = null;
+        mesh = null;
+        mtrl = null;
+        textureRawData = null;
 
         if (Application.isPlaying)
         {
