@@ -29,6 +29,10 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     [SerializeField]
     private bool rootMotionEnabled = false;
 
+    [HideInInspector]
+    [SerializeField]
+    private bool individualDifferenceEnabled = true;
+
     private static GPUSkinningPlayerMonoManager playerManager = new GPUSkinningPlayerMonoManager();
 
     private GPUSkinningPlayer player = null;
@@ -74,14 +78,15 @@ public class GPUSkinningPlayerMono : MonoBehaviour
                 res = new GPUSkinningPlayerResources();
                 res.anim = anim;
                 res.mesh = mesh;
-                res.mtrl = new GPUSkinningPlayerMaterial(new Material(mtrl));
+                res.mtrl = new Material(mtrl);
                 res.texture = GPUSkinningUtil.CreateTexture2D(textureRawData, anim);
-                res.mtrl.Material.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor;
+                res.mtrl.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor;
                 res.texture.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor;
             }
 
             player = new GPUSkinningPlayer(gameObject, res);
             player.RootMotionEnabled = Application.isPlaying ? rootMotionEnabled : false;
+            player.IndividualDifferenceEnabled = individualDifferenceEnabled;
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {

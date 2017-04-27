@@ -45,7 +45,7 @@ public class GPUSkinningPlayerMonoManager
 
         if(item.mtrl == null)
         {
-            item.mtrl = new GPUSkinningPlayerMaterial(new Material(originalMtrl));
+            item.mtrl = new Material(originalMtrl);
         }
 
         if(item.texture == null)

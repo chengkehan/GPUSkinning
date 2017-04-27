@@ -8,11 +8,22 @@ public class GPUSkinningPlayerResources
 
     public Mesh mesh = null;
 
-    public GPUSkinningPlayerMaterial mtrl = null;
+    public Material mtrl = null;
 
     public Texture2D texture = null;
 
     public List<GPUSkinningPlayerMono> players = new List<GPUSkinningPlayerMono>();
+
+    private GPUSkinningExecuteOncePerFrame executeOncePerFrame = new GPUSkinningExecuteOncePerFrame();
+
+    private float time = 0;
+    public float Time
+    {
+        get
+        {
+            return time;
+        }
+    }
 
     private static int shaderPropID_GPUSkinning_TextureMatrix = -1;
 
@@ -49,7 +60,7 @@ public class GPUSkinningPlayerResources
 
         if (mtrl != null)
         {
-            mtrl.Destroy();
+            Object.Destroy(mtrl);
             mtrl = null;
         }
 
@@ -66,14 +77,15 @@ public class GPUSkinningPlayerResources
         }
     }
 
-    public void UpdateMaterial()
+    public void Update(float deltaTime)
     {
-        if(mtrl.MaterialCanBeSetData())
+        if(executeOncePerFrame.CanBeExecute())
         {
-            mtrl.MarkMaterialAsSet();
-            mtrl.Material.SetTexture(shaderPropID_GPUSkinning_TextureMatrix, texture);
-            mtrl.Material.SetFloat(shaderPropID_GPUSkinning_NumPixelsPerFrame, anim.bones.Length * 3/*treat 3 pixels as a float3x4*/);
-            mtrl.Material.SetVector(shaderPropID_GPUSkinning_TextureSize, new Vector4(anim.textureWidth, anim.textureHeight, 0, 0));
+            executeOncePerFrame.MarkAsExecuted();
+            mtrl.SetTexture(shaderPropID_GPUSkinning_TextureMatrix, texture);
+            mtrl.SetFloat(shaderPropID_GPUSkinning_NumPixelsPerFrame, anim.bones.Length * 3/*treat 3 pixels as a float3x4*/);
+            mtrl.SetVector(shaderPropID_GPUSkinning_TextureSize, new Vector4(anim.textureWidth, anim.textureHeight, 0, 0));
+            time += deltaTime;
         }
     }
 
