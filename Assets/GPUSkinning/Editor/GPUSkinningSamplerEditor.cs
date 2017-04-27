@@ -314,7 +314,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             if (rt != null)
             {
-                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 80);
+                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 512);
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.FlexibleSpace();
