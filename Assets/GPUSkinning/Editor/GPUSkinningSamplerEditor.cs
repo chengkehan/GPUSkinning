@@ -53,7 +53,13 @@ public class GPUSkinningSamplerEditor : Editor
 
     private bool isJointsFoldout = true;
 
-    private GPUSkinningPlayerMode playerMode = GPUSkinningPlayerMode.MATRIX_ARRAY;
+    private bool isRootMotionFoldout = true;
+
+    private bool rootMotionEnabled = false;
+
+    private GameObject[] gridGos = null;
+
+    private Material gridMtrl = null;
 
     public override void OnInspectorGUI ()
 	{
@@ -150,13 +156,11 @@ public class GPUSkinningSamplerEditor : Editor
         {
             EditorGUILayout.PrefixLabel("Sample Clips");
 
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("updateOrNew"), new GUIContent("Update Or New"));
-
-            GUI.enabled = sampler.animation == null;
+            GUI.enabled = sampler.IsAnimatorOrAnimation();
             int no = serializedObject.FindProperty("animClips.Array.size").intValue;
             int no2 = serializedObject.FindProperty("wrapModes.Array.size").intValue;
-            int no3 = serializedObject.FindProperty("isSelected.Array.size").intValue;
-            int no4 = serializedObject.FindProperty("fpsList.Array.size").intValue;
+            int no3 = serializedObject.FindProperty("fpsList.Array.size").intValue;
+            int no4 = serializedObject.FindProperty("rootMotionEnabled.Array.size").intValue;
             int c = EditorGUILayout.IntField("Size", no);
             if (c != no)
             {
@@ -166,42 +170,85 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 serializedObject.FindProperty("wrapModes.Array.size").intValue = c;
             }
-            if (c != no3)
-            {
-                serializedObject.FindProperty("isSelected.Array.size").intValue = c;
-            }
-            if(c != no4)
+            if(c != no3)
             {
                 serializedObject.FindProperty("fpsList.Array.size").intValue = c;
             }
+            if(c != no4)
+            {
+                serializedObject.FindProperty("rootMotionEnabled.Array.size").intValue = c;
+            }
             GUI.enabled = true;
 
-            for (int i = 0; i < no; i++)
-            {
-                var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
-                var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
-                var prop3 = serializedObject.FindProperty(string.Format("isSelected.Array.data[{0}]", i));
-                var prop4 = serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i));
-                if (prop != null)
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    {
-                        EditorGUILayout.Space();
-                        EditorGUILayout.Space();
-                        EditorGUILayout.Space();
-                        EditorGUILayout.Space();
-                        EditorGUILayout.PropertyField(prop3); 
-                        EditorGUILayout.PropertyField(prop4, new GUIContent());
-                        EditorGUILayout.PropertyField(prop2, new GUIContent());
-                        GUI.enabled = sampler.animation == null;
-                        EditorGUILayout.PropertyField(prop, new GUIContent());
-                        GUI.enabled = true;
 
-                        prop4.intValue = Mathf.Clamp(prop4.intValue, 0, 60);
+            EditorGUILayout.BeginHorizontal();
+            {
+                for (int j = -1; j < 4; ++j)
+                {
+                    EditorGUILayout.BeginVertical();
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        {
+                            if(j == -1)
+                            {
+                                GUILayout.Label("   ");
+                            }
+                            if(j == 0)
+                            {
+                                GUILayout.Label("FPS");
+                            }
+                            if(j == 1)
+                            {
+                                GUILayout.Label("Wrap Mode");
+                            }
+                            if(j == 2)
+                            {
+                                GUILayout.Label("Anim Clip");
+                            }
+                            if(j == 3)
+                            {
+                                GUILayout.Label("Root Motion");
+                            }
+                        }
+                        EditorGUILayout.EndHorizontal();
+                        for (int i = 0; i < no; i++)
+                        {
+                            var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
+                            var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
+                            var prop3 = serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i));
+                            var prop4 = serializedObject.FindProperty(string.Format("rootMotionEnabled.Array.data[{0}]", i));
+                            if (prop != null)
+                            {
+                                if(j == -1)
+                                {
+                                    GUILayout.Label((i + 1) + ":    ");
+                                }
+                                if(j == 0)
+                                {
+                                    EditorGUILayout.PropertyField(prop3, new GUIContent());
+                                    prop3.intValue = Mathf.Clamp(prop3.intValue, 0, 60);
+                                }
+                                if(j == 1)
+                                {
+                                    EditorGUILayout.PropertyField(prop2, new GUIContent());
+                                }
+                                if(j == 2)
+                                {
+                                    GUI.enabled = sampler.IsAnimatorOrAnimation();
+                                    EditorGUILayout.PropertyField(prop, new GUIContent());
+                                    GUI.enabled = true;
+                                }
+                                if(j == 3)
+                                {
+                                    prop4.boolValue = EditorGUILayout.Toggle(prop4.boolValue);
+                                }
+                            }
+                        }
                     }
-                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.EndVertical();
                 }
             }
+            EditorGUILayout.EndHorizontal();
         }
         EndBox();
     }
@@ -247,20 +294,19 @@ public class GPUSkinningSamplerEditor : Editor
                         cam.farClipPlane = 100;
                         cam.targetTexture = rt;
                         cam.enabled = false;
-                        camGo.transform.position = new Vector3(100, 100, 100);
+                        cam.clearFlags = CameraClearFlags.SolidColor;
+                        cam.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1);
+                        camGo.transform.position = new Vector3(999, 1002, 999);
 
                         previewClipIndex = 0;
 
                         GameObject previewGo = new GameObject("GPUSkinningPreview_Go");
                         previewGo.hideFlags = HideFlags.HideAndDontSave;
-                        previewGo.transform.position = new Vector3(100, 100, 103);
+                        previewGo.transform.position = new Vector3(999, 999, 1002);
                         preview = previewGo.AddComponent<GPUSkinningPlayerMono>();
                         preview.hideFlags = HideFlags.HideAndDontSave;
-                        preview.anim = anim;
-                        preview.mesh = mesh;
-                        preview.mtrl = mtrl;
-                        preview.textureRawData = texture;
-                        preview.Init();
+                        preview.Init(anim, mesh, mtrl, texture);
+                        preview.Player.RootMotionEnabled = rootMotionEnabled;
                     }
                 }
             }
@@ -272,19 +318,25 @@ public class GPUSkinningSamplerEditor : Editor
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.FlexibleSpace();
-                    if (PlayerSettings.colorSpace == ColorSpace.Linear)
+                    EditorGUILayout.BeginVertical();
                     {
-                        RenderTexture tempRT = RenderTexture.active;
-                        Graphics.Blit(rt, rtGamma, linearToGammeMtrl);
-                        RenderTexture.active = tempRT;
-                        GUILayout.Box(rtGamma, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
+                        if (PlayerSettings.colorSpace == ColorSpace.Linear)
+                        {
+                            RenderTexture tempRT = RenderTexture.active;
+                            Graphics.Blit(rt, rtGamma, linearToGammeMtrl);
+                            RenderTexture.active = tempRT;
+                            GUILayout.Box(rtGamma, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
+                        }
+                        else
+                        {
+                            GUILayout.Box(rt, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
+                        }
+                        GetLastGUIRect(ref interactionRect);
+                        PreviewInteraction(interactionRect);
+
+                        EditorGUILayout.HelpBox("Drag to Orbit\nCtrl + Drag to Pitch\nAlt+ Drag to Zoom\nPress P Key to Pause", MessageType.None);
                     }
-                    else
-                    {
-                        GUILayout.Box(rt, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
-                    }
-                    GetLastGUIRect(ref interactionRect);
-                    PreviewInteraction(interactionRect);
+                    EditorGUILayout.EndVertical();
 
                     EditorGUI.ProgressBar(new Rect(interactionRect.x, interactionRect.y + interactionRect.height, interactionRect.width, 5), preview.Player.NormalizedTime, string.Empty);
 
@@ -294,7 +346,9 @@ public class GPUSkinningSamplerEditor : Editor
 
                 OnGUI_PreviewClipsOptions();
 
-                OnGUI_PlayerMode();
+                OnGUI_RootMotion();
+
+                EditorGUILayout.Space();
 
                 OnGUI_EditBounds();
 
@@ -308,22 +362,97 @@ public class GPUSkinningSamplerEditor : Editor
         serializedObject.ApplyModifiedProperties();
     }
 
-    private void OnGUI_PlayerMode()
+    private void OnGUI_RootMotion()
     {
-        EditorGUILayout.BeginHorizontal();
+        List<GPUSkinningClip> rootMotionClips = new List<GPUSkinningClip>();
+        for(int i = 0; i < anim.clips.Length; ++i)
         {
-            GUILayout.FlexibleSpace();
-            int index = playerMode == GPUSkinningPlayerMode.MATRIX_ARRAY ? 0 : 1;
-            index = GUILayout.Toolbar(index, new string[] { GPUSkinningPlayerMode.MATRIX_ARRAY.ToString(), GPUSkinningPlayerMode.TEXTURE_MATRIX.ToString() });
-            playerMode = index == 0 ? GPUSkinningPlayerMode.MATRIX_ARRAY : GPUSkinningPlayerMode.TEXTURE_MATRIX;
-            GUILayout.FlexibleSpace();
-
-            if(preview != null)
+            if(anim.clips[i].rootMotionEnabled)
             {
-                preview.Player.Mode = playerMode;
+                rootMotionClips.Add(anim.clips[i]);
             }
         }
-        EditorGUILayout.EndHorizontal();
+
+        if (rootMotionClips.Count > 0)
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                EditorGUILayout.Space();
+                BeginBox();
+                {
+                    EditorGUILayout.Space();
+                    EditorGUILayout.BeginVertical();
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        {
+                            EditorGUILayout.Space();
+                            EditorGUILayout.Space();
+                            isRootMotionFoldout = EditorGUILayout.Foldout(isRootMotionFoldout, isRootMotionFoldout ? string.Empty : "Root Motion");
+                            SetEditorPrefsBool("isRootMotionFoldout", isRootMotionFoldout);
+                            GUILayout.FlexibleSpace();
+                        }
+                        EditorGUILayout.EndHorizontal();
+
+                        if (isRootMotionFoldout)
+                        {
+                            EditorGUI.BeginChangeCheck();
+                            GUI.enabled = anim.clips[previewClipIndex].rootMotionEnabled;
+                            rootMotionEnabled = EditorGUILayout.Toggle("Apply Root Motion", rootMotionEnabled);
+                            GUI.enabled = true;
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                preview.Player.RootMotionEnabled = rootMotionEnabled;
+                            }
+                        }
+
+                    }
+                    EditorGUILayout.EndVertical();
+                    EditorGUILayout.Space();
+                }
+                EndBox();
+                EditorGUILayout.Space();
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+    }
+
+    private void OnGUI_RootMotion_BakeIntoPose_Label(string label)
+    {
+        BeginIndentLevel(1);
+        {
+            EditorGUILayout.LabelField(label);
+        }
+        EndIndentLevel();
+    }
+
+    private void OnGUI_RootMotion_BakeIntoPose_Bool(string label, ref bool f)
+    {
+        BeginIndentLevel(2);
+        {
+            EditorGUI.BeginChangeCheck();
+            bool b = EditorGUILayout.Toggle(label, f);
+            if (EditorGUI.EndChangeCheck())
+            {
+                f = b;
+                ApplyAnimModification();
+            }
+        }
+        EndIndentLevel();
+    }
+
+    private void OnGUI_RootMotion_BakeIntoPose_Float(string label, ref float f)
+    {
+        BeginIndentLevel(2);
+        {
+            EditorGUI.BeginChangeCheck();
+            float v = EditorGUILayout.FloatField(label, f);
+            if (EditorGUI.EndChangeCheck())
+            {
+                f = v;
+                ApplyAnimModification();
+            }
+        }
+        EndIndentLevel();
     }
 
     private void OnGUI_EditBounds()
@@ -390,9 +519,7 @@ public class GPUSkinningSamplerEditor : Editor
                             mesh.bounds = bounds;
                             anim.bounds = bounds;
                             EditorUtility.SetDirty(mesh);
-                            EditorUtility.SetDirty(anim);
-                            AssetDatabase.SaveAssets();
-                            AssetDatabase.Refresh();
+                            ApplyAnimModification();
                         }
                     }
                 }
@@ -453,9 +580,7 @@ public class GPUSkinningSamplerEditor : Editor
             if(EditorGUI.EndChangeCheck())
             {
                 bone.isExposed = isExposed;
-                EditorUtility.SetDirty(anim);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
+                ApplyAnimModification();
             }
         }
         GUILayout.EndHorizontal();
@@ -490,17 +615,52 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 preview.Player.Play(options[previewClipIndex]);
             }
-            if (anim.clips[previewClipIndex].wrapMode == GPUSkinningWrapMode.Once)
+            if (preview.Player.IsPlaying && !preview.Player.IsTimeAtTheEndOfLoop)
             {
-                if (GUILayout.Button("Play", GUILayout.Width(50)))
+                if (GUILayout.Button("||", GUILayout.Width(50)))
                 {
-                    preview.Player.Play(options[previewClipIndex]);
+                    preview.Player.Stop();
+                }
+            }
+            else
+            {
+                if (GUILayout.Button(">", GUILayout.Width(50)))
+                {
+                    if(preview.Player.IsTimeAtTheEndOfLoop)
+                    {
+                        preview.Player.Play(options[previewClipIndex]);
+                    }
+                    else
+                    {
+                        preview.Player.Resume();
+                    }
                 }
             }
             EditorGUILayout.Space();
         }
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
+    }
+
+    private void PreviewInteraction_CameraRestriction()
+    {
+        if(preview == null)
+        {
+            return;
+        }
+        Transform camTrans = cam.transform;
+        Transform modelTrans = preview.transform;
+        Vector3 lookAtPoint = modelTrans.position + camLookAtOffset;
+
+        Vector3 distV = camTrans.position - modelTrans.position;
+        if(distV.magnitude > 10)
+        {
+            distV.Normalize();
+            distV *= 10;
+            camTrans.position = modelTrans.position + distV;
+        }
+
+        camTrans.LookAt(lookAtPoint);
     }
 
     private void PreviewInteraction(Rect rect)
@@ -522,20 +682,15 @@ public class GPUSkinningSamplerEditor : Editor
 
             EditorGUIUtility.AddCursorRect(rect, MouseCursor.Orbit);
 
-            if (e.type == EventType.ScrollWheel)
+            if(e.type == EventType.MouseDrag)
             {
-                camTrans.Translate(0, 0, -e.delta.y * 0.1f, Space.Self);
-                Vector3 v = camTrans.position - lookAtPoint;
-                if(v.magnitude < 1)
-                {
-                    camTrans.position = lookAtPoint - v.normalized;
-                }
-            }
-            else if(e.type == EventType.MouseDrag)
-            {
-                if ((e.alt && e.control) || e.button == 2)
+                if (e.control)
                 {
                     camLookAtOffset.y += e.delta.y * 0.02f;
+                }
+                else if(e.alt)
+                {
+                    camTrans.Translate(0, 0, -e.delta.y * 0.1f, Space.Self);
                 }
                 else
                 {
@@ -546,8 +701,30 @@ public class GPUSkinningSamplerEditor : Editor
                     camTrans.position = lookAtPoint + v2;
                 }
             }
+        }
+    }
 
-            camTrans.LookAt(lookAtPoint);
+    private void PreviewDrawGrid()
+    {
+        if(gridGos == null)
+        {
+            gridMtrl = new Material(Shader.Find("GPUSkinning/GPUSkinningSamplerEditor_Grid"));
+            gridMtrl.hideFlags = HideFlags.HideAndDontSave;
+            gridMtrl.color = Color.gray;
+
+            gridGos = new GameObject[2];
+
+            gridGos[0] = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            gridGos[0].hideFlags = HideFlags.HideAndDontSave;
+            gridGos[0].transform.localScale = new Vector3(0.001f, 1, 1000);
+            gridGos[0].transform.localPosition = preview.transform.localPosition;
+            gridGos[0].GetComponent<MeshRenderer>().sharedMaterial = gridMtrl;
+
+            gridGos[1] = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            gridGos[1].hideFlags = HideFlags.HideAndDontSave;
+            gridGos[1].transform.localScale = new Vector3(1000, 1, 0.001f);
+            gridGos[1].transform.localPosition = preview.transform.localPosition;
+            gridGos[1].GetComponent<MeshRenderer>().sharedMaterial = gridMtrl;
         }
     }
 
@@ -685,6 +862,16 @@ public class GPUSkinningSamplerEditor : Editor
         bounds.max = max;
     }
 
+    private void ApplyAnimModification()
+    {
+        if(preview != null && anim != null)
+        {
+            EditorUtility.SetDirty(anim);
+            AssetDatabase.Refresh();
+            AssetDatabase.SaveAssets();
+        }
+    }
+
     private void UpdateHandler()
     {
         GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -704,8 +891,10 @@ public class GPUSkinningSamplerEditor : Editor
         {
             PreviewDrawBounds();
             PreviewDrawArrows();
+            PreviewDrawGrid();
 
             preview.Update_Editor(deltaTime);
+            PreviewInteraction_CameraRestriction();
             cam.Render();
         }
 
@@ -802,6 +991,18 @@ public class GPUSkinningSamplerEditor : Editor
                 arrowMtrls = null;
             }
 
+            if(gridGos != null)
+            {
+                foreach(GameObject gridGo in gridGos)
+                {
+                    DestroyImmediate(gridGo);
+                }
+                gridGos = null;
+
+                DestroyImmediate(gridMtrl);
+                gridMtrl = null;
+            }
+
             DestroyImmediate(boundsMtrl);
             boundsMtrl = null;
         }
@@ -854,6 +1055,8 @@ public class GPUSkinningSamplerEditor : Editor
 
         isBoundsFoldout = GetEditorPrefsBool("isBoundsFoldout", true);
         isJointsFoldout = GetEditorPrefsBool("isJointsFoldout", true);
+
+        rootMotionEnabled = true;
     }
 
     private bool GetEditorPrefsBool(string key, bool defaultValue)
@@ -884,4 +1087,16 @@ public class GPUSkinningSamplerEditor : Editor
 		EditorGUILayout.Space();
 		EditorGUILayout.EndVertical();
 	}
+
+    private int lastIndentLevel = 0;
+    private void BeginIndentLevel(int indentLevel)
+    {
+        lastIndentLevel = EditorGUI.indentLevel;
+        EditorGUI.indentLevel = indentLevel;
+    }
+
+    private void EndIndentLevel()
+    {
+        EditorGUI.indentLevel = lastIndentLevel;
+    }
 }

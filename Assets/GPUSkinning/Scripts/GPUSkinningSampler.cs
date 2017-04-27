@@ -33,7 +33,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
-    public bool[] isSelected = null;
+    public bool[] rootMotionEnabled = null; 
 
     [HideInInspector]
     [System.NonSerialized]
@@ -79,9 +79,7 @@ public class GPUSkinningSampler : MonoBehaviour
     [SerializeField]
     public bool updateOrNew = true;
 
-    [HideInInspector]
-    [System.NonSerialized]
-    public Animation animation = null;
+    private Animation animation = null;
 
 	private Animator animator = null;
     private RuntimeAnimatorController runtimeAnimatorController = null;
@@ -91,6 +89,10 @@ public class GPUSkinningSampler : MonoBehaviour
 	private GPUSkinningAnimation gpuSkinningAnimation = null;
 
     private GPUSkinningClip gpuSkinningClip = null;
+
+    private Vector3 rootMotionPosition;
+
+    private Quaternion rootMotionRotation;
 
 	[HideInInspector]
 	[System.NonSerialized]
@@ -121,6 +123,11 @@ public class GPUSkinningSampler : MonoBehaviour
         return samplingClipIndex != -1;
     }
 
+    public bool IsAnimatorOrAnimation()
+    {
+        return animator != null; 
+    }
+
     public void StartSample()
 	{
         if (isSampling)
@@ -147,7 +154,7 @@ public class GPUSkinningSampler : MonoBehaviour
         }
 
         animClip = animClips[samplingClipIndex];
-        if (animClip == null || !isSelected[samplingClipIndex])
+        if (animClip == null)
 		{
             isSampling = false;
 			return;
@@ -184,12 +191,9 @@ public class GPUSkinningSampler : MonoBehaviour
 		gpuSkinningAnimation = anim == null ? ScriptableObject.CreateInstance<GPUSkinningAnimation>() : anim;
 		gpuSkinningAnimation.name = animName;
 
-        if(samplingClipIndex == 0)
+        if(anim == null)
         {
-            if(!updateOrNew)
-            {
-                gpuSkinningAnimation.clips = null;
-            }
+            gpuSkinningAnimation.guid = System.Guid.NewGuid().ToString();
         }
 
 		List<GPUSkinningBone> bones_result = new List<GPUSkinningBone>();
@@ -217,6 +221,12 @@ public class GPUSkinningSampler : MonoBehaviour
         gpuSkinningClip.length = animClip.length;
         gpuSkinningClip.wrapMode = wrapModes[samplingClipIndex];
         gpuSkinningClip.frames = new GPUSkinningFrame[numFrames];
+        gpuSkinningClip.rootMotionEnabled = rootMotionEnabled[samplingClipIndex];
+
+        if(animator != null)
+        {
+            animator.applyRootMotion = gpuSkinningClip.rootMotionEnabled;
+        }
 
         if(gpuSkinningAnimation.clips == null)
         {
@@ -640,11 +650,10 @@ public class GPUSkinningSampler : MonoBehaviour
                 animation.Play();
             }
         }
-        StartCoroutine(SamplingCoroutine(frame));
-        ++samplingFrameIndex;
+        StartCoroutine(SamplingCoroutine(frame, totalFrams));
     }
 
-    private IEnumerator SamplingCoroutine(GPUSkinningFrame frame)
+    private IEnumerator SamplingCoroutine(GPUSkinningFrame frame, int totalFrames)
     {
 		yield return new WaitForEndOfFrame();
 
@@ -670,6 +679,32 @@ public class GPUSkinningSampler : MonoBehaviour
             }
             while (true);
         }
+
+        if(samplingFrameIndex == 0)
+        {
+            rootMotionPosition = bones[gpuSkinningAnimation.rootBoneIndex].transform.localPosition;
+            rootMotionRotation = bones[gpuSkinningAnimation.rootBoneIndex].transform.localRotation;
+        }
+        else
+        {
+            Vector3 newPosition = bones[gpuSkinningAnimation.rootBoneIndex].transform.localPosition;
+            Quaternion newRotation = bones[gpuSkinningAnimation.rootBoneIndex].transform.localRotation;
+            Vector3 deltaPosition = newPosition - rootMotionPosition;
+            frame.rootMotionDeltaPositionQ = Quaternion.Inverse(Quaternion.Euler(transform.forward.normalized)) * Quaternion.Euler(deltaPosition.normalized);
+            frame.rootMotionDeltaPositionL = deltaPosition.magnitude;
+            frame.rootMotionDeltaRotation = Quaternion.Inverse(rootMotionRotation) * newRotation;
+            rootMotionPosition = newPosition;
+            rootMotionRotation = newRotation;
+
+            if(samplingFrameIndex == 1)
+            {
+                gpuSkinningClip.frames[0].rootMotionDeltaPositionQ = gpuSkinningClip.frames[1].rootMotionDeltaPositionQ;
+                gpuSkinningClip.frames[0].rootMotionDeltaPositionL = gpuSkinningClip.frames[1].rootMotionDeltaPositionL;
+                gpuSkinningClip.frames[0].rootMotionDeltaRotation = gpuSkinningClip.frames[1].rootMotionDeltaRotation;
+            }
+        }
+
+        ++samplingFrameIndex;
     }
 
 	private void CreateShaderAndMaterial(string dir)
@@ -681,7 +716,6 @@ public class GPUSkinningSampler : MonoBehaviour
 
 		string shaderStr = ((TextAsset)Resources.Load(shaderTemplate)).text;
 		shaderStr = shaderStr.Replace("_$AnimName$_", animName);
-		shaderStr = shaderStr.Replace("_$NumBones$_", gpuSkinningAnimation.bones.Length.ToString());
 		shaderStr = SkinQualityShaderStr(shaderStr);
 		string shaderPath = dir + "/GPUSKinning_Shader_" + animName + ".shader";
 		File.WriteAllText(shaderPath, shaderStr);

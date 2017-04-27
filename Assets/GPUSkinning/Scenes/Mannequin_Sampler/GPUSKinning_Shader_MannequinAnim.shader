@@ -90,13 +90,11 @@ ENDCG
         #pragma surface surfSpecular StandardSpecular vertex:myvert finalcolor:finalSpecular fullforwardshadows // Opaque or Cutout
         // #pragma surface surfSpecular StandardSpecular vertex:vert finalcolor:finalSpecular fullforwardshadows alpha:fade // Fade
         // #pragma surface surfSpecular StandardSpecular vertex:vert finalcolor:finalSpecular fullforwardshadows alpha:premul // Transparent
- 
-		#pragma multi_compile GPU_SKINNING_MATRIX_ARRAY GPU_SKINNING_TEXTURE_MATRIX
+
+		#pragma multi_compile_instancing
 
         #include "Assets/GPUSkinning/Resources/GPUSkinningSurface.cginc"
 		#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"
-
-        uniform float4x4 _GPUSkinning_MatrixArray[68];
 
         void myvert (inout appdata_vert v, out Input o) 
         {
@@ -105,14 +103,6 @@ ENDCG
 
 		   // Skinning
 		   {
-#ifdef GPU_SKINNING_MATRIX_ARRAY
-				matrixArray(v.uv1, v.uv2);
-#endif
-
-#ifdef GPU_SKINNING_TEXTURE_MATRIX
-				textureMatrix(v.uv1, v.uv2);
-#endif
-
 				float4 normal = float4(v.normal, 0);
 				float4 tangent = float4(v.tangent.xyz, 0);
 

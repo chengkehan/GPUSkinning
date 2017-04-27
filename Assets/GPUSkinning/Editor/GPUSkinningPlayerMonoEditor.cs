@@ -8,6 +8,8 @@ public class GPUSkinningPlayerMonoEditor : Editor
 {
     private float time = 0;
 
+    private string[] clipsName = null;
+
     public override void OnInspectorGUI()
     {
         GPUSkinningPlayerMono player = target as GPUSkinningPlayerMono;
@@ -42,6 +44,39 @@ public class GPUSkinningPlayerMonoEditor : Editor
         if (EditorGUI.EndChangeCheck())
         {
             player.Init();
+        }
+
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("rootMotionEnabled"), new GUIContent("Apply Root Motion"));
+        if(EditorGUI.EndChangeCheck())
+        {
+            if(Application.isPlaying)
+            {
+                player.Player.RootMotionEnabled = serializedObject.FindProperty("rootMotionEnabled").boolValue;
+            }
+        }
+
+        GPUSkinningAnimation anim = serializedObject.FindProperty("anim").objectReferenceValue as GPUSkinningAnimation;
+        SerializedProperty defaultPlayingClipIndex = serializedObject.FindProperty("defaultPlayingClipIndex");
+        if (clipsName == null && anim != null)
+        {
+            List<string> list = new List<string>();
+            for(int i = 0; i < anim.clips.Length; ++i)
+            {
+                list.Add(anim.clips[i].name);
+            }
+            clipsName = list.ToArray();
+
+            defaultPlayingClipIndex.intValue = Mathf.Clamp(defaultPlayingClipIndex.intValue, 0, anim.clips.Length);
+        }
+        if (clipsName != null)
+        {
+            EditorGUI.BeginChangeCheck();
+            defaultPlayingClipIndex.intValue = EditorGUILayout.Popup("Default Playing", defaultPlayingClipIndex.intValue, clipsName);
+            if (EditorGUI.EndChangeCheck())
+            {
+                player.Player.Play(clipsName[defaultPlayingClipIndex.intValue]);
+            }
         }
 
         serializedObject.ApplyModifiedProperties();

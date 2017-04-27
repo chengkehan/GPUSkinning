@@ -15,4 +15,6 @@ public class GPUSkinningClip
     public GPUSkinningFrame[] frames = null;
 
     public int pixelSegmentation = 0;
+
+    public bool rootMotionEnabled = false;
 }

@@ -1,6 +1,30 @@
 ## GPUSkinning to improve performance.
 
-### v0.2.1 ( [dev](https://github.com/chengkehan/GPUSkinning/tree/v0.2.1-dev) )
+### [v0.2.1 release](https://github.com/chengkehan/GPUSkinning/releases)
+
+* Tag v0.2.1
+
+* [Document](Assets/GPUSkinning/Document/Document.pdf)
+
+Completed:
+
+* Memory Optimization
+
+* Individual Difference Animation
+
+* GPU Instancing
+
+* Skinning Instancing
+
+* Root Bone Animation
+
+Deferred:
+
+* Animation Blend
+
+* Level of Detail
+
+### [v0.2.1 dev](https://github.com/chengkehan/GPUSkinning/tree/v0.2.1-dev)
 
 TODO: More Features
 
@@ -16,13 +40,13 @@ TODO: More Features
 
 * Animation Blend
 
-### [v0.2](https://github.com/chengkehan/GPUSkinning/releases)
+### [v0.2 release](https://github.com/chengkehan/GPUSkinning/releases)
 
-* Complete (See tag v0.2)
+* Tag v0.2
 
 * [Document](Assets/GPUSkinning/Document/Document.pdf)
 
-### v0.2 ( [dev](https://github.com/chengkehan/GPUSkinning/tree/v0.2-dev) )
+### [v0.2 dev](https://github.com/chengkehan/GPUSkinning/tree/v0.2-dev)
 
 TODO: 
 

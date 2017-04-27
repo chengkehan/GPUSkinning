@@ -9,14 +9,13 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 	#include "UnityCG.cginc"
 	#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"
 
-	uniform float4x4 _GPUSkinning_MatrixArray[26];
-
 	struct appdata
 	{
 		float4 vertex : POSITION;
 		float2 uv : TEXCOORD0;
 		float4 uv2 : TEXCOORD1;
 		float4 uv3 : TEXCOORD2;
+		UNITY_VERTEX_INPUT_INSTANCE_ID
 	};
 
 	struct v2f
@@ -30,15 +29,9 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 
 	v2f vert(appdata v)
 	{
+		UNITY_SETUP_INSTANCE_ID(v);
+
 		v2f o;
-
-#ifdef GPU_SKINNING_MATRIX_ARRAY
-		matrixArray(v.uv2, v.uv3);
-#endif
-
-#ifdef GPU_SKINNING_TEXTURE_MATRIX
-		textureMatrix(v.uv2, v.uv3);
-#endif
 
 		
 
@@ -70,7 +63,7 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma multi_compile GPU_SKINNING_MATRIX_ARRAY GPU_SKINNING_TEXTURE_MATRIX
+			#pragma multi_compile_instancing
 			ENDCG
 		}
 	}

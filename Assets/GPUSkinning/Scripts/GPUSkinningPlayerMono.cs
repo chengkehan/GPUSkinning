@@ -7,23 +7,29 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 {
     [HideInInspector]
     [SerializeField]
-    public GPUSkinningAnimation anim = null;
+    private GPUSkinningAnimation anim = null;
 
     [HideInInspector]
     [SerializeField]
-    public Mesh mesh = null;
+    private Mesh mesh = null;
 
     [HideInInspector]
     [SerializeField]
-    public Material mtrl = null;
+    private Material mtrl = null;
 
     [HideInInspector]
     [SerializeField]
-    public TextAsset textureRawData = null;
+    private TextAsset textureRawData = null;
 
-    private Material newMtrl = null;
+    [HideInInspector]
+    [SerializeField]
+    private int defaultPlayingClipIndex = 0;
 
-    private Texture2D texture = null;
+    [HideInInspector]
+    [SerializeField]
+    private bool rootMotionEnabled = false;
+
+    private static GPUSkinningPlayerMonoManager playerManager = new GPUSkinningPlayerMonoManager();
 
     private GPUSkinningPlayer player = null;
     public GPUSkinningPlayer Player
@@ -32,6 +38,20 @@ public class GPUSkinningPlayerMono : MonoBehaviour
         {
             return player;
         }
+    }
+
+    public void Init(GPUSkinningAnimation anim, Mesh mesh, Material mtrl, TextAsset textureRawData)
+    {
+        if(player != null)
+        {
+            return;
+        }
+
+        this.anim = anim;
+        this.mesh = mesh;
+        this.mtrl = mtrl;
+        this.textureRawData = textureRawData;
+        Init();
     }
 
     public void Init()
@@ -43,24 +63,29 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
         if (anim != null && mesh != null && mtrl != null && textureRawData != null)
         {
-            newMtrl = new Material(mtrl);
+            GPUSkinningPlayerResources res = null;
 
-            texture = new Texture2D(anim.textureWidth, anim.textureHeight, TextureFormat.RGBAHalf, false, true);
-            texture.filterMode = FilterMode.Point;
-            texture.LoadRawTextureData(textureRawData.bytes);
-            texture.Apply(false, true);
-
-            if(!Application.isPlaying)
+            if (Application.isPlaying)
             {
-                newMtrl.hideFlags = HideFlags.DontSave;
-                texture.hideFlags = HideFlags.DontSave;
+                playerManager.Register(anim, mesh, mtrl, textureRawData, this, out res);
+            }
+            else
+            {
+                res = new GPUSkinningPlayerResources();
+                res.anim = anim;
+                res.mesh = mesh;
+                res.mtrl = new GPUSkinningPlayerMaterial(new Material(mtrl));
+                res.texture = GPUSkinningUtil.CreateTexture2D(textureRawData, anim);
+                res.mtrl.Material.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor;
+                res.texture.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor;
             }
 
-            player = new GPUSkinningPlayer(gameObject, anim, mesh, newMtrl, texture);
+            player = new GPUSkinningPlayer(gameObject, res);
+            player.RootMotionEnabled = Application.isPlaying ? rootMotionEnabled : false;
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {
-                player.Play(anim.clips[0].name);
+                player.Play(anim.clips[Mathf.Clamp(defaultPlayingClipIndex, 0, anim.clips.Length)].name);
             }
         }
     }
@@ -111,17 +136,22 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     private void OnDestroy()
     {
         player = null;
+        anim = null;
+        mesh = null;
+        mtrl = null;
+        textureRawData = null;
 
-        if(newMtrl != null)
+        if (Application.isPlaying)
         {
-            DestroyImmediate(newMtrl);
-            newMtrl = null;
+            playerManager.Unregister(this);
         }
 
-        if(texture != null)
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
         {
-            DestroyImmediate(texture);
-            texture = null;
+            Resources.UnloadUnusedAssets();
+            UnityEditor.EditorUtility.UnloadUnusedAssetsImmediate();
         }
+#endif
     }
 }
