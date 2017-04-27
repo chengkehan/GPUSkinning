@@ -21,6 +21,8 @@ public class GPUSkinningPlayer
 
     private float time = 0;
 
+    private float timeDiff = 0;
+
     private GPUSkinningClip playingClip = null;
 
     private GPUSkinningPlayerResources res = null;
@@ -49,6 +51,19 @@ public class GPUSkinningPlayer
         get
         {
             return isPlaying;
+        }
+    }
+
+    private bool individualDifferenceEnabled = true;
+    public bool IndividualDifferenceEnabled
+    {
+        get
+        {
+            return individualDifferenceEnabled;
+        }
+        set
+        {
+            individualDifferenceEnabled = value;
         }
     }
 
@@ -109,7 +124,7 @@ public class GPUSkinningPlayer
             mf = go.AddComponent<MeshFilter>();
         }
 
-        mr.sharedMaterial = res.mtrl.Material;
+        mr.sharedMaterial = res.mtrl;
         mf.sharedMesh = res.mesh;
 
         mpb = new MaterialPropertyBlock();
@@ -138,7 +153,8 @@ public class GPUSkinningPlayer
                     }
                     else if(playingClip.wrapMode == GPUSkinningWrapMode.Loop)
                     {
-                        time = Random.Range(0, playingClip.length);
+                        time = 0;
+                        timeDiff = Random.Range(0, playingClip.length);
                     }
                     else
                     {
@@ -182,26 +198,25 @@ public class GPUSkinningPlayer
             return;
         }
 
-        if(res == null || res.mtrl == null || res.mtrl.Material == null)
+        if(res == null || res.mtrl == null || res.mtrl == null)
         {
             return;    
         }
 
         if (playingClip.wrapMode == GPUSkinningWrapMode.Loop)
         {
-            UpdateMaterial();
-            time += timeDelta;
+            UpdateMaterial(timeDelta);
         }
         else if(playingClip.wrapMode == GPUSkinningWrapMode.Once)
         {
             if (time >= playingClip.length)
             {
                 time = playingClip.length;
-                UpdateMaterial();
+                UpdateMaterial(timeDelta);
             }
             else
             {
-                UpdateMaterial();
+                UpdateMaterial(timeDelta);
                 time += timeDelta;
                 if(time > playingClip.length)
                 {
@@ -215,11 +230,11 @@ public class GPUSkinningPlayer
         }
     }
 
-    private void UpdateMaterial()
+    private void UpdateMaterial(float deltaTime)
     {
         int frameIndex = GetFrameIndex();
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
-        res.UpdateMaterial();
+        res.Update(deltaTime);
         res.UpdatePlayingData(mpb, playingClip, frameIndex, frame, playingClip.rootMotionEnabled && rootMotionEnabled);
         mr.SetPropertyBlock(mpb);
         UpdateJoints(frame);
@@ -240,6 +255,20 @@ public class GPUSkinningPlayer
 
     private int GetFrameIndex()
     {
+        float time = 0;
+        if(WrapMode == GPUSkinningWrapMode.Once)
+        {
+            time = this.time;
+        }
+        else if(WrapMode == GPUSkinningWrapMode.Loop)
+        {
+            time = res.Time + (individualDifferenceEnabled ? this.timeDiff : 0);
+        }
+        else
+        {
+            throw new System.NotImplementedException();
+        }
+
         if (Mathf.Approximately(playingClip.length, time))
         {
             return (int)(playingClip.length * playingClip.fps) - 1;

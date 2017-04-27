@@ -56,6 +56,13 @@ public class GPUSkinningPlayerMonoEditor : Editor
             }
         }
 
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("individualDifferenceEnabled"), new GUIContent("Individual Difference"));
+        if(EditorGUI.EndChangeCheck())
+        {
+            player.Player.IndividualDifferenceEnabled = serializedObject.FindProperty("individualDifferenceEnabled").boolValue;
+        }
+
         GPUSkinningAnimation anim = serializedObject.FindProperty("anim").objectReferenceValue as GPUSkinningAnimation;
         SerializedProperty defaultPlayingClipIndex = serializedObject.FindProperty("defaultPlayingClipIndex");
         if (clipsName == null && anim != null)
