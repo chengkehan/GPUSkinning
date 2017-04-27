@@ -61,6 +61,22 @@ public class GPUSkinningPlayer
         }
     }
 
+    public GPUSkinningWrapMode WrapMode
+    {
+        get
+        {
+            return playingClip == null ? GPUSkinningWrapMode.Once : playingClip.wrapMode;
+        }
+    }
+
+    public bool IsTimeAtTheEndOfLoop
+    {
+        get
+        {
+            return Mathf.Approximately(NormalizedTime, 1.0f);
+        }
+    }
+
     public float NormalizedTime
     {
         get
@@ -71,8 +87,7 @@ public class GPUSkinningPlayer
             }
             else
             {
-                int i = (int)(time / playingClip.length);
-                return (time - i * playingClip.length) / playingClip.length;
+                return (float)GetFrameIndex() / (float)((int)(playingClip.length * playingClip.fps) - 1);
             }
         }
     }
@@ -111,7 +126,8 @@ public class GPUSkinningPlayer
             if(clips[i].name == clipName)
             {
                 if (playingClip != clips[i] || 
-                    (playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once && Mathf.Approximately(NormalizedTime, 0.0f)))
+                    (playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once && IsTimeAtTheEndOfLoop) || 
+                    (playingClip != null && !isPlaying))
                 {
                     isPlaying = true;
                     playingClip = clips[i];
@@ -137,6 +153,14 @@ public class GPUSkinningPlayer
     public void Stop()
     {
         isPlaying = false;
+    }
+
+    public void Resume()
+    {
+        if(playingClip != null)
+        {
+            isPlaying = true;
+        }
     }
 
 #if UNITY_EDITOR
@@ -216,7 +240,14 @@ public class GPUSkinningPlayer
 
     private int GetFrameIndex()
     {
-        return (int)(time * playingClip.fps) % (int)(playingClip.length * playingClip.fps);
+        if (Mathf.Approximately(playingClip.length, time))
+        {
+            return (int)(playingClip.length * playingClip.fps) - 1;
+        }
+        else
+        {
+            return (int)(time * playingClip.fps) % (int)(playingClip.length * playingClip.fps);
+        }
     }
 
     private void UpdateJoints(GPUSkinningFrame frame)

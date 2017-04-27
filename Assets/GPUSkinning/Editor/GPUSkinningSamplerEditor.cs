@@ -314,7 +314,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             if (rt != null)
             {
-                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 512);
+                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 80);
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.FlexibleSpace();
@@ -615,11 +615,25 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 preview.Player.Play(options[previewClipIndex]);
             }
-            if (anim.clips[previewClipIndex].wrapMode == GPUSkinningWrapMode.Once)
+            if (preview.Player.IsPlaying && !preview.Player.IsTimeAtTheEndOfLoop)
             {
-                if (GUILayout.Button("Play", GUILayout.Width(50)))
+                if (GUILayout.Button("||", GUILayout.Width(50)))
                 {
-                    preview.Player.Play(options[previewClipIndex]);
+                    preview.Player.Stop();
+                }
+            }
+            else
+            {
+                if (GUILayout.Button(">", GUILayout.Width(50)))
+                {
+                    if(preview.Player.IsTimeAtTheEndOfLoop)
+                    {
+                        preview.Player.Play(options[previewClipIndex]);
+                    }
+                    else
+                    {
+                        preview.Player.Resume();
+                    }
                 }
             }
             EditorGUILayout.Space();
