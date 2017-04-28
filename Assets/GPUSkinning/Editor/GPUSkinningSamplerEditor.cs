@@ -161,6 +161,7 @@ public class GPUSkinningSamplerEditor : Editor
             int no2 = serializedObject.FindProperty("wrapModes.Array.size").intValue;
             int no3 = serializedObject.FindProperty("fpsList.Array.size").intValue;
             int no4 = serializedObject.FindProperty("rootMotionEnabled.Array.size").intValue;
+            int no5 = serializedObject.FindProperty("individualDifferenceEnabled.Array.size").intValue;
             int c = EditorGUILayout.IntField("Size", no);
             if (c != no)
             {
@@ -178,12 +179,16 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 serializedObject.FindProperty("rootMotionEnabled.Array.size").intValue = c;
             }
+            if(c != no5)
+            {
+                serializedObject.FindProperty("individualDifferenceEnabled.Array.size").intValue = c;
+            }
             GUI.enabled = true;
 
 
             EditorGUILayout.BeginHorizontal();
             {
-                for (int j = -1; j < 4; ++j)
+                for (int j = -1; j < 5; ++j)
                 {
                     EditorGUILayout.BeginVertical();
                     {
@@ -209,6 +214,10 @@ public class GPUSkinningSamplerEditor : Editor
                             {
                                 GUILayout.Label("Root Motion");
                             }
+                            if(j == 4)
+                            {
+                                GUILayout.Label("Individual Difference");
+                            }
                         }
                         EditorGUILayout.EndHorizontal();
                         for (int i = 0; i < no; i++)
@@ -217,6 +226,7 @@ public class GPUSkinningSamplerEditor : Editor
                             var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
                             var prop3 = serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i));
                             var prop4 = serializedObject.FindProperty(string.Format("rootMotionEnabled.Array.data[{0}]", i));
+                            var prop5 = serializedObject.FindProperty(string.Format("individualDifferenceEnabled.Array.data[{0}]", i));
                             if (prop != null)
                             {
                                 if(j == -1)
@@ -240,7 +250,25 @@ public class GPUSkinningSamplerEditor : Editor
                                 }
                                 if(j == 3)
                                 {
-                                    prop4.boolValue = EditorGUILayout.Toggle(prop4.boolValue);
+                                    EditorGUILayout.BeginHorizontal();
+                                    GUILayout.FlexibleSpace();
+                                    prop4.boolValue = GUILayout.Toggle(prop4.boolValue, string.Empty);
+                                    GUILayout.FlexibleSpace();
+                                    EditorGUILayout.EndHorizontal();
+                                }
+                                if (j == 4)
+                                {
+                                    EditorGUILayout.BeginHorizontal();
+                                    GUILayout.FlexibleSpace();
+                                    GUI.enabled = prop2.enumValueIndex == 1;
+                                    prop5.boolValue = GUILayout.Toggle(prop5.boolValue, string.Empty);
+                                    if(!GUI.enabled)
+                                    {
+                                        prop5.boolValue = false;
+                                    }
+                                    GUI.enabled = true;
+                                    GUILayout.FlexibleSpace();
+                                    EditorGUILayout.EndHorizontal();
                                 }
                             }
                         }

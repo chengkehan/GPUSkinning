@@ -33,7 +33,11 @@ public class GPUSkinningSampler : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
-    public bool[] rootMotionEnabled = null; 
+    public bool[] rootMotionEnabled = null;
+
+    [HideInInspector]
+    [SerializeField]
+    public bool[] individualDifferenceEnabled = null;
 
     [HideInInspector]
     [System.NonSerialized]
@@ -222,6 +226,7 @@ public class GPUSkinningSampler : MonoBehaviour
         gpuSkinningClip.wrapMode = wrapModes[samplingClipIndex];
         gpuSkinningClip.frames = new GPUSkinningFrame[numFrames];
         gpuSkinningClip.rootMotionEnabled = rootMotionEnabled[samplingClipIndex];
+        gpuSkinningClip.individualDifferenceEnabled = individualDifferenceEnabled[samplingClipIndex];
 
         if(animator != null)
         {

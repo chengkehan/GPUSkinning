@@ -17,4 +17,6 @@ public class GPUSkinningClip
     public int pixelSegmentation = 0;
 
     public bool rootMotionEnabled = false;
+
+    public bool individualDifferenceEnabled = false;
 }
