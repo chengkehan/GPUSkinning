@@ -54,19 +54,6 @@ public class GPUSkinningPlayer
         }
     }
 
-    private bool individualDifferenceEnabled = true;
-    public bool IndividualDifferenceEnabled
-    {
-        get
-        {
-            return individualDifferenceEnabled;
-        }
-        set
-        {
-            individualDifferenceEnabled = value;
-        }
-    }
-
     private List<GPUSkinningPlayerJoint> joints = null;
     public List<GPUSkinningPlayerJoint> Joints
     {
@@ -262,7 +249,7 @@ public class GPUSkinningPlayer
         }
         else if(WrapMode == GPUSkinningWrapMode.Loop)
         {
-            time = res.Time + (individualDifferenceEnabled ? this.timeDiff : 0);
+            time = res.Time + (playingClip.individualDifferenceEnabled ? this.timeDiff : 0);
         }
         else
         {

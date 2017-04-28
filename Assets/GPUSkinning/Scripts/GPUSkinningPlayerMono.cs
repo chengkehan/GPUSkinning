@@ -29,10 +29,6 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     [SerializeField]
     private bool rootMotionEnabled = false;
 
-    [HideInInspector]
-    [SerializeField]
-    private bool individualDifferenceEnabled = true;
-
     private static GPUSkinningPlayerMonoManager playerManager = new GPUSkinningPlayerMonoManager();
 
     private GPUSkinningPlayer player = null;
@@ -86,7 +82,6 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
             player = new GPUSkinningPlayer(gameObject, res);
             player.RootMotionEnabled = Application.isPlaying ? rootMotionEnabled : false;
-            player.IndividualDifferenceEnabled = individualDifferenceEnabled;
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {
