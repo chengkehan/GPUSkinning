@@ -82,14 +82,14 @@ inline float getFrameStartIndex_crossFade()
 											float4x4 mat2_crossFade = getMatrix(frameStartIndex_crossFade, uv3.x); \
 											float4x4 mat3_crossFade = getMatrix(frameStartIndex_crossFade, uv3.z);
 
-#define skin1_noroot(mat0) mul(mat0, vertex) * uv2.y;
+#define skin1_noroot(mat0, mat1, mat2, mat3) mul(mat0, vertex) * uv2.y;
 
-#define skin1_root(mat0, root) mul(root, mul(mat0, vertex)) * uv2.y;
+#define skin1_root(mat0, mat1, mat2, mat3, root) mul(root, mul(mat0, vertex)) * uv2.y;
 
-#define skin2_noroot(mat0, mat1) mul(mat0, vertex) * uv2.y + \
+#define skin2_noroot(mat0, mat1, mat2, mat3) mul(mat0, vertex) * uv2.y + \
 									mul(mat1, vertex) * uv2.w;
 
-#define skin2_root(mat0, mat1, root) mul(root, mul(mat0, vertex)) * uv2.y + \
+#define skin2_root(mat0, mat1, mat2, mat3, root) mul(root, mul(mat0, vertex)) * uv2.y + \
 										mul(root, mul(mat1, vertex)) * uv2.w;
 
 #define skin4_noroot(mat0, mat1, mat2, mat3) mul(mat0, vertex) * uv2.y + \
@@ -104,160 +104,68 @@ inline float getFrameStartIndex_crossFade()
 
 #define skin_blend(pos0, pos1) pos1.xyz + (pos0.xyz - pos1.xyz) * crossFadeBlend
 
+#define doskin(quality) textureMatrix(uv2, uv3); \
+						if (rootMotionEnabled) \
+						{ \
+							float4x4 root = rootMotion; \
+							float4 pos0 = skin##quality##_root(mat0, mat1, mat2, mat3, root); \
+							if (crossFadeEnabled) \
+							{ \
+								textureMatrix_crossFade(uv2, uv3); \
+								float4 pos1 = 0; \
+								if (rootMotionEnabled_crossFade) \
+								{ \
+									float4x4 root_crossFade = rootMotion_crossFade; \
+									pos1 = skin##quality##_root(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade, root_crossFade); \
+								} \
+								else \
+								{ \
+									pos1 = skin##quality##_noroot(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade); \
+								} \
+								return float4(skin_blend(pos0, pos1), 1); \
+							} \
+							else \
+							{ \
+								return pos0; \
+							} \
+						} \
+						else \
+						{ \
+							float4 pos0 = skin##quality##_noroot(mat0, mat1, mat2, mat3); \
+							if (crossFadeEnabled) \
+							{ \
+								textureMatrix_crossFade(uv2, uv3); \
+								float4 pos1 = 0; \
+								if (rootMotionEnabled_crossFade) \
+								{ \
+									float4x4 root_crossFade = rootMotion_crossFade; \
+									pos1 = skin##quality##_root(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade, root_crossFade); \
+								} \
+								else \
+								{ \
+									pos1 = skin##quality##_noroot(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade); \
+								} \
+								return float4(skin_blend(pos0, pos1), 1); \
+							} \
+							else \
+							{ \
+								return pos0; \
+							} \
+						}
+
 inline float4 skin1(float4 vertex, float4 uv2, float4 uv3)
 {
-	textureMatrix(uv2, uv3);
-	if (rootMotionEnabled)
-	{
-		float4x4 root = rootMotion;
-		float4 pos0 = skin1_root(mat0, root);
-		if (crossFadeEnabled)
-		{
-			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = 0;
-			if (rootMotionEnabled_crossFade)
-			{
-				float4x4 root_crossFade = rootMotion_crossFade;
-				pos1 = skin1_root(mat0_crossFade, root_crossFade);
-			}
-			else
-			{
-				pos1 = skin1_noroot(mat0_crossFade);
-			}
-			return float4(skin_blend(pos0, pos1), 1);
-		}
-		else
-		{
-			return pos0;
-		}
-	}
-	else
-	{
-		float4 pos0 = skin1_noroot(mat0);
-		if (crossFadeEnabled)
-		{
-			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = 0;
-			if(rootMotionEnabled_crossFade)
-			{
-				float4x4 root_crossFade = rootMotion_crossFade;
-				pos1 = skin1_root(mat0_crossFade, root_crossFade);
-			}
-			else
-			{
-				pos1 = skin1_noroot(mat0_crossFade);
-			}
-			return float4(skin_blend(pos0, pos1), 1);
-		}
-		else
-		{
-			return pos0;
-		}
-	}
+	doskin(1);
 }
 
 inline float4 skin2(float4 vertex, float4 uv2, float4 uv3)
 {
-	textureMatrix(uv2, uv3);
-	if (rootMotionEnabled)
-	{
-		float4x4 root = rootMotion;
-		float4 pos0 = skin2_root(mat0, mat1, root);
-		if (crossFadeEnabled)
-		{
-			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = 0;
-			if (rootMotionEnabled_crossFade)
-			{
-				float4x4 root_crossFade = rootMotion_crossFade;
-				pos1 = skin2_root(mat0_crossFade, mat1_crossFade, root_crossFade);
-			}
-			else
-			{
-				pos1 = skin2_noroot(mat0_crossFade, mat1_crossFade);
-			}
-			return float4(skin_blend(pos0, pos1), 1);
-		}
-		else
-		{
-			return pos0;
-		}
-	}
-	else
-	{
-		float4 pos0 = skin2_noroot(mat0, mat1);
-		if (crossFadeEnabled)
-		{
-			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = 0;
-			if (rootMotionEnabled_crossFade)
-			{
-				float4x4 root_crossFade = rootMotion_crossFade;
-				pos1 = skin2_root(mat0_crossFade, mat1_crossFade, root_crossFade);
-			}
-			else
-			{
-				pos1 = skin2_noroot(mat0_crossFade, mat1_crossFade);
-			}
-			return float4(skin_blend(pos0, pos1), 1);
-		}
-		else
-		{
-			return pos0;
-		}
-	}
+	doskin(2);
 }
 
 inline float4 skin4(float4 vertex, float4 uv2, float4 uv3)
 {
-	textureMatrix(uv2, uv3);
-	if (rootMotionEnabled)
-	{
-		float4x4 root = rootMotion;
-		float4 pos0 = skin4_root(mat0, mat1, mat2, mat3, root);
-		if (crossFadeEnabled)
-		{ 
-			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = 0;
-			if (rootMotionEnabled_crossFade)
-			{
-				float4x4 root_crossFade = rootMotion_crossFade;
-				pos1 = skin4_root(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade, root_crossFade);
-			}
-			else
-			{
-				pos1 = skin4_noroot(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade);
-			}
-			return float4(skin_blend(pos0, pos1), 1);
-		}
-		else
-		{
-			return pos0;
-		}
-	}
-	else
-	{
-		float4 pos0 = skin4_noroot(mat0, mat1, mat2, mat3);
-		if (crossFadeEnabled)
-		{
-			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = 0;
-			if (rootMotionEnabled_crossFade)
-			{
-				float4x4 root_crossFade = rootMotion_crossFade;
-				pos1 = skin4_root(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade, root_crossFade);
-			}
-			else
-			{
-				pos1 = skin4_noroot(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade);
-			}
-			return float4(skin_blend(pos0, pos1), 1);
-		}
-		else
-		{
-			return pos0;
-		}
-	}
+	doskin(4);
 }
 
 #endif
