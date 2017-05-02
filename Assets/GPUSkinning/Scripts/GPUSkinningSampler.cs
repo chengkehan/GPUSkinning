@@ -523,6 +523,13 @@ public class GPUSkinningSampler : MonoBehaviour
         }
     }
 
+    private void InitTransform()
+    {
+        transform.parent = null;
+        transform.position = Vector3.zero;
+        transform.eulerAngles = Vector3.zero;
+    }
+
     private void Awake()
 	{
         animation = GetComponent<Animation>();
@@ -554,12 +561,16 @@ public class GPUSkinningSampler : MonoBehaviour
                 return;
             }
             runtimeAnimatorController = animator.runtimeAnimatorController;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            InitTransform();
             return;
         }
         if(animation != null)
         {
             MappingAnimationClips();
             animation.Stop();
+            animation.cullingType = AnimationCullingType.AlwaysAnimate;
+            InitTransform();
             return;
         }
 	}
