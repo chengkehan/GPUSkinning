@@ -13,6 +13,7 @@ UNITY_INSTANCING_CBUFFER_START(GPUSkinningProperties0)
 	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_CrossFadeBlend)
 	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_PixelSegmentation_CrossFade)
 	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_FrameIndex_CrossFade)
+	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_RootMotionEnabled_CrossFade)
 UNITY_INSTANCING_CBUFFER_END
 
 UNITY_INSTANCING_CBUFFER_START(GPUSkinningProperties1)
@@ -58,6 +59,8 @@ inline float getFrameStartIndex_crossFade()
 }
 
 #define rootMotionEnabled UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_RootMotionEnabled) > 0
+
+#define rootMotionEnabled_crossFade UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_RootMotionEnabled_CrossFade) > 0
 
 #define crossFadeEnabled UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_CrossFadeEnabled) > 0
 
@@ -110,9 +113,17 @@ inline float4 skin1(float4 vertex, float4 uv2, float4 uv3)
 		float4 pos0 = skin1_root(mat0, root);
 		if (crossFadeEnabled)
 		{
-			float4x4 root_crossFade = rootMotion_crossFade;
 			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = skin1_root(mat0_crossFade, root_crossFade);
+			float4 pos1 = 0;
+			if (rootMotionEnabled_crossFade)
+			{
+				float4x4 root_crossFade = rootMotion_crossFade;
+				pos1 = skin1_root(mat0_crossFade, root_crossFade);
+			}
+			else
+			{
+				pos1 = skin1_noroot(mat0_crossFade);
+			}
 			return float4(skin_blend(pos0, pos1), 1);
 		}
 		else
@@ -126,7 +137,16 @@ inline float4 skin1(float4 vertex, float4 uv2, float4 uv3)
 		if (crossFadeEnabled)
 		{
 			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = skin1_noroot(mat0_crossFade);
+			float4 pos1 = 0;
+			if(rootMotionEnabled_crossFade)
+			{
+				float4x4 root_crossFade = rootMotion_crossFade;
+				pos1 = skin1_root(mat0_crossFade, root_crossFade);
+			}
+			else
+			{
+				pos1 = skin1_noroot(mat0_crossFade);
+			}
 			return float4(skin_blend(pos0, pos1), 1);
 		}
 		else
@@ -145,9 +165,17 @@ inline float4 skin2(float4 vertex, float4 uv2, float4 uv3)
 		float4 pos0 = skin2_root(mat0, mat1, root);
 		if (crossFadeEnabled)
 		{
-			float4x4 root_crossFade = rootMotion_crossFade;
 			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = skin2_root(mat0_crossFade, mat1_crossFade, root_crossFade);
+			float4 pos1 = 0;
+			if (rootMotionEnabled_crossFade)
+			{
+				float4x4 root_crossFade = rootMotion_crossFade;
+				pos1 = skin2_root(mat0_crossFade, mat1_crossFade, root_crossFade);
+			}
+			else
+			{
+				pos1 = skin2_noroot(mat0_crossFade, mat1_crossFade);
+			}
 			return float4(skin_blend(pos0, pos1), 1);
 		}
 		else
@@ -161,7 +189,16 @@ inline float4 skin2(float4 vertex, float4 uv2, float4 uv3)
 		if (crossFadeEnabled)
 		{
 			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = skin2_noroot(mat0_crossFade, mat1_crossFade);
+			float4 pos1 = 0;
+			if (rootMotionEnabled_crossFade)
+			{
+				float4x4 root_crossFade = rootMotion_crossFade;
+				pos1 = skin2_root(mat0_crossFade, mat1_crossFade, root_crossFade);
+			}
+			else
+			{
+				pos1 = skin2_noroot(mat0_crossFade, mat1_crossFade);
+			}
 			return float4(skin_blend(pos0, pos1), 1);
 		}
 		else
@@ -180,9 +217,17 @@ inline float4 skin4(float4 vertex, float4 uv2, float4 uv3)
 		float4 pos0 = skin4_root(mat0, mat1, mat2, mat3, root);
 		if (crossFadeEnabled)
 		{ 
-			float4x4 root_crossFade = rootMotion_crossFade;
 			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = skin4_root(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade, root_crossFade);
+			float4 pos1 = 0;
+			if (rootMotionEnabled_crossFade)
+			{
+				float4x4 root_crossFade = rootMotion_crossFade;
+				pos1 = skin4_root(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade, root_crossFade);
+			}
+			else
+			{
+				pos1 = skin4_noroot(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade);
+			}
 			return float4(skin_blend(pos0, pos1), 1);
 		}
 		else
@@ -196,7 +241,16 @@ inline float4 skin4(float4 vertex, float4 uv2, float4 uv3)
 		if (crossFadeEnabled)
 		{
 			textureMatrix_crossFade(uv2, uv3);
-			float4 pos1 = skin4_noroot(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade);
+			float4 pos1 = 0;
+			if (rootMotionEnabled_crossFade)
+			{
+				float4x4 root_crossFade = rootMotion_crossFade;
+				pos1 = skin4_root(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade, root_crossFade);
+			}
+			else
+			{
+				pos1 = skin4_noroot(mat0_crossFade, mat1_crossFade, mat2_crossFade, mat3_crossFade);
+			}
 			return float4(skin_blend(pos0, pos1), 1);
 		}
 		else

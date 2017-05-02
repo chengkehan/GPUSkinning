@@ -49,6 +49,8 @@ public class GPUSkinningPlayerResources
 
     private static int shaderPropID_GPUSkinning_RootMotion_CrossFade = 0;
 
+    private static int shaderPropID_GPUSkinning_RootMotionEnabled_CrossFade = 0;
+
     public GPUSkinningPlayerResources()
     {
         if (shaderPropID_GPUSkinning_TextureMatrix == -1)
@@ -65,6 +67,7 @@ public class GPUSkinningPlayerResources
             shaderPropID_GPUSkinning_PixelSegmentation_CrossFade = Shader.PropertyToID("_GPUSkinning_PixelSegmentation_CrossFade");
             shaderPorpID_GPUSkinning_FrameIndex_CrossFade = Shader.PropertyToID("_GPUSkinning_FrameIndex_CrossFade");
             shaderPropID_GPUSkinning_RootMotion_CrossFade = Shader.PropertyToID("_GPUSkinning_RootMotion_CrossFade");
+            shaderPropID_GPUSkinning_RootMotionEnabled_CrossFade = Shader.PropertyToID("_GPUSkinning_RootMotionEnabled_CrossFade");
         }
     }
 
@@ -120,7 +123,12 @@ public class GPUSkinningPlayerResources
     {
         if(IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
         {
-            mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotion_CrossFade, lastPlayedClip.frames[frameIndex].RootMotionInv(anim.rootBoneIndex));
+            mpb.SetFloat(shaderPropID_GPUSkinning_RootMotionEnabled_CrossFade, lastPlayedClip.rootMotionEnabled ? 1 : -1);
+            if (lastPlayedClip.rootMotionEnabled)
+            {
+                mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotion_CrossFade, lastPlayedClip.frames[frameIndex].RootMotionInv(anim.rootBoneIndex));
+            }
+
             mpb.SetFloat(shaderPorpID_GPUSkinning_FrameIndex_CrossFade, frameIndex);
             mpb.SetFloat(shaderPropID_GPUSkinning_PixelSegmentation_CrossFade, lastPlayedClip.pixelSegmentation);
             mpb.SetFloat(shaderPropID_GPUSkinning_CrossFadeBlend, CrossFadeBlendFactor(crossFadeProgress, crossFadeTime));
