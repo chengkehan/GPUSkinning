@@ -9,19 +9,20 @@ public class GPUSkinningPlayer
     private Transform transform = null;
 
     private MeshRenderer mr = null;
-    public MeshRenderer MeshRenderer
-    {
-        get
-        {
-            return mr;
-        }
-    }
 
     private MeshFilter mf = null;
 
     private float time = 0;
 
     private float timeDiff = 0;
+
+    private float crossFadeTime = -1;
+
+    private float crossFadeProgress = 0;
+
+    private float lastPlayedTime = 0;
+
+    private GPUSkinningClip lastPlayedClip = null;
 
     private GPUSkinningClip playingClip = null;
 
@@ -131,24 +132,41 @@ public class GPUSkinningPlayer
                     (playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once && IsTimeAtTheEndOfLoop) || 
                     (playingClip != null && !isPlaying))
                 {
-                    isPlaying = true;
-                    playingClip = clips[i];
-                    rootMotionFrameIndex = -1;
-                    if (playingClip.wrapMode == GPUSkinningWrapMode.Once)
-                    {
-                        time = 0;
-                    }
-                    else if(playingClip.wrapMode == GPUSkinningWrapMode.Loop)
-                    {
-                        time = 0;
-                        timeDiff = Random.Range(0, playingClip.length);
-                    }
-                    else
-                    {
-                        throw new System.NotImplementedException();
-                    }
+                    SetNewPlayingClip(clips[i]);
                 }
                 return;
+            }
+        }
+    }
+
+    public void CrossFade(string clipName, float fadeLength)
+    {
+        if (playingClip == null)
+        {
+            Play(clipName);
+        }
+        else
+        {
+            GPUSkinningClip[] clips = res.anim.clips;
+            int numClips = clips == null ? 0 : clips.Length;
+            for (int i = 0; i < numClips; ++i)
+            {
+                if (clips[i].name == clipName)
+                {
+                    if (playingClip != clips[i])
+                    {
+                        crossFadeProgress = 0;
+                        crossFadeTime = fadeLength;
+                        SetNewPlayingClip(clips[i]);
+                        return;
+                    }
+                    if ((playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once && IsTimeAtTheEndOfLoop) ||
+                        (playingClip != null && !isPlaying))
+                    {
+                        SetNewPlayingClip(clips[i]);
+                        return;
+                    }
+                }
             }
         }
     }
@@ -176,6 +194,18 @@ public class GPUSkinningPlayer
     public void Update(float timeDelta)
     {
         Update_Internal(timeDelta);
+    }
+
+    private void SetNewPlayingClip(GPUSkinningClip clip)
+    {
+        lastPlayedClip = playingClip;
+        lastPlayedTime = GetCurrentTime();
+
+        isPlaying = true;
+        playingClip = clip;
+        rootMotionFrameIndex = -1;
+        time = 0;
+        timeDiff = Random.Range(0, playingClip.length);
     }
 
     private void Update_Internal(float timeDelta)
@@ -215,39 +245,67 @@ public class GPUSkinningPlayer
         {
             throw new System.NotImplementedException();
         }
+
+        crossFadeProgress += timeDelta;
+        lastPlayedTime += timeDelta;
     }
 
     private void UpdateMaterial(float deltaTime)
     {
+        float blend_crossFade = 1;
+        int frameIndex_crossFade = -1;
+        GPUSkinningFrame frame_crossFade = null;
+        if (res.IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
+        {
+            frameIndex_crossFade = GetCrossFadeFrameIndex();
+            frame_crossFade = lastPlayedClip.frames[frameIndex_crossFade];
+            blend_crossFade = res.CrossFadeBlendFactor(crossFadeProgress, crossFadeTime);
+        }
+
         int frameIndex = GetFrameIndex();
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
         res.Update(deltaTime);
         res.UpdatePlayingData(mpb, playingClip, frameIndex, frame, playingClip.rootMotionEnabled && rootMotionEnabled);
+        res.UpdateCrossFade(mpb, lastPlayedClip, GetCrossFadeFrameIndex(), ref crossFadeTime, ref crossFadeProgress);
         mr.SetPropertyBlock(mpb);
         UpdateJoints(frame);
 
         if (playingClip.rootMotionEnabled && rootMotionEnabled && frameIndex != rootMotionFrameIndex)
         {
             rootMotionFrameIndex = frameIndex;
-            Quaternion rotation = transform.rotation;
-            Quaternion deltaRotation = frame.rootMotionDeltaPositionQ;
-            transform.rotation *= deltaRotation;
-            Vector3 deltaPosition = transform.forward * frame.rootMotionDeltaPositionL;
-            transform.Translate(deltaPosition, Space.World);
-            transform.rotation = rotation;
+            DoRootMotion(frame_crossFade, 1 - blend_crossFade, false);
+            DoRootMotion(frame, blend_crossFade, true);
+        }
+    }
 
+    private void DoRootMotion(GPUSkinningFrame frame, float blend, bool doRotate)
+    {
+        if(frame == null)
+        {
+            return;
+        }
+
+        Quaternion rotation = transform.rotation;
+        Quaternion deltaRotation = frame.rootMotionDeltaPositionQ;
+        transform.rotation *= deltaRotation;
+        Vector3 deltaPosition = transform.forward * frame.rootMotionDeltaPositionL * blend;
+        transform.Translate(deltaPosition, Space.World);
+        transform.rotation = rotation;
+
+        if(doRotate)
+        {
             transform.rotation *= frame.rootMotionDeltaRotation;
         }
     }
 
-    private int GetFrameIndex()
+    private float GetCurrentTime()
     {
         float time = 0;
-        if(WrapMode == GPUSkinningWrapMode.Once)
+        if (WrapMode == GPUSkinningWrapMode.Once)
         {
             time = this.time;
         }
-        else if(WrapMode == GPUSkinningWrapMode.Loop)
+        else if (WrapMode == GPUSkinningWrapMode.Loop)
         {
             time = res.Time + (playingClip.individualDifferenceEnabled ? this.timeDiff : 0);
         }
@@ -255,15 +313,58 @@ public class GPUSkinningPlayer
         {
             throw new System.NotImplementedException();
         }
+        return time;
+    }
 
+    private int GetFrameIndex()
+    {
+        float time = GetCurrentTime();
         if (Mathf.Approximately(playingClip.length, time))
         {
-            return (int)(playingClip.length * playingClip.fps) - 1;
+            return GetTheLastFrameIndex_WrapMode_Once(playingClip);
         }
         else
         {
-            return (int)(time * playingClip.fps) % (int)(playingClip.length * playingClip.fps);
+            return GetFrameIndex_WrapMode_Loop(playingClip, time);
         }
+    }
+
+    private int GetCrossFadeFrameIndex()
+    {
+        if (lastPlayedClip == null)
+        {
+            return 0;
+        }
+
+        if (lastPlayedClip.wrapMode == GPUSkinningWrapMode.Once)
+        {
+            if (lastPlayedTime >= lastPlayedClip.length)
+            {
+                return GetTheLastFrameIndex_WrapMode_Once(lastPlayedClip);
+            }
+            else
+            {
+                return GetFrameIndex_WrapMode_Loop(lastPlayedClip, lastPlayedTime);
+            }
+        }
+        else if (lastPlayedClip.wrapMode == GPUSkinningWrapMode.Loop)
+        {
+            return GetFrameIndex_WrapMode_Loop(lastPlayedClip, lastPlayedTime);
+        }
+        else
+        {
+            throw new System.NotImplementedException();
+        }
+    }
+
+    private int GetTheLastFrameIndex_WrapMode_Once(GPUSkinningClip clip)
+    {
+        return (int)(clip.length * clip.fps) - 1;
+    }
+
+    private int GetFrameIndex_WrapMode_Loop(GPUSkinningClip clip, float time)
+    {
+        return (int)(time * clip.fps) % (int)(clip.length * clip.fps);
     }
 
     private void UpdateJoints(GPUSkinningFrame frame)
