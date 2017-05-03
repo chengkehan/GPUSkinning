@@ -128,6 +128,8 @@ public class GPUSkinningSamplerEditor : Editor
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("rootBoneTransform"), new GUIContent("Root Bone"));
 
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("createNewShader"), new GUIContent("New Shader"));
+
             OnGUI_AnimClips(sampler);
 
             if (GUILayout.Button("Step1: Play Scene"))

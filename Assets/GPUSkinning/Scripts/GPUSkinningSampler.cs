@@ -40,6 +40,10 @@ public class GPUSkinningSampler : MonoBehaviour
     public bool[] individualDifferenceEnabled = null;
 
     [HideInInspector]
+    [SerializeField]
+    public bool createNewShader = false;
+
+    [HideInInspector]
     [System.NonSerialized]
     public int samplingClipIndex = -1;
 
@@ -725,20 +729,38 @@ public class GPUSkinningSampler : MonoBehaviour
 
 	private void CreateShaderAndMaterial(string dir)
 	{
-		string shaderTemplate = 
-			shaderType == GPUSkinningShaderType.Unlit ? "GPUSkinningUnlit_Template" : 
-			shaderType == GPUSkinningShaderType.StandardSpecular ? "GPUSkinningSpecular_Template" :
-			shaderType == GPUSkinningShaderType.StandardMetallic ? "GPUSkinningMetallic_Template" : string.Empty;
+        Shader shader = null;
+        if (createNewShader)
+        {
+            string shaderTemplate =
+                shaderType == GPUSkinningShaderType.Unlit ? "GPUSkinningUnlit_Template" :
+                shaderType == GPUSkinningShaderType.StandardSpecular ? "GPUSkinningSpecular_Template" :
+                shaderType == GPUSkinningShaderType.StandardMetallic ? "GPUSkinningMetallic_Template" : string.Empty;
 
-		string shaderStr = ((TextAsset)Resources.Load(shaderTemplate)).text;
-		shaderStr = shaderStr.Replace("_$AnimName$_", animName);
-		shaderStr = SkinQualityShaderStr(shaderStr);
-		string shaderPath = dir + "/GPUSKinning_Shader_" + animName + ".shader";
-		File.WriteAllText(shaderPath, shaderStr);
-        WriteTempData(TEMP_SAVED_SHADER_PATH, shaderPath);
-		AssetDatabase.ImportAsset(shaderPath);
+            string shaderStr = ((TextAsset)Resources.Load(shaderTemplate)).text;
+            shaderStr = shaderStr.Replace("_$AnimName$_", animName);
+            shaderStr = SkinQualityShaderStr(shaderStr);
+            string shaderPath = dir + "/GPUSKinning_Shader_" + animName + ".shader";
+            File.WriteAllText(shaderPath, shaderStr);
+            WriteTempData(TEMP_SAVED_SHADER_PATH, shaderPath);
+            AssetDatabase.ImportAsset(shaderPath);
+            shader = AssetDatabase.LoadMainAssetAtPath(shaderPath) as Shader;
+        }
+        else
+        {
+            string shaderName =
+                shaderType == GPUSkinningShaderType.Unlit ? "GPUSkinning/GPUSkinning_Unlit_Skin" :
+                shaderType == GPUSkinningShaderType.StandardSpecular ? "GPUSkinning/GPUSkinning_Specular_Skin" :
+                shaderType == GPUSkinningShaderType.StandardMetallic ? "GPUSkinning_Metallic_Skin" : string.Empty;
+            shaderName +=
+                skinQuality == GPUSkinningQuality.Bone1 ? 1 :
+                skinQuality == GPUSkinningQuality.Bone2 ? 2 :
+                skinQuality == GPUSkinningQuality.Bone4 ? 4 : 1;
+            shader = Shader.Find(shaderName);
+            WriteTempData(TEMP_SAVED_SHADER_PATH, AssetDatabase.GetAssetPath(shader));
+        }
 
-		Material mtrl = new Material(AssetDatabase.LoadMainAssetAtPath(shaderPath) as Shader);
+		Material mtrl = new Material(shader);
 		if(smr.sharedMaterial != null)
 		{
 			mtrl.CopyPropertiesFromMaterial(smr.sharedMaterial);
