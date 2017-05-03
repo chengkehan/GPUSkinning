@@ -43,10 +43,7 @@ public class GPUSkinningPlayerMonoManager
             item.mesh = mesh;
         }
 
-        if(item.mtrl == null)
-        {
-            item.mtrl = new Material(originalMtrl);
-        }
+        item.InitMaterial(originalMtrl, HideFlags.None);
 
         if(item.texture == null)
         {

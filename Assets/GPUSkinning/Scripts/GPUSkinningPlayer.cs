@@ -112,7 +112,7 @@ public class GPUSkinningPlayer
             mf = go.AddComponent<MeshFilter>();
         }
 
-        mr.sharedMaterial = res.mtrl;
+        mr.sharedMaterial = GetCurrentMaterial();
         mf.sharedMesh = res.mesh;
 
         mpb = new MaterialPropertyBlock();
@@ -215,25 +215,31 @@ public class GPUSkinningPlayer
             return;
         }
 
-        if(res == null || res.mtrl == null || res.mtrl == null)
+        Material currMtrl = GetCurrentMaterial();
+        if(currMtrl == null)
         {
             return;    
         }
 
+        if(mr.sharedMaterial != currMtrl)
+        {
+            mr.sharedMaterial = currMtrl;
+        }
+
         if (playingClip.wrapMode == GPUSkinningWrapMode.Loop)
         {
-            UpdateMaterial(timeDelta);
+            UpdateMaterial(timeDelta, currMtrl);
         }
         else if(playingClip.wrapMode == GPUSkinningWrapMode.Once)
         {
             if (time >= playingClip.length)
             {
                 time = playingClip.length;
-                UpdateMaterial(timeDelta);
+                UpdateMaterial(timeDelta, currMtrl);
             }
             else
             {
-                UpdateMaterial(timeDelta);
+                UpdateMaterial(timeDelta, currMtrl);
                 time += timeDelta;
                 if(time > playingClip.length)
                 {
@@ -250,7 +256,7 @@ public class GPUSkinningPlayer
         lastPlayedTime += timeDelta;
     }
 
-    private void UpdateMaterial(float deltaTime)
+    private void UpdateMaterial(float deltaTime, Material currMtrl)
     {
         float blend_crossFade = 1;
         int frameIndex_crossFade = -1;
@@ -264,9 +270,9 @@ public class GPUSkinningPlayer
 
         int frameIndex = GetFrameIndex();
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
-        res.Update(deltaTime);
+        res.Update(deltaTime, currMtrl);
         res.UpdatePlayingData(mpb, playingClip, frameIndex, frame, playingClip.rootMotionEnabled && rootMotionEnabled);
-        res.UpdateCrossFade(mpb, lastPlayedClip, GetCrossFadeFrameIndex(), ref crossFadeTime, ref crossFadeProgress);
+        res.UpdateCrossFade(mpb, lastPlayedClip, GetCrossFadeFrameIndex(), crossFadeTime, crossFadeProgress);
         mr.SetPropertyBlock(mpb);
         UpdateJoints(frame);
 
@@ -275,6 +281,43 @@ public class GPUSkinningPlayer
             rootMotionFrameIndex = frameIndex;
             DoRootMotion(frame_crossFade, 1 - blend_crossFade, false);
             DoRootMotion(frame, blend_crossFade, true);
+        }
+    }
+
+    private Material GetCurrentMaterial()
+    {
+        if(res == null)
+        {
+            return null;
+        }
+
+        if(playingClip == null)
+        {
+            return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOff_BlendOff);
+        }
+        if(playingClip.rootMotionEnabled && rootMotionEnabled)
+        {
+            if(res.IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
+            {
+                if(lastPlayedClip.rootMotionEnabled)
+                {
+                    return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOn_BlendOn_CrossFadeRootOn);
+                }
+                return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOn_BlendOn_CrossFadeRootOff);
+            }
+            return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOn_BlendOff);
+        }
+        if(res.IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
+        {
+            if (lastPlayedClip.rootMotionEnabled)
+            {
+                return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOff_BlendOn_CrossFadeRootOn);
+            }
+            return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOff_BlendOn_CrossFadeRootOff);
+        }
+        else
+        {
+            return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOff_BlendOff);
         }
     }
 
