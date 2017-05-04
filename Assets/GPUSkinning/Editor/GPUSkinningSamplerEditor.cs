@@ -173,6 +173,11 @@ public class GPUSkinningSamplerEditor : Editor
             rootMotionEnabled_item_sp.Clear();
             individualDifferenceEnabled_item_sp.Clear();
 
+            wrapModes_array_size_sp.intValue = animClips_array_size_sp.intValue;
+            fpsList_array_size_sp.intValue = animClips_array_size_sp.intValue;
+            rootMotionEnabled_array_size_sp.intValue = animClips_array_size_sp.intValue;
+            individualDifferenceEnabled_array_size_sp.intValue = animClips_array_size_sp.intValue;
+
             for (int i = 0; i < animClips_array_size_sp.intValue; i++)
             {
                 animClips_item_sp.Add(serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i)));
