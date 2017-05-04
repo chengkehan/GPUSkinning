@@ -156,6 +156,11 @@ public class GPUSkinningSamplerEditor : Editor
     {
         BeginBox();
         {
+            if(!sampler.IsAnimatorOrAnimation())
+            {
+                EditorGUILayout.HelpBox("Set AnimClips with Animation Component", MessageType.Info);
+            }
+
             EditorGUILayout.PrefixLabel("Sample Clips");
 
             GUI.enabled = sampler.IsAnimatorOrAnimation();
