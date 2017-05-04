@@ -150,4 +150,22 @@ public class Adam_Player_InputControl : MonoBehaviour
     {
         camTransform.position = thisTransform.position + camOffsetPos;
     }
+
+    private void OnGUI()
+    {
+        float boxSize = Screen.height / 8;
+        DrawGUI_ASDW(new Rect(boxSize, 0, boxSize, boxSize), isForward, "W");
+        DrawGUI_ASDW(new Rect(boxSize, boxSize, boxSize, boxSize), isBackward, "S");
+        DrawGUI_ASDW(new Rect(0, boxSize, boxSize, boxSize), isTurningLeft, "A");
+        DrawGUI_ASDW(new Rect(boxSize * 2, boxSize, boxSize, boxSize), isTurningRight, "D");
+    }
+
+    private void DrawGUI_ASDW(Rect rect, bool isDoing, string label)
+    {
+        if (isDoing)
+        {
+            GUI.Button(rect, string.Empty);
+        }
+        GUI.Button(rect, label);
+    }
 }
