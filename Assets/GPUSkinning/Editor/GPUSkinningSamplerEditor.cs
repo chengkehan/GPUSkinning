@@ -61,8 +61,6 @@ public class GPUSkinningSamplerEditor : Editor
 
     private Material gridMtrl = null;
 
-    private float[] gui_red_highlight_res = new float[5];
-
     public override void OnInspectorGUI ()
 	{
 		GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -77,7 +75,10 @@ public class GPUSkinningSamplerEditor : Editor
 
         OnGUI_Preview(sampler);
 
-        Repaint();
+        if (preview != null)
+        {
+            Repaint();
+        }
 	}
 
     private void OnGUI_Sampler(GPUSkinningSampler sampler)
@@ -92,40 +93,30 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("anim"), new GUIContent());
-                EditorGUI.DrawRect(GUILayoutUtility.GetLastRect(), new Color(1, 0, 0, gui_red_highlight_res[0]));
-                GUIRedHighlightUpdate(ref gui_red_highlight_res[0]);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("savedMesh"), new GUIContent());
-                EditorGUI.DrawRect(GUILayoutUtility.GetLastRect(), new Color(1, 0, 0, gui_red_highlight_res[1]));
-                GUIRedHighlightUpdate(ref gui_red_highlight_res[1]);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("savedMtrl"), new GUIContent());
-                EditorGUI.DrawRect(GUILayoutUtility.GetLastRect(), new Color(1, 0, 0, gui_red_highlight_res[2]));
-                GUIRedHighlightUpdate(ref gui_red_highlight_res[2]);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("savedShader"), new GUIContent());
-                EditorGUI.DrawRect(GUILayoutUtility.GetLastRect(), new Color(1, 0, 0, gui_red_highlight_res[3]));
-                GUIRedHighlightUpdate(ref gui_red_highlight_res[3]);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("texture"), new GUIContent());
-                EditorGUI.DrawRect(GUILayoutUtility.GetLastRect(), new Color(1, 0, 0, gui_red_highlight_res[4]));
-                GUIRedHighlightUpdate(ref gui_red_highlight_res[4]);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -313,10 +304,6 @@ public class GPUSkinningSamplerEditor : Editor
                 }
                 if (anim == null || mesh == null || mtrl == null || texture == null)
                 {
-                    if(anim == null) gui_red_highlight_res[0] = 0.5f;
-                    if (mesh == null) gui_red_highlight_res[1] = 0.5f;
-                    if (mtrl == null) gui_red_highlight_res[2] = 0.5f;
-                    if (texture == null) gui_red_highlight_res[4] = 0.5f;
                     EditorUtility.DisplayDialog("GPUSkinning", "Missing Sampling Resources", "OK");
                 }
                 else
@@ -971,11 +958,6 @@ public class GPUSkinningSamplerEditor : Editor
             string msg = sampler.animClip.name + "(" + (sampler.samplingClipIndex + 1) + "/" + sampler.animClips.Length +")";
             EditorUtility.DisplayProgressBar("Sampling, DONOT stop playing", msg, (float)(sampler.samplingFrameIndex + 1) / sampler.samplingTotalFrams);
         }
-    }
-
-    private void GUIRedHighlightUpdate(ref float value)
-    {
-        value = Mathf.Max(0, value - 0.0025f);
     }
 
     private void LockInspector(bool isLocked)
