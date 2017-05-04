@@ -145,19 +145,19 @@ public class GPUSkinningSampler : MonoBehaviour
 
         if (string.IsNullOrEmpty(animName.Trim()))
         {
-            ShowDialog("Empty AnimName");
+            ShowDialog("Animation name is empty.");
             return;
         }
 
         if (rootBoneTransform == null)
         {
-            ShowDialog("Missing RootBoneTransform");
+            ShowDialog("Please set Root Bone.");
             return;
         }
 
         if (animClips == null || animClips.Length == 0)
         {
-            ShowDialog("Missing AnimationClip");
+            ShowDialog("Please set Anim Clips.");
             return;
         }
 
@@ -178,12 +178,12 @@ public class GPUSkinningSampler : MonoBehaviour
 		smr = GetComponentInChildren<SkinnedMeshRenderer>();
 		if(smr == null)
 		{
-			ShowDialog("Missing SkinnedMeshRenderer");
+			ShowDialog("Cannot find SkinnedMeshRenderer.");
 			return;
 		}
 		if(smr.sharedMesh == null)
 		{
-			ShowDialog("Missing SkinnedMeshRenderer.Mesh");
+			ShowDialog("Cannot find SkinnedMeshRenderer.mesh.");
 			return;
 		}
 
@@ -606,7 +606,7 @@ public class GPUSkinningSampler : MonoBehaviour
 			{
 				if(!savePath.Contains(Application.dataPath.Replace('\\', '/')))
 				{
-					ShowDialog("Must be select directory in project");
+					ShowDialog("Must select a directory in the project's Asset folder.");
 				}
 				else
 				{
