@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Adam_Player_InputControl : MonoBehaviour
+public class Adam_Player_Controller : MonoBehaviour
 {
     private GPUSkinningPlayer player = null;
 
