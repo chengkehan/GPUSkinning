@@ -947,12 +947,13 @@ public class GPUSkinningSamplerEditor : Editor
     private void CalculateBoundsAuto()
     {
         Matrix4x4[] matrices = anim.clips[0].frames[0].matrices;
+        Matrix4x4 rootMotionInv = anim.clips[0].rootMotionEnabled ? matrices[anim.rootBoneIndex].inverse : Matrix4x4.identity;
         GPUSkinningBone[] bones = anim.bones;
         Vector3 min = Vector3.one * 9999;
         Vector3 max = min * -1;
-        for(int i = 0; i < bones.Length; ++i)
+        for (int i = 0; i < bones.Length; ++i)
         {
-            Vector4 pos = (matrices[i] * bones[i].bindpose.inverse) * new Vector4(0, 0, 0, 1);
+            Vector4 pos = (rootMotionInv * matrices[i] * bones[i].bindpose.inverse) * new Vector4(0, 0, 0, 1);
             min.x = Mathf.Min(min.x, pos.x);
             min.y = Mathf.Min(min.y, pos.y);
             min.z = Mathf.Min(min.z, pos.z);
