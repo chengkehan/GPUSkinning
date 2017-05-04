@@ -152,8 +152,54 @@ public class GPUSkinningSamplerEditor : Editor
         EndBox();
     }
 
+    private SerializedProperty animClips_array_size_sp = null;
+    private SerializedProperty wrapModes_array_size_sp = null;
+    private SerializedProperty fpsList_array_size_sp = null;
+    private SerializedProperty rootMotionEnabled_array_size_sp = null;
+    private SerializedProperty individualDifferenceEnabled_array_size_sp = null;
+    private List<SerializedProperty> animClips_item_sp = null;
+    private List<SerializedProperty> wrapModes_item_sp = null;
+    private List<SerializedProperty> fpsList_item_sp = null;
+    private List<SerializedProperty> rootMotionEnabled_item_sp = null;
+    private List<SerializedProperty> individualDifferenceEnabled_item_sp = null;
+    private int animClips_count = 0;
     private void OnGUI_AnimClips(GPUSkinningSampler sampler)
     {
+        System.Action ResetItemSp = () =>
+        {
+            animClips_item_sp.Clear();
+            wrapModes_item_sp.Clear();
+            fpsList_item_sp.Clear();
+            rootMotionEnabled_item_sp.Clear();
+            individualDifferenceEnabled_item_sp.Clear();
+
+            for (int i = 0; i < animClips_array_size_sp.intValue; i++)
+            {
+                animClips_item_sp.Add(serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i)));
+                wrapModes_item_sp.Add(serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i)));
+                fpsList_item_sp.Add(serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i)));
+                rootMotionEnabled_item_sp.Add(serializedObject.FindProperty(string.Format("rootMotionEnabled.Array.data[{0}]", i)));
+                individualDifferenceEnabled_item_sp.Add(serializedObject.FindProperty(string.Format("individualDifferenceEnabled.Array.data[{0}]", i)));
+            }
+
+            animClips_count = animClips_item_sp.Count;
+        };
+
+        if (animClips_array_size_sp == null) animClips_array_size_sp = serializedObject.FindProperty("animClips.Array.size");
+        if (wrapModes_array_size_sp == null) wrapModes_array_size_sp = serializedObject.FindProperty("wrapModes.Array.size");
+        if (fpsList_array_size_sp == null) fpsList_array_size_sp = serializedObject.FindProperty("fpsList.Array.size");
+        if (rootMotionEnabled_array_size_sp == null) rootMotionEnabled_array_size_sp = serializedObject.FindProperty("rootMotionEnabled.Array.size");
+        if (individualDifferenceEnabled_array_size_sp == null) individualDifferenceEnabled_array_size_sp = serializedObject.FindProperty("individualDifferenceEnabled.Array.size");
+        if(animClips_item_sp == null)
+        {
+            animClips_item_sp = new List<SerializedProperty>();
+            wrapModes_item_sp = new List<SerializedProperty>();
+            fpsList_item_sp = new List<SerializedProperty>();
+            rootMotionEnabled_item_sp = new List<SerializedProperty>();
+            individualDifferenceEnabled_item_sp = new List<SerializedProperty>();
+            ResetItemSp();
+        }
+
         BeginBox();
         {
             if(!sampler.IsAnimatorOrAnimation())
@@ -164,34 +210,49 @@ public class GPUSkinningSamplerEditor : Editor
             EditorGUILayout.PrefixLabel("Sample Clips");
 
             GUI.enabled = sampler.IsAnimatorOrAnimation();
-            int no = serializedObject.FindProperty("animClips.Array.size").intValue;
-            int no2 = serializedObject.FindProperty("wrapModes.Array.size").intValue;
-            int no3 = serializedObject.FindProperty("fpsList.Array.size").intValue;
-            int no4 = serializedObject.FindProperty("rootMotionEnabled.Array.size").intValue;
-            int no5 = serializedObject.FindProperty("individualDifferenceEnabled.Array.size").intValue;
-            int c = EditorGUILayout.IntField("Size", no);
-            if (c != no)
-            {
-                serializedObject.FindProperty("animClips.Array.size").intValue = c;
-            }
-            if (c != no2)
-            {
-                serializedObject.FindProperty("wrapModes.Array.size").intValue = c;
-            }
-            if(c != no3)
-            {
-                serializedObject.FindProperty("fpsList.Array.size").intValue = c;
-            }
-            if(c != no4)
-            {
-                serializedObject.FindProperty("rootMotionEnabled.Array.size").intValue = c;
-            }
-            if(c != no5)
-            {
-                serializedObject.FindProperty("individualDifferenceEnabled.Array.size").intValue = c;
-            }
-            GUI.enabled = true;
+            int no = animClips_array_size_sp.intValue;
+            int no2 = wrapModes_array_size_sp.intValue;
+            int no3 = fpsList_array_size_sp.intValue;
+            int no4 = rootMotionEnabled_array_size_sp.intValue;
+            int no5 = individualDifferenceEnabled_array_size_sp.intValue;
 
+            EditorGUILayout.BeginHorizontal();
+            {
+                animClips_count = EditorGUILayout.IntField("Size", animClips_count);
+                if (GUILayout.Button("Apply", GUILayout.Width(60)))
+                {
+                    if (animClips_count != no)
+                    {
+                        animClips_array_size_sp.intValue = animClips_count;
+                    }
+                    if (animClips_count != no2)
+                    {
+                        wrapModes_array_size_sp.intValue = animClips_count;
+                    }
+                    if (animClips_count != no3)
+                    {
+                        fpsList_array_size_sp.intValue = animClips_count;
+                    }
+                    if (animClips_count != no4)
+                    {
+                        rootMotionEnabled_array_size_sp.intValue = animClips_count;
+                    }
+                    if (animClips_count != no5)
+                    {
+                        individualDifferenceEnabled_array_size_sp.intValue = animClips_count;
+                        ResetItemSp();
+                    }
+                    return;
+                }
+                if(GUILayout.Button("Reset", GUILayout.Width(60)))
+                {
+                    ResetItemSp();
+                    GUI.FocusControl(string.Empty);
+                    return;
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+            GUI.enabled = true;
 
             EditorGUILayout.BeginHorizontal();
             {
@@ -229,11 +290,11 @@ public class GPUSkinningSamplerEditor : Editor
                         EditorGUILayout.EndHorizontal();
                         for (int i = 0; i < no; i++)
                         {
-                            var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
-                            var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
-                            var prop3 = serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i));
-                            var prop4 = serializedObject.FindProperty(string.Format("rootMotionEnabled.Array.data[{0}]", i));
-                            var prop5 = serializedObject.FindProperty(string.Format("individualDifferenceEnabled.Array.data[{0}]", i));
+                            var prop = animClips_item_sp[i];
+                            var prop2 = wrapModes_item_sp[i];
+                            var prop3 = fpsList_item_sp[i];
+                            var prop4 = rootMotionEnabled_item_sp[i];
+                            var prop5 = individualDifferenceEnabled_item_sp[i];
                             if (prop != null)
                             {
                                 if(j == -1)
