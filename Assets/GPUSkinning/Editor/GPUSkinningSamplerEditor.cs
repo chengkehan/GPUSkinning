@@ -672,6 +672,8 @@ public class GPUSkinningSamplerEditor : Editor
             }
             else
             {
+                Color guiColor = GUI.color;
+                GUI.color = Color.red;
                 if (GUILayout.Button(">", GUILayout.Width(50)))
                 {
                     if(preview.Player.IsTimeAtTheEndOfLoop)
@@ -683,6 +685,7 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.Player.Resume();
                     }
                 }
+                GUI.color = guiColor;
             }
             EditorGUILayout.Space();
         }
