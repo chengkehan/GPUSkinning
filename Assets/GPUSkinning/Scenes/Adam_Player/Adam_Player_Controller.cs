@@ -70,17 +70,24 @@ public class Adam_Player_Controller : MonoBehaviour
 
         if (isForward)
         {
-            forwardSpeed += 0.002f;
+			forwardSpeed += 0.5f * Time.deltaTime;
         }
-        if(!isForward && !isBackward)
+		if(!isForward)
         {
-            forwardSpeed *= 0.96f;
+			if(isBackward)
+			{
+				forwardSpeed -= 0.2f * Time.deltaTime;
+			}
+			else
+			{
+				forwardSpeed -= 1.25f * Time.deltaTime;
+			}
         }
+		if(isTurningLeft || isTurningRight)
+		{
+			forwardSpeed -= 0.8f * Time.deltaTime;
+		}
         forwardSpeed = Mathf.Clamp01(forwardSpeed);
-        if(forwardSpeed < 0.0001f && forwardSpeed > -0.0001f)
-        {
-            forwardSpeed = 0;
-        }
 
 		if(forwardSpeed == 0)
         {
