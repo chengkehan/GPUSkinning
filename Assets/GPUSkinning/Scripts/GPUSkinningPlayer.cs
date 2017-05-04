@@ -55,6 +55,14 @@ public class GPUSkinningPlayer
         }
     }
 
+    public string PlayingClipName
+    {
+        get
+        {
+            return playingClip == null ? null : playingClip.name;
+        }
+    }
+
     private List<GPUSkinningPlayerJoint> joints = null;
     public List<GPUSkinningPlayerJoint> Joints
     {
