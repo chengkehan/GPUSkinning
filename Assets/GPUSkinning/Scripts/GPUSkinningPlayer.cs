@@ -328,14 +328,12 @@ public class GPUSkinningPlayer
             return;
         }
 
-        Quaternion rotation = transform.rotation;
         Quaternion deltaRotation = frame.rootMotionDeltaPositionQ;
-        transform.rotation *= deltaRotation;
-        Vector3 deltaPosition = transform.forward * frame.rootMotionDeltaPositionL * blend;
+        Vector3 newForward = deltaRotation * transform.forward;
+        Vector3 deltaPosition = newForward * frame.rootMotionDeltaPositionL * blend;
         transform.Translate(deltaPosition, Space.World);
-        transform.rotation = rotation;
 
-        if(doRotate)
+        if (doRotate)
         {
             transform.rotation *= frame.rootMotionDeltaRotation;
         }
