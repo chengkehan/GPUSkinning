@@ -455,7 +455,14 @@ public class GPUSkinningSampler : MonoBehaviour
         texture.Apply();
 
         string savedPath = dir + "/GPUSKinning_Texture_" + animName + ".bytes";
-        File.WriteAllBytes(savedPath, texture.GetRawTextureData());
+        using (FileStream fileStream = new FileStream(savedPath, FileMode.Create))
+        {
+            byte[] bytes = texture.GetRawTextureData();
+            fileStream.Write(bytes, 0, bytes.Length);
+            fileStream.Flush();
+            fileStream.Close();
+            fileStream.Dispose();
+        }
         WriteTempData(TEMP_SAVED_TEXTURE_PATH, savedPath);
     }
 
