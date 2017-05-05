@@ -198,7 +198,7 @@ public class GPUSkinningPlayerResources
             GPUSkinningPlayerMono player = players[i];
             BoundingSphere bounds = cullingBounds[i];
             bounds.position = player.Player.Position;
-            bounds.radius = 1.0f;
+            bounds.radius = anim.sphereRadius;
             cullingBounds[i] = bounds;
         }
     }
