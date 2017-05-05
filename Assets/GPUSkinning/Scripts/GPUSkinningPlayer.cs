@@ -46,6 +46,19 @@ public class GPUSkinningPlayer
         }
     }
 
+    private bool visible = false;
+    public bool Visible
+    {
+        get
+        {
+            return Application.isPlaying ? visible : true;
+        }
+        set
+        {
+            visible = value;
+        }
+    }
+
     private bool lodEnabled = true;
     public bool LODEnabled
     {

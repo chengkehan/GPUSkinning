@@ -379,7 +379,7 @@ public class GPUSkinningSamplerEditor : Editor
                 }
                 else
                 {
-                    if (rt == null)
+                    if (rt == null && !EditorApplication.isPlaying)
                     {
                         linearToGammeMtrl = new Material(Shader.Find("GPUSkinning/GPUSkinningSamplerEditor_LinearToGamma"));
                         linearToGammeMtrl.hideFlags = HideFlags.HideAndDontSave;
@@ -1082,6 +1082,12 @@ public class GPUSkinningSamplerEditor : Editor
 
     private void UpdateHandler()
     {
+        if(preview != null && EditorApplication.isPlaying)
+        {
+            DestroyPreview();
+            return;
+        }
+
         GPUSkinningSampler sampler = target as GPUSkinningSampler;
 
         if (EditorApplication.isCompiling)

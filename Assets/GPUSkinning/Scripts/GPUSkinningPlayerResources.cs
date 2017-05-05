@@ -171,6 +171,11 @@ public class GPUSkinningPlayerResources
         if(evt.isVisible)
         {
             SetLODMeshByDistanceIndex(evt.currentDistance, player.Player);
+            player.Player.Visible = true;
+        }
+        else
+        {
+            player.Player.Visible = false;
         }
     }
 
@@ -230,7 +235,7 @@ public class GPUSkinningPlayerResources
 
     public void UpdateCrossFade(MaterialPropertyBlock mpb, GPUSkinningClip lastPlayedClip, int frameIndex, float crossFadeTime, float crossFadeProgress)
     {
-        if(IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
+        if (IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
         {
             if (lastPlayedClip.rootMotionEnabled)
             {
