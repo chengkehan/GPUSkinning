@@ -625,6 +625,20 @@ public class GPUSkinningSamplerEditor : Editor
                         {
                             mesh.bounds = bounds;
                             anim.bounds = bounds;
+
+                            if(anim.lodMeshes != null)
+                            {
+                                for(int i = 0; i < anim.lodMeshes.Length; ++i)
+                                {
+                                    Mesh lodMesh = anim.lodMeshes[i];
+                                    if(lodMesh != null)
+                                    {
+                                        lodMesh.bounds = bounds;
+                                        EditorUtility.SetDirty(lodMesh);
+                                    }
+                                }
+                            }
+
                             EditorUtility.SetDirty(mesh);
                             ApplyAnimModification();
                         }
