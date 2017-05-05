@@ -56,10 +56,7 @@ public class GPUSkinningPlayer
         set
         {
             lodEnabled = value;
-            if(!lodEnabled)
-            {
-                SetLODMesh(null);
-            }
+            res.LODSettingChanged(this);
         }
     }
 

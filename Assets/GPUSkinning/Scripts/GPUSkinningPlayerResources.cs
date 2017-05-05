@@ -23,7 +23,7 @@ public class GPUSkinningPlayerResources
 
     public List<GPUSkinningPlayerMono> players = new List<GPUSkinningPlayerMono>();
 
-    private CullingGroup lodCullingGroup = null;
+    private CullingGroup cullingGroup = null;
 
     private GPUSkinningBetterList<BoundingSphere> cullingBounds = new GPUSkinningBetterList<BoundingSphere>();
 
@@ -92,10 +92,10 @@ public class GPUSkinningPlayerResources
             cullingBounds = null;
         }
 
-        if(lodCullingGroup != null)
+        if(cullingGroup != null)
         {
-            lodCullingGroup.Dispose();
-            lodCullingGroup = null;
+            cullingGroup.Dispose();
+            cullingGroup = null;
         }
 
         if(mtrls != null)
@@ -123,40 +123,46 @@ public class GPUSkinningPlayerResources
 
     public void AddCullingBounds()
     {
-        if(!ContainsLODConfig())
+        if (cullingGroup == null)
         {
-            return;
-        }
-
-        if (lodCullingGroup == null)
-        {
-            lodCullingGroup = new CullingGroup();
-            lodCullingGroup.targetCamera = Camera.main;
-            lodCullingGroup.SetBoundingDistances(anim.lodDistances);
-            lodCullingGroup.SetDistanceReferencePoint(Camera.main.transform);
-            lodCullingGroup.onStateChanged = OnLodCullingGroupOnStateChangedHandler;
+            cullingGroup = new CullingGroup();
+            cullingGroup.targetCamera = Camera.main;
+            cullingGroup.SetBoundingDistances(anim.lodDistances);
+            cullingGroup.SetDistanceReferencePoint(Camera.main.transform);
+            cullingGroup.onStateChanged = OnLodCullingGroupOnStateChangedHandler;
         }
 
         cullingBounds.Add(new BoundingSphere());
-        lodCullingGroup.SetBoundingSpheres(cullingBounds.buffer);
-        lodCullingGroup.SetBoundingSphereCount(players.Count);
+        cullingGroup.SetBoundingSpheres(cullingBounds.buffer);
+        cullingGroup.SetBoundingSphereCount(players.Count);
     }
 
     public void RemoveCullingBounds(int index)
     {
-        if (!ContainsLODConfig())
-        {
-            return;
-        }
-
         cullingBounds.RemoveAt(index);
-        lodCullingGroup.SetBoundingSpheres(cullingBounds.buffer);
-        lodCullingGroup.SetBoundingSphereCount(players.Count);
+        cullingGroup.SetBoundingSpheres(cullingBounds.buffer);
+        cullingGroup.SetBoundingSphereCount(players.Count);
     }
 
-    private bool ContainsLODConfig()
+    public void LODSettingChanged(GPUSkinningPlayer player)
     {
-        return anim.lodMeshes != null && anim.lodMeshes.Length > 0;
+        if(player.LODEnabled)
+        {
+            int numPlayers = players.Count;
+            for(int i = 0; i < numPlayers; ++i)
+            {
+                if(players[i].Player == player)
+                {
+                    int distanceIndex = cullingGroup.GetDistance(i);
+                    SetLODMeshByDistanceIndex(distanceIndex, players[i].Player);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            player.SetLODMesh(null);
+        }
     }
 
     private void OnLodCullingGroupOnStateChangedHandler(CullingGroupEvent evt)
@@ -164,32 +170,28 @@ public class GPUSkinningPlayerResources
         GPUSkinningPlayerMono player = players[evt.index];
         if(evt.isVisible)
         {
-            Mesh lodMesh = null;
-            if(evt.currentDistance == 0)
-            {
-                lodMesh = this.mesh;
-            }
-            else
-            {
-                Mesh[] lodMeshes = anim.lodMeshes;
-                lodMesh = lodMeshes == null || lodMeshes.Length == 0 ? this.mesh : lodMeshes[Mathf.Min(evt.currentDistance - 1, lodMeshes.Length - 1)];
-                if (lodMesh == null) lodMesh = this.mesh;
-            }
-            player.Player.SetLODMesh(lodMesh);
+            SetLODMeshByDistanceIndex(evt.currentDistance, player.Player);
+        }
+    }
+
+    private void SetLODMeshByDistanceIndex(int index, GPUSkinningPlayer player)
+    {
+        Mesh lodMesh = null;
+        if (index == 0)
+        {
+            lodMesh = this.mesh;
         }
         else
         {
-            // Do nothing
+            Mesh[] lodMeshes = anim.lodMeshes;
+            lodMesh = lodMeshes == null || lodMeshes.Length == 0 ? this.mesh : lodMeshes[Mathf.Min(index - 1, lodMeshes.Length - 1)];
+            if (lodMesh == null) lodMesh = this.mesh;
         }
+        player.SetLODMesh(lodMesh);
     }
 
     private void UpdateCullingBounds()
     {
-        if (!ContainsLODConfig())
-        {
-            return;
-        }
-
         int numPlayers = players.Count;
         for (int i = 0; i < numPlayers; ++i)
         {
