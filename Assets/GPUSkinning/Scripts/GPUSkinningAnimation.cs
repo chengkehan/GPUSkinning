@@ -22,4 +22,6 @@ public class GPUSkinningAnimation : ScriptableObject
     public float[] lodDistances = null;
 
     public Mesh[] lodMeshes = null;
+
+    public float sphereRadius = 1.0f;
 }

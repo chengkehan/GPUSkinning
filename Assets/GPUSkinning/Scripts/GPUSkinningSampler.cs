@@ -49,6 +49,10 @@ public class GPUSkinningSampler : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
+    private float sphereRadius = 1.0f;
+
+    [HideInInspector]
+    [SerializeField]
     public bool createNewShader = false;
 
     [HideInInspector]
@@ -323,6 +327,7 @@ public class GPUSkinningSampler : MonoBehaviour
     {
         gpuSkinningAnimation.lodMeshes = null;
         gpuSkinningAnimation.lodDistances = null;
+        gpuSkinningAnimation.sphereRadius = sphereRadius;
 
         if(lodMeshes != null)
         {

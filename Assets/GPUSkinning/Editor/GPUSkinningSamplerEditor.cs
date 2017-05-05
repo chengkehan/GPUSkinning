@@ -721,6 +721,9 @@ public class GPUSkinningSamplerEditor : Editor
             }
         }
         EditorGUILayout.EndVertical();
+
+        EditorGUILayout.Space();
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("sphereRadius"));
     }
 
     private void OnGUI_Joints()
