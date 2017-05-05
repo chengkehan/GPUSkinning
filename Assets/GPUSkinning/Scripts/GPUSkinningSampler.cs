@@ -41,6 +41,14 @@ public class GPUSkinningSampler : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
+    public Mesh[] lodMeshes = null;
+
+    [HideInInspector]
+    [SerializeField]
+    public float[] lodDistances = null;
+
+    [HideInInspector]
+    [SerializeField]
     public bool createNewShader = false;
 
     [HideInInspector]
@@ -311,16 +319,46 @@ public class GPUSkinningSampler : MonoBehaviour
         }
     }
 
-    private Mesh CreateNewMesh()
+    private void CreateLODMeshes(Bounds bounds, string dir)
     {
-        Mesh mesh = smr.sharedMesh;
+        gpuSkinningAnimation.lodMeshes = null;
+        gpuSkinningAnimation.lodDistances = null;
+
+        if(lodMeshes != null)
+        {
+            List<Mesh> newMeshes = new List<Mesh>();
+            List<float> newLodDistances = new List<float>();
+            for (int i = 0; i < lodMeshes.Length; ++i)
+            {
+                Mesh lodMesh = lodMeshes[i];
+                if(lodMesh != null)
+                {
+                    Mesh newMesh = CreateNewMesh(lodMesh, "GPUSkinning_Mesh_LOD" + (i + 1));
+                    newMesh.bounds = bounds;
+                    string savedMeshPath = dir + "/GPUSKinning_Mesh_" + animName + "_LOD" + (i + 1) + ".asset";
+                    AssetDatabase.CreateAsset(newMesh, savedMeshPath);
+                    newMeshes.Add(newMesh);
+                    newLodDistances.Add(lodDistances[i]);
+                }
+            }
+            gpuSkinningAnimation.lodMeshes = newMeshes.ToArray();
+
+            newLodDistances.Add(9999);
+            gpuSkinningAnimation.lodDistances = newLodDistances.ToArray();
+        }
+
+        EditorUtility.SetDirty(gpuSkinningAnimation);
+    }
+
+    private Mesh CreateNewMesh(Mesh mesh, string meshName)
+    {
         Vector3[] normals = mesh.normals;
         Vector4[] tangents = mesh.tangents;
         Color[] colors = mesh.colors;
         Vector2[] uv = mesh.uv;
 
         Mesh newMesh = new Mesh();
-        newMesh.name = "GPUSkinning_Mesh";
+        newMesh.name = meshName;
         newMesh.vertices = mesh.vertices;
         if (normals != null && normals.Length > 0) { newMesh.normals = normals; }
         if (tangents != null && tangents.Length > 0) { newMesh.tangents = tangents; }
@@ -635,7 +673,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
                     if (samplingClipIndex == 0)
                     {
-                        Mesh newMesh = CreateNewMesh();
+                        Mesh newMesh = CreateNewMesh(smr.sharedMesh, "GPUSkinning_Mesh");
                         if (savedMesh != null)
                         {
                             newMesh.bounds = savedMesh.bounds;
@@ -646,6 +684,8 @@ public class GPUSkinningSampler : MonoBehaviour
                         savedMesh = newMesh;
 
                         CreateShaderAndMaterial(dir);
+
+                        CreateLODMeshes(newMesh.bounds, dir);
                     }
 
 					AssetDatabase.Refresh();

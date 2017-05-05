@@ -22,6 +22,8 @@ public class GPUSkinningPlayerMonoEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("anim"));
         if (EditorGUI.EndChangeCheck())
         {
+            serializedObject.ApplyModifiedProperties();
+            player.DeletePlayer();
             player.Init();
         }
 
@@ -29,6 +31,8 @@ public class GPUSkinningPlayerMonoEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("mesh"));
         if (EditorGUI.EndChangeCheck())
         {
+            serializedObject.ApplyModifiedProperties();
+            player.DeletePlayer();
             player.Init();
         }
 
@@ -36,6 +40,8 @@ public class GPUSkinningPlayerMonoEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("mtrl"));
         if (EditorGUI.EndChangeCheck())
         {
+            serializedObject.ApplyModifiedProperties();
+            player.DeletePlayer();
             player.Init();
         }
 
@@ -43,6 +49,8 @@ public class GPUSkinningPlayerMonoEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("textureRawData"));
         if (EditorGUI.EndChangeCheck())
         {
+            serializedObject.ApplyModifiedProperties();
+            player.DeletePlayer();
             player.Init();
         }
 
@@ -117,5 +125,17 @@ public class GPUSkinningPlayerMonoEditor : Editor
                 (sceneView as SceneView).Repaint();
             }
         }
+    }
+
+    private void BeginBox()
+    {
+        EditorGUILayout.BeginVertical(GUI.skin.GetStyle("Box"));
+        EditorGUILayout.Space();
+    }
+
+    private void EndBox()
+    {
+        EditorGUILayout.Space();
+        EditorGUILayout.EndVertical();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
@@ -52,6 +53,8 @@ public class GPUSkinningSamplerEditor : Editor
     private bool isBoundsFoldout = true;
 
     private bool isJointsFoldout = true;
+
+    private bool isLODFoldout = true;
 
     private bool isRootMotionFoldout = true;
 
@@ -131,6 +134,8 @@ public class GPUSkinningSamplerEditor : Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("createNewShader"), new GUIContent("New Shader"));
 
             OnGUI_AnimClips(sampler);
+
+            OnGUI_LOD(sampler);
 
             if (GUILayout.Button("Step1: Play Scene"))
             {
@@ -633,6 +638,76 @@ public class GPUSkinningSamplerEditor : Editor
         EditorGUILayout.EndHorizontal();
     }
 
+    private void OnGUI_LOD(GPUSkinningSampler sampler)
+    {
+        BeginBox();
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginVertical();
+            {
+                EditorGUILayout.BeginHorizontal();
+                {
+                    EditorGUILayout.Space();
+                    EditorGUILayout.Space();
+                    isLODFoldout = EditorGUILayout.Foldout(isLODFoldout, isLODFoldout ? string.Empty : "LOD");
+                    SetEditorPrefsBool("isLODFoldout", isLODFoldout);
+                    GUILayout.FlexibleSpace();
+                }
+                EditorGUILayout.EndHorizontal();
+
+                if (isLODFoldout)
+                {
+                    OnGUI_LODMeshes(sampler);
+                }
+            }
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.Space();
+        }
+        EndBox();
+    }
+     
+    private void OnGUI_LODMeshes(GPUSkinningSampler sampler)
+    {
+        SerializedProperty sizeSP = serializedObject.FindProperty("lodMeshes.Array.size");
+        SerializedProperty dist_sizeSP = serializedObject.FindProperty("lodDistances.Array.size");
+
+        sizeSP.intValue = EditorGUILayout.IntField("Size", sizeSP.intValue);
+        dist_sizeSP.intValue = sizeSP.intValue;
+
+        EditorGUILayout.BeginVertical();
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("LOD Distance");
+            }
+            EditorGUILayout.EndHorizontal();
+
+            for(int i = 0; i < sizeSP.intValue; ++i)
+            {
+                EditorGUILayout.BeginHorizontal();
+                {
+                    EditorGUI.BeginChangeCheck();
+                    EditorGUILayout.ObjectField(serializedObject.FindProperty("lodMeshes.Array.data[" + i + "]"), new GUIContent("LOD" + (i + 1)));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        ApplySamplerModification(sampler);
+                    }
+
+                    EditorGUI.BeginChangeCheck();
+                    SerializedProperty distSP = serializedObject.FindProperty("lodDistances.Array.data[" + i + "]");
+                    distSP.floatValue = EditorGUILayout.FloatField(distSP.floatValue, GUILayout.Width(80));
+                    if(EditorGUI.EndChangeCheck())
+                    {
+                        ApplySamplerModification(sampler);
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+        }
+        EditorGUILayout.EndVertical();
+    }
+
     private void OnGUI_Joints()
     {
         EditorGUILayout.BeginHorizontal();
@@ -977,6 +1052,16 @@ public class GPUSkinningSamplerEditor : Editor
         }
     }
 
+    private void ApplySamplerModification(GPUSkinningSampler sampler)
+    {
+        if(sampler != null)
+        {
+            EditorUtility.SetDirty(sampler);
+            EditorUtility.SetDirty(sampler.gameObject);
+            EditorSceneManager.SaveOpenScenes();
+        }
+    }
+
     private void UpdateHandler()
     {
         GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -1160,6 +1245,8 @@ public class GPUSkinningSamplerEditor : Editor
 
         isBoundsFoldout = GetEditorPrefsBool("isBoundsFoldout", true);
         isJointsFoldout = GetEditorPrefsBool("isJointsFoldout", true);
+        isRootMotionFoldout = GetEditorPrefsBool("isRootMotionFoldout", true);
+        isLODFoldout = GetEditorPrefsBool("isLODFoldout", true);
 
         rootMotionEnabled = true;
     }

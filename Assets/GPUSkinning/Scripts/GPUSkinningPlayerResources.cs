@@ -23,6 +23,10 @@ public class GPUSkinningPlayerResources
 
     public List<GPUSkinningPlayerMono> players = new List<GPUSkinningPlayerMono>();
 
+    private CullingGroup lodCullingGroup = null;
+
+    private GPUSkinningBetterList<BoundingSphere> cullingBounds = new GPUSkinningBetterList<BoundingSphere>();
+
     private Material[] mtrls = null;
 
     private static string[] keywords = new string[] {
@@ -82,6 +86,18 @@ public class GPUSkinningPlayerResources
         anim = null;
         mesh = null;
 
+        if(cullingBounds != null)
+        {
+            cullingBounds.Release();
+            cullingBounds = null;
+        }
+
+        if(lodCullingGroup != null)
+        {
+            lodCullingGroup.Dispose();
+            lodCullingGroup = null;
+        }
+
         if(mtrls != null)
         {
             for(int i = 0; i < mtrls.Length; ++i)
@@ -105,12 +121,93 @@ public class GPUSkinningPlayerResources
         }
     }
 
+    public void AddCullingBounds()
+    {
+        if(!ContainsLODConfig())
+        {
+            return;
+        }
+
+        if (lodCullingGroup == null)
+        {
+            lodCullingGroup = new CullingGroup();
+            lodCullingGroup.targetCamera = Camera.main;
+            lodCullingGroup.SetBoundingDistances(anim.lodDistances);
+            lodCullingGroup.SetDistanceReferencePoint(Camera.main.transform);
+            lodCullingGroup.onStateChanged = OnLodCullingGroupOnStateChangedHandler;
+        }
+
+        cullingBounds.Add(new BoundingSphere());
+        lodCullingGroup.SetBoundingSpheres(cullingBounds.buffer);
+        lodCullingGroup.SetBoundingSphereCount(players.Count);
+    }
+
+    public void RemoveCullingBounds(int index)
+    {
+        if (!ContainsLODConfig())
+        {
+            return;
+        }
+
+        cullingBounds.RemoveAt(index);
+        lodCullingGroup.SetBoundingSpheres(cullingBounds.buffer);
+        lodCullingGroup.SetBoundingSphereCount(players.Count);
+    }
+
+    private bool ContainsLODConfig()
+    {
+        return anim.lodMeshes != null && anim.lodMeshes.Length > 0;
+    }
+
+    private void OnLodCullingGroupOnStateChangedHandler(CullingGroupEvent evt)
+    {
+        GPUSkinningPlayerMono player = players[evt.index];
+        if(evt.isVisible)
+        {
+            Mesh lodMesh = null;
+            if(evt.currentDistance == 0)
+            {
+                lodMesh = this.mesh;
+            }
+            else
+            {
+                Mesh[] lodMeshes = anim.lodMeshes;
+                lodMesh = lodMeshes == null || lodMeshes.Length == 0 ? this.mesh : lodMeshes[Mathf.Min(evt.currentDistance - 1, lodMeshes.Length - 1)];
+                if (lodMesh == null) lodMesh = this.mesh;
+            }
+            player.Player.SetMesh(lodMesh);
+        }
+        else
+        {
+            // Do nothing
+        }
+    }
+
+    private void UpdateCullingBounds()
+    {
+        if (!ContainsLODConfig())
+        {
+            return;
+        }
+
+        int numPlayers = players.Count;
+        for (int i = 0; i < numPlayers; ++i)
+        {
+            GPUSkinningPlayerMono player = players[i];
+            BoundingSphere bounds = cullingBounds[i];
+            bounds.position = player.Player.Position;
+            bounds.radius = 1.0f;
+            cullingBounds[i] = bounds;
+        }
+    }
+
     public void Update(float deltaTime, Material mtrl)
     {
         if (executeOncePerFrame.CanBeExecute())
         {
             executeOncePerFrame.MarkAsExecuted();
             time += deltaTime;
+            UpdateCullingBounds();
         }
 
         mtrl.SetTexture(shaderPropID_GPUSkinning_TextureMatrix, texture);

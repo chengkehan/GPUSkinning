@@ -53,6 +53,7 @@ public class GPUSkinningPlayerMonoManager
         if (!item.players.Contains(player))
         {
             item.players.Add(player);
+            item.AddCullingBounds();
         }
 
         resources = item;
@@ -72,6 +73,7 @@ public class GPUSkinningPlayerMonoManager
             if(playerIndex != -1)
             {
                 items[i].players.RemoveAt(playerIndex);
+                items[i].RemoveCullingBounds(playerIndex);
                 if(items[i].players.Count == 0)
                 {
                     items[i].Destroy();

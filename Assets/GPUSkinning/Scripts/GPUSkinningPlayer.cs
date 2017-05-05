@@ -62,6 +62,22 @@ public class GPUSkinningPlayer
             return playingClip == null ? null : playingClip.name;
         }
     }
+    
+    public Vector3 Position
+    {
+        get
+        {
+            return transform == null ? Vector3.zero : transform.position;
+        }
+    }
+
+    public Vector3 LocalPosition
+    {
+        get
+        {
+            return transform == null ? Vector3.zero : transform.localPosition;
+        }
+    }
 
     private List<GPUSkinningPlayerJoint> joints = null;
     public List<GPUSkinningPlayerJoint> Joints
@@ -189,6 +205,14 @@ public class GPUSkinningPlayer
         if(playingClip != null)
         {
             isPlaying = true;
+        }
+    }
+
+    public void SetMesh(Mesh mesh)
+    {
+        if(mf != null && mf.sharedMesh != mesh)
+        {
+            mf.sharedMesh = mesh;
         }
     }
 

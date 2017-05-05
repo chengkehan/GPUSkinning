@@ -90,6 +90,11 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+    public void DeletePlayer()
+    {
+        player = null;
+    }
+
     public void Update_Editor(float deltaTime)
     {
         if(player != null && !Application.isPlaying)
@@ -100,8 +105,11 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
     private void OnValidate()
     {
-        Init();
-        Update_Editor(0);
+        if (!Application.isPlaying)
+        {
+            Init();
+            Update_Editor(0);
+        }
     }
 #endif
 
