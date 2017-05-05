@@ -46,6 +46,23 @@ public class GPUSkinningPlayer
         }
     }
 
+    private bool lodEnabled = true;
+    public bool LODEnabled
+    {
+        get
+        {
+            return lodEnabled;
+        }
+        set
+        {
+            lodEnabled = value;
+            if(!lodEnabled)
+            {
+                SetLODMesh(null);
+            }
+        }
+    }
+
     private bool isPlaying = false;
     public bool IsPlaying
     {
@@ -208,8 +225,13 @@ public class GPUSkinningPlayer
         }
     }
 
-    public void SetMesh(Mesh mesh)
+    public void SetLODMesh(Mesh mesh)
     {
+        if(!LODEnabled)
+        {
+            mesh = res.mesh;
+        }
+
         if(mf != null && mf.sharedMesh != mesh)
         {
             mf.sharedMesh = mesh;

@@ -413,6 +413,7 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.hideFlags = HideFlags.HideAndDontSave;
                         preview.Init(anim, mesh, mtrl, texture);
                         preview.Player.RootMotionEnabled = rootMotionEnabled;
+                        preview.Player.LODEnabled = false;
                     }
                 }
             }

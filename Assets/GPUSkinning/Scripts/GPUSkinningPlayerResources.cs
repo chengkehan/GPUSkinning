@@ -175,7 +175,7 @@ public class GPUSkinningPlayerResources
                 lodMesh = lodMeshes == null || lodMeshes.Length == 0 ? this.mesh : lodMeshes[Mathf.Min(evt.currentDistance - 1, lodMeshes.Length - 1)];
                 if (lodMesh == null) lodMesh = this.mesh;
             }
-            player.Player.SetMesh(lodMesh);
+            player.Player.SetLODMesh(lodMesh);
         }
         else
         {

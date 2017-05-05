@@ -64,6 +64,16 @@ public class GPUSkinningPlayerMonoEditor : Editor
             }
         }
 
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("lodEnabled"), new GUIContent("LOD Enabled"));
+        if (EditorGUI.EndChangeCheck())
+        {
+            if (Application.isPlaying)
+            {
+                player.Player.LODEnabled = serializedObject.FindProperty("lodEnabled").boolValue;
+            }
+        }
+
         GPUSkinningAnimation anim = serializedObject.FindProperty("anim").objectReferenceValue as GPUSkinningAnimation;
         SerializedProperty defaultPlayingClipIndex = serializedObject.FindProperty("defaultPlayingClipIndex");
         if (clipsName == null && anim != null)
