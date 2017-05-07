@@ -33,6 +33,10 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     [SerializeField]
     private bool lodEnabled = true;
 
+    [HideInInspector]
+    [SerializeField]
+    private GPUSKinningCullingMode cullingMode = GPUSKinningCullingMode.Visible;
+
     private static GPUSkinningPlayerMonoManager playerManager = new GPUSkinningPlayerMonoManager();
 
     private GPUSkinningPlayer player = null;
@@ -86,6 +90,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
             player = new GPUSkinningPlayer(gameObject, res);
             player.RootMotionEnabled = Application.isPlaying ? rootMotionEnabled : false;
             player.LODEnabled = Application.isPlaying ? lodEnabled : false;
+            player.CullingMode = cullingMode;
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {

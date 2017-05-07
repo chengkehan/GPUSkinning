@@ -74,6 +74,17 @@ public class GPUSkinningPlayerMonoEditor : Editor
             }
         }
 
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("cullingMode"), new GUIContent("Culling Mode"));
+        if (EditorGUI.EndChangeCheck())
+        {
+            if (Application.isPlaying)
+            {
+                player.Player.CullingMode = 
+                    serializedObject.FindProperty("cullingMode").enumValueIndex == 0 ? GPUSKinningCullingMode.Always : GPUSKinningCullingMode.Visible;
+            }
+        }
+
         GPUSkinningAnimation anim = serializedObject.FindProperty("anim").objectReferenceValue as GPUSkinningAnimation;
         SerializedProperty defaultPlayingClipIndex = serializedObject.FindProperty("defaultPlayingClipIndex");
         if (clipsName == null && anim != null)

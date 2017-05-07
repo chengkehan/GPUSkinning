@@ -46,6 +46,19 @@ public class GPUSkinningPlayer
         }
     }
 
+    private GPUSKinningCullingMode cullingMode = GPUSKinningCullingMode.Visible;
+    public GPUSKinningCullingMode CullingMode
+    {
+        get
+        {
+            return cullingMode;
+        }
+        set
+        {
+            cullingMode = value;
+        }
+    }
+
     private bool visible = false;
     public bool Visible
     {
@@ -342,7 +355,9 @@ public class GPUSkinningPlayer
 
         int frameIndex = GetFrameIndex();
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
-        if (!Application.isPlaying || visible)
+        if (!Application.isPlaying || 
+            cullingMode == GPUSKinningCullingMode.Always || 
+            (cullingMode == GPUSKinningCullingMode.Visible && visible))
         {
             res.Update(deltaTime, currMtrl);
             res.UpdatePlayingData(mpb, playingClip, frameIndex, frame, playingClip.rootMotionEnabled && rootMotionEnabled);
