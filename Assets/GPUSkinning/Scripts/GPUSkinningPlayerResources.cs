@@ -69,6 +69,11 @@ public class GPUSkinningPlayerResources
         }
     }
 
+    ~GPUSkinningPlayerResources()
+    {
+        DestroyCullingGroup();
+    }
+
     public void Destroy()
     {
         anim = null;
@@ -80,11 +85,7 @@ public class GPUSkinningPlayerResources
             cullingBounds = null;
         }
 
-        if(cullingGroup != null)
-        {
-            cullingGroup.Dispose();
-            cullingGroup = null;
-        }
+        DestroyCullingGroup();
 
         if(mtrls != null)
         {
@@ -164,6 +165,15 @@ public class GPUSkinningPlayerResources
         else
         {
             player.Player.Visible = false;
+        }
+    }
+
+    private void DestroyCullingGroup()
+    {
+        if (cullingGroup != null)
+        {
+            cullingGroup.Dispose();
+            cullingGroup = null;
         }
     }
 
