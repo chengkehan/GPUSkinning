@@ -127,7 +127,14 @@ public class GPUSkinningPlayer
     {
         get
         {
-            return Mathf.Approximately(NormalizedTime, 1.0f);
+            if(playingClip == null)
+            {
+                return false;
+            }
+            else
+            {
+                return GetFrameIndex() == ((int)(playingClip.length * playingClip.fps) - 1);
+            }
         }
     }
 
@@ -163,7 +170,8 @@ public class GPUSkinningPlayer
             mf = go.AddComponent<MeshFilter>();
         }
 
-        mr.sharedMaterial = GetCurrentMaterial();
+        GPUSkinningMaterial mtrl = GetCurrentMaterial();
+        mr.sharedMaterial = mtrl == null ? null : mtrl.material;
         mf.sharedMesh = res.mesh;
 
         mpb = new MaterialPropertyBlock();
@@ -279,15 +287,15 @@ public class GPUSkinningPlayer
             return;
         }
 
-        Material currMtrl = GetCurrentMaterial();
+        GPUSkinningMaterial currMtrl = GetCurrentMaterial();
         if(currMtrl == null)
         {
             return;    
         }
 
-        if(mr.sharedMaterial != currMtrl)
+        if(mr.sharedMaterial != currMtrl.material)
         {
-            mr.sharedMaterial = currMtrl;
+            mr.sharedMaterial = currMtrl.material;
         }
 
         if (playingClip.wrapMode == GPUSkinningWrapMode.Loop)
@@ -320,7 +328,7 @@ public class GPUSkinningPlayer
         lastPlayedTime += timeDelta;
     }
 
-    private void UpdateMaterial(float deltaTime, Material currMtrl)
+    private void UpdateMaterial(float deltaTime, GPUSkinningMaterial currMtrl)
     {
         float blend_crossFade = 1;
         int frameIndex_crossFade = -1;
@@ -334,11 +342,14 @@ public class GPUSkinningPlayer
 
         int frameIndex = GetFrameIndex();
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
-        res.Update(deltaTime, currMtrl);
-        res.UpdatePlayingData(mpb, playingClip, frameIndex, frame, playingClip.rootMotionEnabled && rootMotionEnabled);
-        res.UpdateCrossFade(mpb, lastPlayedClip, GetCrossFadeFrameIndex(), crossFadeTime, crossFadeProgress);
-        mr.SetPropertyBlock(mpb);
-        UpdateJoints(frame);
+        if (!Application.isPlaying || visible)
+        {
+            res.Update(deltaTime, currMtrl);
+            res.UpdatePlayingData(mpb, playingClip, frameIndex, frame, playingClip.rootMotionEnabled && rootMotionEnabled);
+            res.UpdateCrossFade(mpb, lastPlayedClip, GetCrossFadeFrameIndex(), crossFadeTime, crossFadeProgress);
+            mr.SetPropertyBlock(mpb);
+            UpdateJoints(frame);
+        }
 
         if (playingClip.rootMotionEnabled && rootMotionEnabled && frameIndex != rootMotionFrameIndex)
         {
@@ -348,7 +359,7 @@ public class GPUSkinningPlayer
         }
     }
 
-    private Material GetCurrentMaterial()
+    private GPUSkinningMaterial GetCurrentMaterial()
     {
         if(res == null)
         {
@@ -424,7 +435,7 @@ public class GPUSkinningPlayer
     private int GetFrameIndex()
     {
         float time = GetCurrentTime();
-        if (Mathf.Approximately(playingClip.length, time))
+        if (playingClip.length == time)
         {
             return GetTheLastFrameIndex_WrapMode_Once(playingClip);
         }

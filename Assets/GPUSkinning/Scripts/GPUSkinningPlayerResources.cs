@@ -27,7 +27,7 @@ public class GPUSkinningPlayerResources
 
     private GPUSkinningBetterList<BoundingSphere> cullingBounds = new GPUSkinningBetterList<BoundingSphere>();
 
-    private Material[] mtrls = null;
+    private GPUSkinningMaterial[] mtrls = null;
 
     private static string[] keywords = new string[] {
         "ROOTON_BLENDOFF", "ROOTON_BLENDON_CROSSFADEROOTON", "ROOTON_BLENDON_CROSSFADEROOTOFF",
@@ -102,7 +102,7 @@ public class GPUSkinningPlayerResources
         {
             for(int i = 0; i < mtrls.Length; ++i)
             {
-                Object.Destroy(mtrls[i]);
+                mtrls[i].Destroy();
                 mtrls[i] = null;
             }
             mtrls = null;
@@ -208,7 +208,7 @@ public class GPUSkinningPlayerResources
         }
     }
 
-    public void Update(float deltaTime, Material mtrl)
+    public void Update(float deltaTime, GPUSkinningMaterial mtrl)
     {
         if (executeOncePerFrame.CanBeExecute())
         {
@@ -217,9 +217,13 @@ public class GPUSkinningPlayerResources
             UpdateCullingBounds();
         }
 
-        mtrl.SetTexture(shaderPropID_GPUSkinning_TextureMatrix, texture);
-        mtrl.SetFloat(shaderPropID_GPUSkinning_NumPixelsPerFrame, anim.bones.Length * 3/*treat 3 pixels as a float3x4*/);
-        mtrl.SetVector(shaderPropID_GPUSkinning_TextureSize, new Vector4(anim.textureWidth, anim.textureHeight, 0, 0));
+        if (mtrl.executeOncePerFrame.CanBeExecute())
+        {
+            mtrl.executeOncePerFrame.MarkAsExecuted();
+            mtrl.material.SetTexture(shaderPropID_GPUSkinning_TextureMatrix, texture);
+            mtrl.material.SetFloat(shaderPropID_GPUSkinning_NumPixelsPerFrame, anim.bones.Length * 3/*treat 3 pixels as a float3x4*/);
+            mtrl.material.SetVector(shaderPropID_GPUSkinning_TextureSize, new Vector4(anim.textureWidth, anim.textureHeight, 0, 0));
+        }
     }
 
     public void UpdatePlayingData(MaterialPropertyBlock mpb, GPUSkinningClip playingClip, int frameIndex, GPUSkinningFrame frame, bool rootMotionEnabled)
@@ -258,7 +262,7 @@ public class GPUSkinningPlayerResources
         return lastPlayedClip != null && crossFadeTime > 0 && crossFadeProgress <= crossFadeTime;
     }
 
-    public Material GetMaterial(MaterialState state)
+    public GPUSkinningMaterial GetMaterial(MaterialState state)
     {
         return mtrls[(int)state];
     }
@@ -270,28 +274,28 @@ public class GPUSkinningPlayerResources
             return;
         }
 
-        mtrls = new Material[(int)MaterialState.Count];
+        mtrls = new GPUSkinningMaterial[(int)MaterialState.Count];
 
         for (int i = 0; i < mtrls.Length; ++i)
         {
-            mtrls[i] = new Material(originalMaterial);
-            mtrls[i].name = keywords[i];
-            mtrls[i].hideFlags = hideFlags;
+            mtrls[i] = new GPUSkinningMaterial() { material = new Material(originalMaterial) };
+            mtrls[i].material.name = keywords[i];
+            mtrls[i].material.hideFlags = hideFlags;
             EnableKeywords(i, mtrls[i]);
         }
     }
 
-    private void EnableKeywords(int ki, Material mtrl)
+    private void EnableKeywords(int ki, GPUSkinningMaterial mtrl)
     {
         for(int i = 0; i < mtrls.Length; ++i)
         {
             if(i == ki)
             {
-                mtrl.EnableKeyword(keywords[i]);
+                mtrl.material.EnableKeyword(keywords[i]);
             }
             else
             {
-                mtrl.DisableKeyword(keywords[i]);
+                mtrl.material.DisableKeyword(keywords[i]);
             }
         }
     }

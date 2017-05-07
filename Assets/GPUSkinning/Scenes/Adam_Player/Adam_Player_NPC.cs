@@ -35,17 +35,17 @@ public class Adam_Player_NPC : MonoBehaviour
 			}
 			else if(rnd < 0.75f)
 			{
-				player.CrossFade("TurnOnSpotRightD", 0.2f);
+				player.CrossFade("TurnOnSpotRightC", 0.2f);
 			}
 			else
 			{
-				player.CrossFade("TurnOnSpotLeftD", 0.2f);
+				player.CrossFade("TurnOnSpotLeftC", 0.2f);
 			}
 		}
 
 		if(player.IsTimeAtTheEndOfLoop)
 		{
-			player.CrossFade("Idle", 0.2f);
+			player.CrossFade("Idle", 0.8f);
 		}
 	}
 }
