@@ -24,6 +24,10 @@ public class GPUSkinningPlayer
 
     private GPUSkinningClip lastPlayedClip = null;
 
+    private int lastPlayingFrameIndex = -1;
+
+    private GPUSkinningClip lastPlayingClip = null;
+
     private GPUSkinningClip playingClip = null;
 
     private GPUSkinningPlayerResources res = null;
@@ -343,6 +347,15 @@ public class GPUSkinningPlayer
 
     private void UpdateMaterial(float deltaTime, GPUSkinningMaterial currMtrl)
     {
+        int frameIndex = GetFrameIndex();
+        if(lastPlayingClip == playingClip && lastPlayingFrameIndex == frameIndex)
+        {
+            res.Update(deltaTime, currMtrl);
+            return;
+        }
+        lastPlayingClip = playingClip;
+        lastPlayingFrameIndex = frameIndex;
+
         float blend_crossFade = 1;
         int frameIndex_crossFade = -1;
         GPUSkinningFrame frame_crossFade = null;
@@ -353,7 +366,6 @@ public class GPUSkinningPlayer
             blend_crossFade = res.CrossFadeBlendFactor(crossFadeProgress, crossFadeTime);
         }
 
-        int frameIndex = GetFrameIndex();
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
         if (!Application.isPlaying || 
             cullingMode == GPUSKinningCullingMode.Always || 
