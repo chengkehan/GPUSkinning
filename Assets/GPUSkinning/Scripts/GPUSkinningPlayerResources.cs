@@ -46,21 +46,13 @@ public class GPUSkinningPlayerResources
 
     private static int shaderPropID_GPUSkinning_TextureMatrix = -1;
 
-    private static int shaderPropID_GPUSkinning_NumPixelsPerFrame = 0;
+    private static int shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame = 0;
 
-    private static int shaderPropID_GPUSkinning_TextureSize = 0;
-
-    private static int shaderPorpID_GPUSkinning_FrameIndex = 0;
-
-    private static int shaderPropID_GPUSkinning_PixelSegmentation = 0;
+    private static int shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation = 0;
 
     private static int shaderPropID_GPUSkinning_RootMotion = 0;
 
-    private static int shaderPropID_GPUSkinning_CrossFadeBlend = 0;
-
-    private static int shaderPropID_GPUSkinning_PixelSegmentation_CrossFade = 0;
-
-    private static int shaderPorpID_GPUSkinning_FrameIndex_CrossFade = 0;
+    private static int shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade = 0;
 
     private static int shaderPropID_GPUSkinning_RootMotion_CrossFade = 0;
 
@@ -69,14 +61,10 @@ public class GPUSkinningPlayerResources
         if (shaderPropID_GPUSkinning_TextureMatrix == -1)
         {
             shaderPropID_GPUSkinning_TextureMatrix = Shader.PropertyToID("_GPUSkinning_TextureMatrix");
-            shaderPropID_GPUSkinning_NumPixelsPerFrame = Shader.PropertyToID("_GPUSkinning_NumPixelsPerFrame");
-            shaderPropID_GPUSkinning_TextureSize = Shader.PropertyToID("_GPUSkinning_TextureSize");
-            shaderPorpID_GPUSkinning_FrameIndex = Shader.PropertyToID("_GPUSkinning_FrameIndex");
-            shaderPropID_GPUSkinning_PixelSegmentation = Shader.PropertyToID("_GPUSkinning_PixelSegmentation");
+            shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame = Shader.PropertyToID("_GPUSkinning_TextureSize_NumPixelsPerFrame");
+            shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation = Shader.PropertyToID("_GPUSkinning_FrameIndex_PixelSegmentation");
             shaderPropID_GPUSkinning_RootMotion = Shader.PropertyToID("_GPUSkinning_RootMotion");
-            shaderPropID_GPUSkinning_CrossFadeBlend = Shader.PropertyToID("_GPUSkinning_CrossFadeBlend");
-            shaderPropID_GPUSkinning_PixelSegmentation_CrossFade = Shader.PropertyToID("_GPUSkinning_PixelSegmentation_CrossFade");
-            shaderPorpID_GPUSkinning_FrameIndex_CrossFade = Shader.PropertyToID("_GPUSkinning_FrameIndex_CrossFade");
+            shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade = Shader.PropertyToID("_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade");
             shaderPropID_GPUSkinning_RootMotion_CrossFade = Shader.PropertyToID("_GPUSkinning_RootMotion_CrossFade");
         }
     }
@@ -221,15 +209,14 @@ public class GPUSkinningPlayerResources
         {
             mtrl.executeOncePerFrame.MarkAsExecuted();
             mtrl.material.SetTexture(shaderPropID_GPUSkinning_TextureMatrix, texture);
-            mtrl.material.SetFloat(shaderPropID_GPUSkinning_NumPixelsPerFrame, anim.bones.Length * 3/*treat 3 pixels as a float3x4*/);
-            mtrl.material.SetVector(shaderPropID_GPUSkinning_TextureSize, new Vector4(anim.textureWidth, anim.textureHeight, 0, 0));
+            mtrl.material.SetVector(shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame, 
+                new Vector4(anim.textureWidth, anim.textureHeight, anim.bones.Length * 3/*treat 3 pixels as a float3x4*/, 0));
         }
     }
 
     public void UpdatePlayingData(MaterialPropertyBlock mpb, GPUSkinningClip playingClip, int frameIndex, GPUSkinningFrame frame, bool rootMotionEnabled)
     {
-        mpb.SetFloat(shaderPorpID_GPUSkinning_FrameIndex, frameIndex);
-        mpb.SetFloat(shaderPropID_GPUSkinning_PixelSegmentation, playingClip.pixelSegmentation);
+        mpb.SetVector(shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation, new Vector4(frameIndex, playingClip.pixelSegmentation, 0, 0));
         if (rootMotionEnabled)
         {
             Matrix4x4 rootMotionInv = frame.RootMotionInv(anim.rootBoneIndex);
@@ -246,9 +233,8 @@ public class GPUSkinningPlayerResources
                 mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotion_CrossFade, lastPlayedClip.frames[frameIndex].RootMotionInv(anim.rootBoneIndex));
             }
 
-            mpb.SetFloat(shaderPorpID_GPUSkinning_FrameIndex_CrossFade, frameIndex);
-            mpb.SetFloat(shaderPropID_GPUSkinning_PixelSegmentation_CrossFade, lastPlayedClip.pixelSegmentation);
-            mpb.SetFloat(shaderPropID_GPUSkinning_CrossFadeBlend, CrossFadeBlendFactor(crossFadeProgress, crossFadeTime));
+            mpb.SetVector(shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade, 
+                new Vector4(frameIndex, lastPlayedClip.pixelSegmentation, CrossFadeBlendFactor(crossFadeProgress, crossFadeTime)));
         }
     }
 

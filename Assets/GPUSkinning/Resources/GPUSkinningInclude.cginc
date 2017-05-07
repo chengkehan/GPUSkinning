@@ -2,16 +2,12 @@
 #define GPUSKINNING_INCLUDE
 
 uniform sampler2D _GPUSkinning_TextureMatrix;
-uniform float _GPUSkinning_NumPixelsPerFrame;
-uniform float2 _GPUSkinning_TextureSize;
+uniform float3 _GPUSkinning_TextureSize_NumPixelsPerFrame;
 
 UNITY_INSTANCING_CBUFFER_START(GPUSkinningProperties0)
-	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_FrameIndex)
-	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_PixelSegmentation)
+	UNITY_DEFINE_INSTANCED_PROP(float2, _GPUSkinning_FrameIndex_PixelSegmentation)
 #if !defined(ROOTON_BLENDOFF) && !defined(ROOTOFF_BLENDOFF)
-	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_CrossFadeBlend)
-	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_PixelSegmentation_CrossFade)
-	UNITY_DEFINE_INSTANCED_PROP(float, _GPUSkinning_FrameIndex_CrossFade)
+	UNITY_DEFINE_INSTANCED_PROP(float3, _GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade)
 #endif
 UNITY_INSTANCING_CBUFFER_END
 
@@ -29,9 +25,9 @@ UNITY_INSTANCING_CBUFFER_END
 
 inline float4 indexToUV(float index)
 {
-	int row = (int)(index / _GPUSkinning_TextureSize.x);
-	float col = index - row * _GPUSkinning_TextureSize.x;
-	return float4(col / _GPUSkinning_TextureSize.x, row / _GPUSkinning_TextureSize.y, 0, 0);
+	int row = (int)(index / _GPUSkinning_TextureSize_NumPixelsPerFrame.x);
+	float col = index - row * _GPUSkinning_TextureSize_NumPixelsPerFrame.x;
+	return float4(col / _GPUSkinning_TextureSize_NumPixelsPerFrame.x, row / _GPUSkinning_TextureSize_NumPixelsPerFrame.y, 0, 0);
 }
 
 inline float4x4 getMatrix(int frameStartIndex, float boneIndex)
@@ -47,23 +43,25 @@ inline float4x4 getMatrix(int frameStartIndex, float boneIndex)
 
 inline float getFrameStartIndex()
 {
-	float segment = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_PixelSegmentation);
-	float frameIndex = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_FrameIndex);
-	float frameStartIndex = segment + frameIndex * _GPUSkinning_NumPixelsPerFrame;
+	float2 frameIndex_segment = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_FrameIndex_PixelSegmentation);
+	float segment = frameIndex_segment.y;
+	float frameIndex = frameIndex_segment.x;
+	float frameStartIndex = segment + frameIndex * _GPUSkinning_TextureSize_NumPixelsPerFrame.z;
 	return frameStartIndex;
 }
 
 #if !defined(ROOTON_BLENDOFF) && !defined(ROOTOFF_BLENDOFF)
 inline float getFrameStartIndex_crossFade()
 {
-	float segment = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_PixelSegmentation_CrossFade);
-	float frameIndex = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_FrameIndex_CrossFade);
-	float frameStartIndex = segment + frameIndex * _GPUSkinning_NumPixelsPerFrame;
+	float3 frameIndex_segment = UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade);
+	float segment = frameIndex_segment.y;
+	float frameIndex = frameIndex_segment.x;
+	float frameStartIndex = segment + frameIndex * _GPUSkinning_TextureSize_NumPixelsPerFrame.z;
 	return frameStartIndex;
 }
 #endif
 
-#define crossFadeBlend UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_CrossFadeBlend)
+#define crossFadeBlend UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade).z
 
 #define rootMotion UNITY_ACCESS_INSTANCED_PROP(_GPUSkinning_RootMotion)
 
