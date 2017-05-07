@@ -214,7 +214,9 @@ public class GPUSkinningPlayerResources
         }
     }
 
-    public void UpdatePlayingData(MaterialPropertyBlock mpb, GPUSkinningClip playingClip, int frameIndex, GPUSkinningFrame frame, bool rootMotionEnabled)
+    public void UpdatePlayingData(
+        MaterialPropertyBlock mpb, GPUSkinningClip playingClip, int frameIndex, GPUSkinningFrame frame, bool rootMotionEnabled,
+        GPUSkinningClip lastPlayedClip, int frameIndex_crossFade, float crossFadeTime, float crossFadeProgress)
     {
         mpb.SetVector(shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation, new Vector4(frameIndex, playingClip.pixelSegmentation, 0, 0));
         if (rootMotionEnabled)
@@ -222,19 +224,16 @@ public class GPUSkinningPlayerResources
             Matrix4x4 rootMotionInv = frame.RootMotionInv(anim.rootBoneIndex);
             mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotion, rootMotionInv);
         }
-    }
 
-    public void UpdateCrossFade(MaterialPropertyBlock mpb, GPUSkinningClip lastPlayedClip, int frameIndex, float crossFadeTime, float crossFadeProgress)
-    {
         if (IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
         {
             if (lastPlayedClip.rootMotionEnabled)
             {
-                mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotion_CrossFade, lastPlayedClip.frames[frameIndex].RootMotionInv(anim.rootBoneIndex));
+                mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotion_CrossFade, lastPlayedClip.frames[frameIndex_crossFade].RootMotionInv(anim.rootBoneIndex));
             }
 
-            mpb.SetVector(shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade, 
-                new Vector4(frameIndex, lastPlayedClip.pixelSegmentation, CrossFadeBlendFactor(crossFadeProgress, crossFadeTime)));
+            mpb.SetVector(shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade,
+                new Vector4(frameIndex_crossFade, lastPlayedClip.pixelSegmentation, CrossFadeBlendFactor(crossFadeProgress, crossFadeTime)));
         }
     }
 

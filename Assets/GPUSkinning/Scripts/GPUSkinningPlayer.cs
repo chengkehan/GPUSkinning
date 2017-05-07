@@ -372,8 +372,10 @@ public class GPUSkinningPlayer
             (cullingMode == GPUSKinningCullingMode.Visible && visible))
         {
             res.Update(deltaTime, currMtrl);
-            res.UpdatePlayingData(mpb, playingClip, frameIndex, frame, playingClip.rootMotionEnabled && rootMotionEnabled);
-            res.UpdateCrossFade(mpb, lastPlayedClip, GetCrossFadeFrameIndex(), crossFadeTime, crossFadeProgress);
+            res.UpdatePlayingData(
+                mpb, playingClip, frameIndex, frame, playingClip.rootMotionEnabled && rootMotionEnabled,
+                lastPlayedClip, GetCrossFadeFrameIndex(), crossFadeTime, crossFadeProgress
+            );
             mr.SetPropertyBlock(mpb);
             UpdateJoints(frame);
         }
