@@ -50,7 +50,7 @@ public class GPUSkinningPlayer
         }
     }
 
-    private GPUSKinningCullingMode cullingMode = GPUSKinningCullingMode.Visible;
+    private GPUSKinningCullingMode cullingMode = GPUSKinningCullingMode.CullUpdateTransforms;
     public GPUSKinningCullingMode CullingMode
     {
         get
@@ -368,8 +368,8 @@ public class GPUSkinningPlayer
 
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
         if (!Application.isPlaying || 
-            cullingMode == GPUSKinningCullingMode.Always || 
-            (cullingMode == GPUSKinningCullingMode.Visible && visible))
+            cullingMode == GPUSKinningCullingMode.AlwaysAnimate || 
+            visible)
         {
             res.Update(deltaTime, currMtrl);
             res.UpdatePlayingData(
@@ -382,9 +382,12 @@ public class GPUSkinningPlayer
 
         if (playingClip.rootMotionEnabled && rootMotionEnabled && frameIndex != rootMotionFrameIndex)
         {
-            rootMotionFrameIndex = frameIndex;
-            DoRootMotion(frame_crossFade, 1 - blend_crossFade, false);
-            DoRootMotion(frame, blend_crossFade, true);
+            if (!Application.isPlaying || cullingMode != GPUSKinningCullingMode.CullCompletely)
+            {
+                rootMotionFrameIndex = frameIndex;
+                DoRootMotion(frame_crossFade, 1 - blend_crossFade, false);
+                DoRootMotion(frame, blend_crossFade, true);
+            }
         }
     }
 

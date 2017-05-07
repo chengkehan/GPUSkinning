@@ -414,6 +414,7 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.Init(anim, mesh, mtrl, texture);
                         preview.Player.RootMotionEnabled = rootMotionEnabled;
                         preview.Player.LODEnabled = false;
+                        preview.Player.CullingMode = GPUSKinningCullingMode.AlwaysAnimate;
                     }
                 }
             }

@@ -81,7 +81,8 @@ public class GPUSkinningPlayerMonoEditor : Editor
             if (Application.isPlaying)
             {
                 player.Player.CullingMode = 
-                    serializedObject.FindProperty("cullingMode").enumValueIndex == 0 ? GPUSKinningCullingMode.Always : GPUSKinningCullingMode.Visible;
+                    serializedObject.FindProperty("cullingMode").enumValueIndex == 0 ? GPUSKinningCullingMode.AlwaysAnimate :
+                    serializedObject.FindProperty("cullingMode").enumValueIndex == 1 ? GPUSKinningCullingMode.CullUpdateTransforms : GPUSKinningCullingMode.CullCompletely;
             }
         }
 

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public enum GPUSKinningCullingMode
 {
-    Always, 
-    Visible
+    AlwaysAnimate, 
+    CullUpdateTransforms, 
+    CullCompletely
 }

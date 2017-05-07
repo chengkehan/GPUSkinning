@@ -35,7 +35,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
-    private GPUSKinningCullingMode cullingMode = GPUSKinningCullingMode.Visible;
+    private GPUSKinningCullingMode cullingMode = GPUSKinningCullingMode.CullUpdateTransforms;
 
     private static GPUSkinningPlayerMonoManager playerManager = new GPUSkinningPlayerMonoManager();
 
