@@ -22,6 +22,8 @@ public class GPUSkinningPlayerMonoEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("anim"));
         if (EditorGUI.EndChangeCheck())
         {
+            serializedObject.ApplyModifiedProperties();
+            player.DeletePlayer();
             player.Init();
         }
 
@@ -29,6 +31,8 @@ public class GPUSkinningPlayerMonoEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("mesh"));
         if (EditorGUI.EndChangeCheck())
         {
+            serializedObject.ApplyModifiedProperties();
+            player.DeletePlayer();
             player.Init();
         }
 
@@ -36,6 +40,8 @@ public class GPUSkinningPlayerMonoEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("mtrl"));
         if (EditorGUI.EndChangeCheck())
         {
+            serializedObject.ApplyModifiedProperties();
+            player.DeletePlayer();
             player.Init();
         }
 
@@ -43,6 +49,8 @@ public class GPUSkinningPlayerMonoEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("textureRawData"));
         if (EditorGUI.EndChangeCheck())
         {
+            serializedObject.ApplyModifiedProperties();
+            player.DeletePlayer();
             player.Init();
         }
 
@@ -53,6 +61,28 @@ public class GPUSkinningPlayerMonoEditor : Editor
             if(Application.isPlaying)
             {
                 player.Player.RootMotionEnabled = serializedObject.FindProperty("rootMotionEnabled").boolValue;
+            }
+        }
+
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("lodEnabled"), new GUIContent("LOD Enabled"));
+        if (EditorGUI.EndChangeCheck())
+        {
+            if (Application.isPlaying)
+            {
+                player.Player.LODEnabled = serializedObject.FindProperty("lodEnabled").boolValue;
+            }
+        }
+
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("cullingMode"), new GUIContent("Culling Mode"));
+        if (EditorGUI.EndChangeCheck())
+        {
+            if (Application.isPlaying)
+            {
+                player.Player.CullingMode = 
+                    serializedObject.FindProperty("cullingMode").enumValueIndex == 0 ? GPUSKinningCullingMode.AlwaysAnimate :
+                    serializedObject.FindProperty("cullingMode").enumValueIndex == 1 ? GPUSKinningCullingMode.CullUpdateTransforms : GPUSKinningCullingMode.CullCompletely;
             }
         }
 
@@ -117,5 +147,17 @@ public class GPUSkinningPlayerMonoEditor : Editor
                 (sceneView as SceneView).Repaint();
             }
         }
+    }
+
+    private void BeginBox()
+    {
+        EditorGUILayout.BeginVertical(GUI.skin.GetStyle("Box"));
+        EditorGUILayout.Space();
+    }
+
+    private void EndBox()
+    {
+        EditorGUILayout.Space();
+        EditorGUILayout.EndVertical();
     }
 }

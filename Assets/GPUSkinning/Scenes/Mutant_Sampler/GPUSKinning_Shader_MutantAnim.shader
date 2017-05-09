@@ -64,6 +64,7 @@ Shader "GPUSkinning/GPUSkinning_Unlit_MutantAnim"
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma multi_compile_instancing
+			#pragma multi_compile ROOTON_BLENDOFF ROOTON_BLENDON_CROSSFADEROOTON ROOTON_BLENDON_CROSSFADEROOTOFF ROOTOFF_BLENDOFF ROOTOFF_BLENDON_CROSSFADEROOTON ROOTOFF_BLENDON_CROSSFADEROOTOFF
 			ENDCG
 		}
 	}

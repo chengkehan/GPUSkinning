@@ -18,4 +18,10 @@ public class GPUSkinningAnimation : ScriptableObject
     public int textureWidth = 0;
 
     public int textureHeight = 0;
+
+    public float[] lodDistances = null;
+
+    public Mesh[] lodMeshes = null;
+
+    public float sphereRadius = 1.0f;
 }

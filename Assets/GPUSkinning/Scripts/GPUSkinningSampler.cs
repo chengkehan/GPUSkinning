@@ -40,6 +40,22 @@ public class GPUSkinningSampler : MonoBehaviour
     public bool[] individualDifferenceEnabled = null;
 
     [HideInInspector]
+    [SerializeField]
+    public Mesh[] lodMeshes = null;
+
+    [HideInInspector]
+    [SerializeField]
+    public float[] lodDistances = null;
+
+    [HideInInspector]
+    [SerializeField]
+    private float sphereRadius = 1.0f;
+
+    [HideInInspector]
+    [SerializeField]
+    public bool createNewShader = false;
+
+    [HideInInspector]
     [System.NonSerialized]
     public int samplingClipIndex = -1;
 
@@ -141,19 +157,19 @@ public class GPUSkinningSampler : MonoBehaviour
 
         if (string.IsNullOrEmpty(animName.Trim()))
         {
-            ShowDialog("Empty AnimName");
+            ShowDialog("Animation name is empty.");
             return;
         }
 
         if (rootBoneTransform == null)
         {
-            ShowDialog("Missing RootBoneTransform");
+            ShowDialog("Please set Root Bone.");
             return;
         }
 
         if (animClips == null || animClips.Length == 0)
         {
-            ShowDialog("Missing AnimationClip");
+            ShowDialog("Please set Anim Clips.");
             return;
         }
 
@@ -174,12 +190,12 @@ public class GPUSkinningSampler : MonoBehaviour
 		smr = GetComponentInChildren<SkinnedMeshRenderer>();
 		if(smr == null)
 		{
-			ShowDialog("Missing SkinnedMeshRenderer");
+			ShowDialog("Cannot find SkinnedMeshRenderer.");
 			return;
 		}
 		if(smr.sharedMesh == null)
 		{
-			ShowDialog("Missing SkinnedMeshRenderer.Mesh");
+			ShowDialog("Cannot find SkinnedMeshRenderer.mesh.");
 			return;
 		}
 
@@ -307,16 +323,47 @@ public class GPUSkinningSampler : MonoBehaviour
         }
     }
 
-    private Mesh CreateNewMesh()
+    private void CreateLODMeshes(Bounds bounds, string dir)
     {
-        Mesh mesh = smr.sharedMesh;
+        gpuSkinningAnimation.lodMeshes = null;
+        gpuSkinningAnimation.lodDistances = null;
+        gpuSkinningAnimation.sphereRadius = sphereRadius;
+
+        if(lodMeshes != null)
+        {
+            List<Mesh> newMeshes = new List<Mesh>();
+            List<float> newLodDistances = new List<float>();
+            for (int i = 0; i < lodMeshes.Length; ++i)
+            {
+                Mesh lodMesh = lodMeshes[i];
+                if(lodMesh != null)
+                {
+                    Mesh newMesh = CreateNewMesh(lodMesh, "GPUSkinning_Mesh_LOD" + (i + 1));
+                    newMesh.bounds = bounds;
+                    string savedMeshPath = dir + "/GPUSKinning_Mesh_" + animName + "_LOD" + (i + 1) + ".asset";
+                    AssetDatabase.CreateAsset(newMesh, savedMeshPath);
+                    newMeshes.Add(newMesh);
+                    newLodDistances.Add(lodDistances[i]);
+                }
+            }
+            gpuSkinningAnimation.lodMeshes = newMeshes.ToArray();
+
+            newLodDistances.Add(9999);
+            gpuSkinningAnimation.lodDistances = newLodDistances.ToArray();
+        }
+
+        EditorUtility.SetDirty(gpuSkinningAnimation);
+    }
+
+    private Mesh CreateNewMesh(Mesh mesh, string meshName)
+    {
         Vector3[] normals = mesh.normals;
         Vector4[] tangents = mesh.tangents;
         Color[] colors = mesh.colors;
         Vector2[] uv = mesh.uv;
 
         Mesh newMesh = new Mesh();
-        newMesh.name = "GPUSkinning_Mesh";
+        newMesh.name = meshName;
         newMesh.vertices = mesh.vertices;
         if (normals != null && normals.Length > 0) { newMesh.normals = normals; }
         if (tangents != null && tangents.Length > 0) { newMesh.tangents = tangents; }
@@ -451,7 +498,14 @@ public class GPUSkinningSampler : MonoBehaviour
         texture.Apply();
 
         string savedPath = dir + "/GPUSKinning_Texture_" + animName + ".bytes";
-        File.WriteAllBytes(savedPath, texture.GetRawTextureData());
+        using (FileStream fileStream = new FileStream(savedPath, FileMode.Create))
+        {
+            byte[] bytes = texture.GetRawTextureData();
+            fileStream.Write(bytes, 0, bytes.Length);
+            fileStream.Flush();
+            fileStream.Close();
+            fileStream.Dispose();
+        }
         WriteTempData(TEMP_SAVED_TEXTURE_PATH, savedPath);
     }
 
@@ -523,6 +577,13 @@ public class GPUSkinningSampler : MonoBehaviour
         }
     }
 
+    private void InitTransform()
+    {
+        transform.parent = null;
+        transform.position = Vector3.zero;
+        transform.eulerAngles = Vector3.zero;
+    }
+
     private void Awake()
 	{
         animation = GetComponent<Animation>();
@@ -554,12 +615,16 @@ public class GPUSkinningSampler : MonoBehaviour
                 return;
             }
             runtimeAnimatorController = animator.runtimeAnimatorController;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            InitTransform();
             return;
         }
         if(animation != null)
         {
             MappingAnimationClips();
             animation.Stop();
+            animation.cullingType = AnimationCullingType.AlwaysAnimate;
+            InitTransform();
             return;
         }
 	}
@@ -591,7 +656,7 @@ public class GPUSkinningSampler : MonoBehaviour
 			{
 				if(!savePath.Contains(Application.dataPath.Replace('\\', '/')))
 				{
-					ShowDialog("Must be select directory in project");
+					ShowDialog("Must select a directory in the project's Asset folder.");
 				}
 				else
 				{
@@ -613,7 +678,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
                     if (samplingClipIndex == 0)
                     {
-                        Mesh newMesh = CreateNewMesh();
+                        Mesh newMesh = CreateNewMesh(smr.sharedMesh, "GPUSkinning_Mesh");
                         if (savedMesh != null)
                         {
                             newMesh.bounds = savedMesh.bounds;
@@ -624,6 +689,8 @@ public class GPUSkinningSampler : MonoBehaviour
                         savedMesh = newMesh;
 
                         CreateShaderAndMaterial(dir);
+
+                        CreateLODMeshes(newMesh.bounds, dir);
                     }
 
 					AssetDatabase.Refresh();
@@ -714,20 +781,38 @@ public class GPUSkinningSampler : MonoBehaviour
 
 	private void CreateShaderAndMaterial(string dir)
 	{
-		string shaderTemplate = 
-			shaderType == GPUSkinningShaderType.Unlit ? "GPUSkinningUnlit_Template" : 
-			shaderType == GPUSkinningShaderType.StandardSpecular ? "GPUSkinningSpecular_Template" :
-			shaderType == GPUSkinningShaderType.StandardMetallic ? "GPUSkinningMetallic_Template" : string.Empty;
+        Shader shader = null;
+        if (createNewShader)
+        {
+            string shaderTemplate =
+                shaderType == GPUSkinningShaderType.Unlit ? "GPUSkinningUnlit_Template" :
+                shaderType == GPUSkinningShaderType.StandardSpecular ? "GPUSkinningSpecular_Template" :
+                shaderType == GPUSkinningShaderType.StandardMetallic ? "GPUSkinningMetallic_Template" : string.Empty;
 
-		string shaderStr = ((TextAsset)Resources.Load(shaderTemplate)).text;
-		shaderStr = shaderStr.Replace("_$AnimName$_", animName);
-		shaderStr = SkinQualityShaderStr(shaderStr);
-		string shaderPath = dir + "/GPUSKinning_Shader_" + animName + ".shader";
-		File.WriteAllText(shaderPath, shaderStr);
-        WriteTempData(TEMP_SAVED_SHADER_PATH, shaderPath);
-		AssetDatabase.ImportAsset(shaderPath);
+            string shaderStr = ((TextAsset)Resources.Load(shaderTemplate)).text;
+            shaderStr = shaderStr.Replace("_$AnimName$_", animName);
+            shaderStr = SkinQualityShaderStr(shaderStr);
+            string shaderPath = dir + "/GPUSKinning_Shader_" + animName + ".shader";
+            File.WriteAllText(shaderPath, shaderStr);
+            WriteTempData(TEMP_SAVED_SHADER_PATH, shaderPath);
+            AssetDatabase.ImportAsset(shaderPath);
+            shader = AssetDatabase.LoadMainAssetAtPath(shaderPath) as Shader;
+        }
+        else
+        {
+            string shaderName =
+                shaderType == GPUSkinningShaderType.Unlit ? "GPUSkinning/GPUSkinning_Unlit_Skin" :
+                shaderType == GPUSkinningShaderType.StandardSpecular ? "GPUSkinning/GPUSkinning_Specular_Skin" :
+                shaderType == GPUSkinningShaderType.StandardMetallic ? "GPUSkinning_Metallic_Skin" : string.Empty;
+            shaderName +=
+                skinQuality == GPUSkinningQuality.Bone1 ? 1 :
+                skinQuality == GPUSkinningQuality.Bone2 ? 2 :
+                skinQuality == GPUSkinningQuality.Bone4 ? 4 : 1;
+            shader = Shader.Find(shaderName);
+            WriteTempData(TEMP_SAVED_SHADER_PATH, AssetDatabase.GetAssetPath(shader));
+        }
 
-		Material mtrl = new Material(AssetDatabase.LoadMainAssetAtPath(shaderPath) as Shader);
+		Material mtrl = new Material(shader);
 		if(smr.sharedMaterial != null)
 		{
 			mtrl.CopyPropertiesFromMaterial(smr.sharedMaterial);

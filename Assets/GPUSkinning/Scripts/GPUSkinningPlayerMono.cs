@@ -29,6 +29,14 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     [SerializeField]
     private bool rootMotionEnabled = false;
 
+    [HideInInspector]
+    [SerializeField]
+    private bool lodEnabled = true;
+
+    [HideInInspector]
+    [SerializeField]
+    private GPUSKinningCullingMode cullingMode = GPUSKinningCullingMode.CullUpdateTransforms;
+
     private static GPUSkinningPlayerMonoManager playerManager = new GPUSkinningPlayerMonoManager();
 
     private GPUSkinningPlayer player = null;
@@ -74,14 +82,15 @@ public class GPUSkinningPlayerMono : MonoBehaviour
                 res = new GPUSkinningPlayerResources();
                 res.anim = anim;
                 res.mesh = mesh;
-                res.mtrl = new Material(mtrl);
+                res.InitMaterial(mtrl, HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor);
                 res.texture = GPUSkinningUtil.CreateTexture2D(textureRawData, anim);
-                res.mtrl.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor;
                 res.texture.hideFlags = HideFlags.DontSaveInBuild | HideFlags.DontSaveInEditor;
             }
 
             player = new GPUSkinningPlayer(gameObject, res);
             player.RootMotionEnabled = Application.isPlaying ? rootMotionEnabled : false;
+            player.LODEnabled = Application.isPlaying ? lodEnabled : false;
+            player.CullingMode = cullingMode;
 
             if (anim != null && anim.clips != null && anim.clips.Length > 0)
             {
@@ -91,6 +100,11 @@ public class GPUSkinningPlayerMono : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+    public void DeletePlayer()
+    {
+        player = null;
+    }
+
     public void Update_Editor(float deltaTime)
     {
         if(player != null && !Application.isPlaying)
@@ -101,8 +115,11 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
     private void OnValidate()
     {
-        Init();
-        Update_Editor(0);
+        if (!Application.isPlaying)
+        {
+            Init();
+            Update_Editor(0);
+        }
     }
 #endif
 

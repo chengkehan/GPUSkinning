@@ -92,6 +92,7 @@ ENDCG
         // #pragma surface surfSpecular StandardSpecular vertex:vert finalcolor:finalSpecular fullforwardshadows alpha:premul // Transparent
 
 		#pragma multi_compile_instancing
+		#pragma multi_compile ROOTON_BLENDOFF ROOTON_BLENDON_CROSSFADEROOTON ROOTON_BLENDON_CROSSFADEROOTOFF ROOTOFF_BLENDOFF ROOTOFF_BLENDON_CROSSFADEROOTON ROOTOFF_BLENDON_CROSSFADEROOTOFF
 
         #include "Assets/GPUSkinning/Resources/GPUSkinningSurface.cginc"
 		#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"

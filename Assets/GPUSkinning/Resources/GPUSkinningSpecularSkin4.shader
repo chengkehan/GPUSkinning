@@ -1,4 +1,4 @@
-Shader "GPUSkinning/GPUSkinning_Specular_AdamAnim"
+﻿Shader "GPUSkinning/GPUSkinning_Specular_Skin4"
 {
     Properties
     {
@@ -92,6 +92,7 @@ ENDCG
         // #pragma surface surfSpecular StandardSpecular vertex:vert finalcolor:finalSpecular fullforwardshadows alpha:premul // Transparent
 
 		#pragma multi_compile_instancing
+		#pragma multi_compile ROOTON_BLENDOFF ROOTON_BLENDON_CROSSFADEROOTON ROOTON_BLENDON_CROSSFADEROOTOFF ROOTOFF_BLENDOFF ROOTOFF_BLENDON_CROSSFADEROOTON ROOTOFF_BLENDON_CROSSFADEROOTOFF
 
         #include "Assets/GPUSkinning/Resources/GPUSkinningSurface.cginc"
 		#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"
@@ -106,15 +107,9 @@ ENDCG
 				float4 normal = float4(v.normal, 0);
 				float4 tangent = float4(v.tangent.xyz, 0);
 
-				
-
-				
-
-				
 				float4 pos = skin4(v.vertex, v.uv1, v.uv2);
 				normal = skin4(normal, v.uv1, v.uv2);
 				tangent = skin4(tangent, v.uv1, v.uv2);
-				
 
 				v.vertex = pos;
 				v.normal = normal.xyz;

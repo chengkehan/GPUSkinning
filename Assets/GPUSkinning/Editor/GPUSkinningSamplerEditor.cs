@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
@@ -52,6 +53,8 @@ public class GPUSkinningSamplerEditor : Editor
     private bool isBoundsFoldout = true;
 
     private bool isJointsFoldout = true;
+
+    private bool isLODFoldout = true;
 
     private bool isRootMotionFoldout = true;
 
@@ -128,7 +131,11 @@ public class GPUSkinningSamplerEditor : Editor
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("rootBoneTransform"), new GUIContent("Root Bone"));
 
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("createNewShader"), new GUIContent("New Shader"));
+
             OnGUI_AnimClips(sampler);
+
+            OnGUI_LOD(sampler);
 
             if (GUILayout.Button("Step1: Play Scene"))
             {
@@ -150,41 +157,112 @@ public class GPUSkinningSamplerEditor : Editor
         EndBox();
     }
 
+    private SerializedProperty animClips_array_size_sp = null;
+    private SerializedProperty wrapModes_array_size_sp = null;
+    private SerializedProperty fpsList_array_size_sp = null;
+    private SerializedProperty rootMotionEnabled_array_size_sp = null;
+    private SerializedProperty individualDifferenceEnabled_array_size_sp = null;
+    private List<SerializedProperty> animClips_item_sp = null;
+    private List<SerializedProperty> wrapModes_item_sp = null;
+    private List<SerializedProperty> fpsList_item_sp = null;
+    private List<SerializedProperty> rootMotionEnabled_item_sp = null;
+    private List<SerializedProperty> individualDifferenceEnabled_item_sp = null;
+    private int animClips_count = 0;
     private void OnGUI_AnimClips(GPUSkinningSampler sampler)
     {
+        System.Action ResetItemSp = () =>
+        {
+            animClips_item_sp.Clear();
+            wrapModes_item_sp.Clear();
+            fpsList_item_sp.Clear();
+            rootMotionEnabled_item_sp.Clear();
+            individualDifferenceEnabled_item_sp.Clear();
+
+            wrapModes_array_size_sp.intValue = animClips_array_size_sp.intValue;
+            fpsList_array_size_sp.intValue = animClips_array_size_sp.intValue;
+            rootMotionEnabled_array_size_sp.intValue = animClips_array_size_sp.intValue;
+            individualDifferenceEnabled_array_size_sp.intValue = animClips_array_size_sp.intValue;
+
+            for (int i = 0; i < animClips_array_size_sp.intValue; i++)
+            {
+                animClips_item_sp.Add(serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i)));
+                wrapModes_item_sp.Add(serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i)));
+                fpsList_item_sp.Add(serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i)));
+                rootMotionEnabled_item_sp.Add(serializedObject.FindProperty(string.Format("rootMotionEnabled.Array.data[{0}]", i)));
+                individualDifferenceEnabled_item_sp.Add(serializedObject.FindProperty(string.Format("individualDifferenceEnabled.Array.data[{0}]", i)));
+            }
+
+            animClips_count = animClips_item_sp.Count;
+        };
+
+        if (animClips_array_size_sp == null) animClips_array_size_sp = serializedObject.FindProperty("animClips.Array.size");
+        if (wrapModes_array_size_sp == null) wrapModes_array_size_sp = serializedObject.FindProperty("wrapModes.Array.size");
+        if (fpsList_array_size_sp == null) fpsList_array_size_sp = serializedObject.FindProperty("fpsList.Array.size");
+        if (rootMotionEnabled_array_size_sp == null) rootMotionEnabled_array_size_sp = serializedObject.FindProperty("rootMotionEnabled.Array.size");
+        if (individualDifferenceEnabled_array_size_sp == null) individualDifferenceEnabled_array_size_sp = serializedObject.FindProperty("individualDifferenceEnabled.Array.size");
+        if(animClips_item_sp == null)
+        {
+            animClips_item_sp = new List<SerializedProperty>();
+            wrapModes_item_sp = new List<SerializedProperty>();
+            fpsList_item_sp = new List<SerializedProperty>();
+            rootMotionEnabled_item_sp = new List<SerializedProperty>();
+            individualDifferenceEnabled_item_sp = new List<SerializedProperty>();
+            ResetItemSp();
+        }
+
         BeginBox();
         {
+            if(!sampler.IsAnimatorOrAnimation())
+            {
+                EditorGUILayout.HelpBox("Set AnimClips with Animation Component", MessageType.Info);
+            }
+
             EditorGUILayout.PrefixLabel("Sample Clips");
 
             GUI.enabled = sampler.IsAnimatorOrAnimation();
-            int no = serializedObject.FindProperty("animClips.Array.size").intValue;
-            int no2 = serializedObject.FindProperty("wrapModes.Array.size").intValue;
-            int no3 = serializedObject.FindProperty("fpsList.Array.size").intValue;
-            int no4 = serializedObject.FindProperty("rootMotionEnabled.Array.size").intValue;
-            int no5 = serializedObject.FindProperty("individualDifferenceEnabled.Array.size").intValue;
-            int c = EditorGUILayout.IntField("Size", no);
-            if (c != no)
-            {
-                serializedObject.FindProperty("animClips.Array.size").intValue = c;
-            }
-            if (c != no2)
-            {
-                serializedObject.FindProperty("wrapModes.Array.size").intValue = c;
-            }
-            if(c != no3)
-            {
-                serializedObject.FindProperty("fpsList.Array.size").intValue = c;
-            }
-            if(c != no4)
-            {
-                serializedObject.FindProperty("rootMotionEnabled.Array.size").intValue = c;
-            }
-            if(c != no5)
-            {
-                serializedObject.FindProperty("individualDifferenceEnabled.Array.size").intValue = c;
-            }
-            GUI.enabled = true;
+            int no = animClips_array_size_sp.intValue;
+            int no2 = wrapModes_array_size_sp.intValue;
+            int no3 = fpsList_array_size_sp.intValue;
+            int no4 = rootMotionEnabled_array_size_sp.intValue;
+            int no5 = individualDifferenceEnabled_array_size_sp.intValue;
 
+            EditorGUILayout.BeginHorizontal();
+            {
+                animClips_count = EditorGUILayout.IntField("Size", animClips_count);
+                if (GUILayout.Button("Apply", GUILayout.Width(60)))
+                {
+                    if (animClips_count != no)
+                    {
+                        animClips_array_size_sp.intValue = animClips_count;
+                    }
+                    if (animClips_count != no2)
+                    {
+                        wrapModes_array_size_sp.intValue = animClips_count;
+                    }
+                    if (animClips_count != no3)
+                    {
+                        fpsList_array_size_sp.intValue = animClips_count;
+                    }
+                    if (animClips_count != no4)
+                    {
+                        rootMotionEnabled_array_size_sp.intValue = animClips_count;
+                    }
+                    if (animClips_count != no5)
+                    {
+                        individualDifferenceEnabled_array_size_sp.intValue = animClips_count;
+                        ResetItemSp();
+                    }
+                    return;
+                }
+                if(GUILayout.Button("Reset", GUILayout.Width(60)))
+                {
+                    ResetItemSp();
+                    GUI.FocusControl(string.Empty);
+                    return;
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+            GUI.enabled = true;
 
             EditorGUILayout.BeginHorizontal();
             {
@@ -222,11 +300,11 @@ public class GPUSkinningSamplerEditor : Editor
                         EditorGUILayout.EndHorizontal();
                         for (int i = 0; i < no; i++)
                         {
-                            var prop = serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i));
-                            var prop2 = serializedObject.FindProperty(string.Format("wrapModes.Array.data[{0}]", i));
-                            var prop3 = serializedObject.FindProperty(string.Format("fpsList.Array.data[{0}]", i));
-                            var prop4 = serializedObject.FindProperty(string.Format("rootMotionEnabled.Array.data[{0}]", i));
-                            var prop5 = serializedObject.FindProperty(string.Format("individualDifferenceEnabled.Array.data[{0}]", i));
+                            var prop = animClips_item_sp[i];
+                            var prop2 = wrapModes_item_sp[i];
+                            var prop3 = fpsList_item_sp[i];
+                            var prop4 = rootMotionEnabled_item_sp[i];
+                            var prop5 = individualDifferenceEnabled_item_sp[i];
                             if (prop != null)
                             {
                                 if(j == -1)
@@ -301,7 +379,7 @@ public class GPUSkinningSamplerEditor : Editor
                 }
                 else
                 {
-                    if (rt == null)
+                    if (rt == null && !EditorApplication.isPlaying)
                     {
                         linearToGammeMtrl = new Material(Shader.Find("GPUSkinning/GPUSkinningSamplerEditor_LinearToGamma"));
                         linearToGammeMtrl.hideFlags = HideFlags.HideAndDontSave;
@@ -335,6 +413,8 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.hideFlags = HideFlags.HideAndDontSave;
                         preview.Init(anim, mesh, mtrl, texture);
                         preview.Player.RootMotionEnabled = rootMotionEnabled;
+                        preview.Player.LODEnabled = false;
+                        preview.Player.CullingMode = GPUSKinningCullingMode.AlwaysAnimate;
                     }
                 }
             }
@@ -546,6 +626,20 @@ public class GPUSkinningSamplerEditor : Editor
                         {
                             mesh.bounds = bounds;
                             anim.bounds = bounds;
+
+                            if(anim.lodMeshes != null)
+                            {
+                                for(int i = 0; i < anim.lodMeshes.Length; ++i)
+                                {
+                                    Mesh lodMesh = anim.lodMeshes[i];
+                                    if(lodMesh != null)
+                                    {
+                                        lodMesh.bounds = bounds;
+                                        EditorUtility.SetDirty(lodMesh);
+                                    }
+                                }
+                            }
+
                             EditorUtility.SetDirty(mesh);
                             ApplyAnimModification();
                         }
@@ -558,6 +652,79 @@ public class GPUSkinningSamplerEditor : Editor
             EditorGUILayout.Space();
         }
         EditorGUILayout.EndHorizontal();
+    }
+
+    private void OnGUI_LOD(GPUSkinningSampler sampler)
+    {
+        BeginBox();
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginVertical();
+            {
+                EditorGUILayout.BeginHorizontal();
+                {
+                    EditorGUILayout.Space();
+                    EditorGUILayout.Space();
+                    isLODFoldout = EditorGUILayout.Foldout(isLODFoldout, isLODFoldout ? string.Empty : "LOD");
+                    SetEditorPrefsBool("isLODFoldout", isLODFoldout);
+                    GUILayout.FlexibleSpace();
+                }
+                EditorGUILayout.EndHorizontal();
+
+                if (isLODFoldout)
+                {
+                    OnGUI_LODMeshes(sampler);
+                }
+            }
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.Space();
+        }
+        EndBox();
+    }
+     
+    private void OnGUI_LODMeshes(GPUSkinningSampler sampler)
+    {
+        SerializedProperty sizeSP = serializedObject.FindProperty("lodMeshes.Array.size");
+        SerializedProperty dist_sizeSP = serializedObject.FindProperty("lodDistances.Array.size");
+
+        sizeSP.intValue = EditorGUILayout.IntField("Size", sizeSP.intValue);
+        dist_sizeSP.intValue = sizeSP.intValue;
+
+        EditorGUILayout.BeginVertical();
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("LOD Distance");
+            }
+            EditorGUILayout.EndHorizontal();
+
+            for(int i = 0; i < sizeSP.intValue; ++i)
+            {
+                EditorGUILayout.BeginHorizontal();
+                {
+                    EditorGUI.BeginChangeCheck();
+                    EditorGUILayout.ObjectField(serializedObject.FindProperty("lodMeshes.Array.data[" + i + "]"), new GUIContent("LOD" + (i + 1)));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        ApplySamplerModification(sampler);
+                    }
+
+                    EditorGUI.BeginChangeCheck();
+                    SerializedProperty distSP = serializedObject.FindProperty("lodDistances.Array.data[" + i + "]");
+                    distSP.floatValue = EditorGUILayout.FloatField(distSP.floatValue, GUILayout.Width(80));
+                    if(EditorGUI.EndChangeCheck())
+                    {
+                        ApplySamplerModification(sampler);
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+        }
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.Space();
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("sphereRadius"));
     }
 
     private void OnGUI_Joints()
@@ -652,6 +819,8 @@ public class GPUSkinningSamplerEditor : Editor
             }
             else
             {
+                Color guiColor = GUI.color;
+                GUI.color = Color.red;
                 if (GUILayout.Button(">", GUILayout.Width(50)))
                 {
                     if(preview.Player.IsTimeAtTheEndOfLoop)
@@ -663,6 +832,7 @@ public class GPUSkinningSamplerEditor : Editor
                         preview.Player.Resume();
                     }
                 }
+                GUI.color = guiColor;
             }
             EditorGUILayout.Space();
         }
@@ -871,12 +1041,13 @@ public class GPUSkinningSamplerEditor : Editor
     private void CalculateBoundsAuto()
     {
         Matrix4x4[] matrices = anim.clips[0].frames[0].matrices;
+        Matrix4x4 rootMotionInv = anim.clips[0].rootMotionEnabled ? matrices[anim.rootBoneIndex].inverse : Matrix4x4.identity;
         GPUSkinningBone[] bones = anim.bones;
         Vector3 min = Vector3.one * 9999;
         Vector3 max = min * -1;
-        for(int i = 0; i < bones.Length; ++i)
+        for (int i = 0; i < bones.Length; ++i)
         {
-            Vector4 pos = (matrices[i] * bones[i].bindpose.inverse) * new Vector4(0, 0, 0, 1);
+            Vector4 pos = (rootMotionInv * matrices[i] * bones[i].bindpose.inverse) * new Vector4(0, 0, 0, 1);
             min.x = Mathf.Min(min.x, pos.x);
             min.y = Mathf.Min(min.y, pos.y);
             min.z = Mathf.Min(min.z, pos.z);
@@ -900,8 +1071,24 @@ public class GPUSkinningSamplerEditor : Editor
         }
     }
 
+    private void ApplySamplerModification(GPUSkinningSampler sampler)
+    {
+        if(sampler != null)
+        {
+            EditorUtility.SetDirty(sampler);
+            EditorUtility.SetDirty(sampler.gameObject);
+            EditorSceneManager.SaveOpenScenes();
+        }
+    }
+
     private void UpdateHandler()
     {
+        if(preview != null && EditorApplication.isPlaying)
+        {
+            DestroyPreview();
+            return;
+        }
+
         GPUSkinningSampler sampler = target as GPUSkinningSampler;
 
         if (EditorApplication.isCompiling)
@@ -1083,6 +1270,8 @@ public class GPUSkinningSamplerEditor : Editor
 
         isBoundsFoldout = GetEditorPrefsBool("isBoundsFoldout", true);
         isJointsFoldout = GetEditorPrefsBool("isJointsFoldout", true);
+        isRootMotionFoldout = GetEditorPrefsBool("isRootMotionFoldout", true);
+        isLODFoldout = GetEditorPrefsBool("isLODFoldout", true);
 
         rootMotionEnabled = true;
     }
