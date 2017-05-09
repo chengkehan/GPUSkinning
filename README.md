@@ -1,5 +1,15 @@
 ## GPUSkinning to improve performance.
 
+### [v0.2.2 release](https://github.com/chengkehan/GPUSkinning/releases)
+
+* Animation Blend
+
+* Level of Detail
+
+* Optimization
+
+* Crowd Example Scene
+
 ### [v0.2.1 release](https://github.com/chengkehan/GPUSkinning/releases)
 
 * Tag v0.2.1
