@@ -54,7 +54,9 @@ Features:
 
 * New GPUSkinning api.
 
-### [v0.1-alpha](https://github.com/chengkehan/GPUSkinning/tree/v0.1-alpha)
+### [v0.1-alpha](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.1-alpha)
+
+* [Tag v0.1-alpha](https://github.com/chengkehan/GPUSkinning/tree/v0.1-alpha)
 
 _Experimental Version.This version is not for production use, just to verify feasibility of idea._
 
