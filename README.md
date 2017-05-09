@@ -1,6 +1,10 @@
 ## GPUSkinning to improve performance.
 
-### [v0.2.2 release](https://github.com/chengkehan/GPUSkinning/releases)
+### [v0.2.2 release](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.2)
+
+* [Tag v0.2.2](https://github.com/chengkehan/GPUSkinning/tree/v0.2.2)
+
+Features:
 
 * Animation Blend
 
@@ -10,13 +14,15 @@
 
 * Crowd Example Scene
 
-### [v0.2.1 release](https://github.com/chengkehan/GPUSkinning/releases)
+### [v0.2.1 release](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.1)
 
-* Tag v0.2.1
+* [Tag v0.2.1](https://github.com/chengkehan/GPUSkinning/tree/v0.2.1)
 
-* [Document](Assets/GPUSkinning/Document/Document.pdf)
+* [v0.2.1p1](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.1p1)
 
-Completed:
+* [v0.2.1p2](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.1p2)
+
+Features:
 
 * Memory Optimization
 
@@ -34,31 +40,11 @@ Deferred:
 
 * Level of Detail
 
-### [v0.2.1 dev](https://github.com/chengkehan/GPUSkinning/tree/v0.2.1-dev)
+### [v0.2 release](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2)
 
-TODO: More Features
+* [Tag v0.2](https://github.com/chengkehan/GPUSkinning/tree/v0.2)
 
-* Memory Optimization
-
-* Individual Difference Animation
-
-* GPU Instancing
-
-* Skinning Instancing
-
-* Root Bone Animation
-
-* Animation Blend
-
-### [v0.2 release](https://github.com/chengkehan/GPUSkinning/releases)
-
-* Tag v0.2
-
-* [Document](Assets/GPUSkinning/Document/Document.pdf)
-
-### [v0.2 dev](https://github.com/chengkehan/GPUSkinning/tree/v0.2-dev)
-
-TODO: 
+Features:
 
 * No hard-code. 
 
