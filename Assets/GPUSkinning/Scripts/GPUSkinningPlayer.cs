@@ -55,7 +55,7 @@ public class GPUSkinningPlayer
     {
         get
         {
-            return cullingMode;
+            return Application.isPlaying ? cullingMode : GPUSKinningCullingMode.AlwaysAnimate;
         }
         set
         {
@@ -367,9 +367,8 @@ public class GPUSkinningPlayer
         }
 
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
-        if (!Application.isPlaying || 
-            cullingMode == GPUSKinningCullingMode.AlwaysAnimate || 
-            visible)
+        if (Visible || 
+            CullingMode == GPUSKinningCullingMode.AlwaysAnimate)
         {
             res.Update(deltaTime, currMtrl);
             res.UpdatePlayingData(
@@ -382,7 +381,7 @@ public class GPUSkinningPlayer
 
         if (playingClip.rootMotionEnabled && rootMotionEnabled && frameIndex != rootMotionFrameIndex)
         {
-            if (!Application.isPlaying || cullingMode != GPUSKinningCullingMode.CullCompletely)
+            if (CullingMode != GPUSKinningCullingMode.CullCompletely)
             {
                 rootMotionFrameIndex = frameIndex;
                 DoRootMotion(frame_crossFade, 1 - blend_crossFade, false);
