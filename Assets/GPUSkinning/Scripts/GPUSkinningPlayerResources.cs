@@ -42,6 +42,10 @@ public class GPUSkinningPlayerResources
         {
             return time;
         }
+        set
+        {
+            time = value;
+        }
     }
 
     private static int shaderPropID_GPUSkinning_TextureMatrix = -1;

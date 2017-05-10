@@ -19,4 +19,6 @@ public class GPUSkinningClip
     public bool rootMotionEnabled = false;
 
     public bool individualDifferenceEnabled = false;
+
+    public GPUSkinningAnimEvent[] events = null;
 }

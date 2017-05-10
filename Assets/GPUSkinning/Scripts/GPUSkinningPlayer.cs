@@ -168,6 +168,32 @@ public class GPUSkinningPlayer
                 return (float)GetFrameIndex() / (float)((int)(playingClip.length * playingClip.fps) - 1);
             }
         }
+        set
+        {
+            if(playingClip != null)
+            {
+                float v = Mathf.Clamp01(value);
+                if(WrapMode == GPUSkinningWrapMode.Once)
+                {
+                    this.time = v * playingClip.length;
+                }
+                else if(WrapMode == GPUSkinningWrapMode.Loop)
+                {
+                    if(playingClip.individualDifferenceEnabled)
+                    {
+                        res.Time = playingClip.length +  v * playingClip.length - this.timeDiff;
+                    }
+                    else
+                    {
+                        res.Time = v * playingClip.length;
+                    }
+                }
+                else
+                {
+                    throw new System.NotImplementedException();
+                }
+            }
+        }
     }
 
     public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningPlayerResources res)
