@@ -560,6 +560,7 @@ public class GPUSkinningSamplerEditor : Editor
 
     private bool animEvent_dragging = false;
     private int animEvent_dragging_index = -1;
+    private int animEvent_edit_index = -1;
     private void OnGUI_AnimEvents(Rect rect)
     {
         rect.y += 30;
@@ -597,7 +598,10 @@ public class GPUSkinningSamplerEditor : Editor
             for (int i = 0; i < clip.events.Length; ++i)
             {
                 GPUSkinningAnimEvent evt = clip.events[i];
-                Rect thumbRect = OnGUI_AnimEvents_DrawThumb(rect, evt.normalizedTime, animEvent_dragging && animEvent_dragging_index == i);
+                Rect thumbRect = OnGUI_AnimEvents_DrawThumb(rect, evt.normalizedTime, (animEvent_dragging && animEvent_dragging_index == i) || animEvent_edit_index == i);
+                Rect thumbLabelRect = thumbRect; thumbLabelRect.y += 20;
+                thumbLabelRect.width = 400;
+                EditorGUI.LabelField(thumbLabelRect, evt.eventId.ToString());
                 if(thumbRect.Contains(mousePos) && e.type == EventType.MouseDown)
                 {
                     if (e.control)
@@ -608,11 +612,13 @@ public class GPUSkinningSamplerEditor : Editor
                         ApplyAnimModification();
                         --i;
                         OnGUI_AnimTimeline_PlayerUpdate();
+                        animEvent_edit_index = -1;
                     }
                     else
                     {
                         animEvent_dragging = true;
                         animEvent_dragging_index = i;
+                        animEvent_edit_index = i;
                     }
                 }
             }
@@ -622,7 +628,11 @@ public class GPUSkinningSamplerEditor : Editor
         {
             if(e.type == EventType.MouseDown && !e.control && !animEvent_dragging)
             {
-                List<GPUSkinningAnimEvent> newEvents = new List<GPUSkinningAnimEvent>(clip.events);
+                List<GPUSkinningAnimEvent> newEvents = new List<GPUSkinningAnimEvent>();
+                if(clip.events != null)
+                {
+                    newEvents.AddRange(clip.events);
+                }
                 GPUSkinningAnimEvent newEvent = new GPUSkinningAnimEvent();
                 newEvents.Add(newEvent);
                 newEvent.normalizedTime = OnGUI_AnimTimeline_MouseDown_NormalizedTime(mousePos, rect);
@@ -630,6 +640,26 @@ public class GPUSkinningSamplerEditor : Editor
                 ApplyAnimModification();
                 OnGUI_AnimTimeline_PlayerUpdate();
             }
+        }
+
+        if(animEvent_edit_index != -1 && clip.events != null)
+        {
+            OnGUI_AnimEvents_Edit(rect, clip.events[animEvent_edit_index]);
+        }
+    }
+
+    private void OnGUI_AnimEvents_Edit(Rect bgRect, GPUSkinningAnimEvent evt)
+    {
+        Rect rect = bgRect;
+        rect.y += 30;
+        EditorGUI.PrefixLabel(rect, new GUIContent("EventId:"));
+        rect.x += 80;
+        rect.width -= 80;
+        EditorGUI.BeginChangeCheck();
+        evt.eventId = EditorGUI.IntField(rect, evt.eventId);
+        if(EditorGUI.EndChangeCheck())
+        {
+            ApplyAnimModification();
         }
     }
 
