@@ -424,7 +424,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             if (rt != null)
             {
-                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 50);
+                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 512);
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.FlexibleSpace();
@@ -485,7 +485,7 @@ public class GPUSkinningSamplerEditor : Editor
             BeginBox();
             {
                 EditorGUILayout.Space();
-                if(isAnimEventsFoldout) EditorGUILayout.BeginVertical(GUILayout.Height(100));
+                if(isAnimEventsFoldout) EditorGUILayout.BeginVertical(GUILayout.Height(110));
                 else EditorGUILayout.BeginVertical();
                 {
                     EditorGUILayout.BeginHorizontal();
@@ -599,9 +599,11 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 GPUSkinningAnimEvent evt = clip.events[i];
                 Rect thumbRect = OnGUI_AnimEvents_DrawThumb(rect, evt.normalizedTime, (animEvent_dragging && animEvent_dragging_index == i) || animEvent_edit_index == i);
+
                 Rect thumbLabelRect = thumbRect; thumbLabelRect.y += 20;
                 thumbLabelRect.width = 400;
-                EditorGUI.LabelField(thumbLabelRect, evt.eventId.ToString());
+				EditorGUI.LabelField(thumbLabelRect, evt.eventId.ToString());
+
                 if(thumbRect.Contains(mousePos) && e.type == EventType.MouseDown)
                 {
                     if (e.control)
@@ -619,6 +621,7 @@ public class GPUSkinningSamplerEditor : Editor
                         animEvent_dragging = true;
                         animEvent_dragging_index = i;
                         animEvent_edit_index = i;
+						GUI.FocusControl(string.Empty);
                     }
                 }
             }
@@ -645,7 +648,17 @@ public class GPUSkinningSamplerEditor : Editor
         if(animEvent_edit_index != -1 && clip.events != null)
         {
             OnGUI_AnimEvents_Edit(rect, clip.events[animEvent_edit_index]);
+
+			Rect tipsRect = rect;
+			tipsRect.y += 50;
+			OnGUI_AnimEvents_Tips(tipsRect);
         }
+		else
+		{
+			Rect tipsRect = rect;
+			tipsRect.y += 30;
+			OnGUI_AnimEvents_Tips(tipsRect);
+		}
     }
 
     private void OnGUI_AnimEvents_Edit(Rect bgRect, GPUSkinningAnimEvent evt)
@@ -660,18 +673,24 @@ public class GPUSkinningSamplerEditor : Editor
         if(EditorGUI.EndChangeCheck())
         {
             ApplyAnimModification();
+			OnGUI_AnimTimeline_PlayerUpdate();
         }
     }
 
+	private void OnGUI_AnimEvents_Tips(Rect bgRect)
+	{
+		EditorGUI.HelpBox(bgRect, "Ctrl+Click to Delete", MessageType.None);
+	}
+
     private Rect OnGUI_AnimEvents_DrawThumb(Rect bgRect, float value01, bool isDragging)
     {
-        Color c = isDragging ? new Color(0.2f, 0.2f, 0.2f, 0.6f) : new Color(0, 0, 0, 0.5f);
+        Color c = isDragging ? new Color(0, 0.6f, 0.6f, 0.6f) : new Color(0, 0, 0, 0.5f);
         Color bc = new Color(0, 0, 0, 0.3f);
 
         Rect rectThumb = bgRect;
         rectThumb.y -= 4;
         rectThumb.height += 8;
-        rectThumb.width = 8;
+        rectThumb.width = 10;
         rectThumb.x = bgRect.x + bgRect.width * value01 - rectThumb.width * 0.5f;
         EditorGUI.DrawRect(rectThumb, c);
 
