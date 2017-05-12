@@ -34,6 +34,10 @@ public class GPUSkinningPlayer
 
     private MaterialPropertyBlock mpb = null;
 
+    private GPUSkinningBetterList<GPUSkinningAnimEvent> events = null;
+
+    private GPUSkinningBetterList<GPUSkinningAnimEvent> events_corssfade = null;
+
     private int rootMotionFrameIndex = -1;
 
     private bool rootMotionEnabled = false;
@@ -219,6 +223,9 @@ public class GPUSkinningPlayer
 
         mpb = new MaterialPropertyBlock();
 
+        events = new GPUSkinningBetterList<GPUSkinningAnimEvent>(10);
+        events_corssfade = new GPUSkinningBetterList<GPUSkinningAnimEvent>(10);
+
         ConstructJoints();
     }
 
@@ -311,6 +318,15 @@ public class GPUSkinningPlayer
         Update_Internal(timeDelta);
     }
 
+    private void FillEvents(GPUSkinningClip clip, GPUSkinningBetterList<GPUSkinningAnimEvent> events)
+    {
+        events.Clear();
+        if(clip != null && clip.events != null && clip.events.Length > 0)
+        {
+            events.AddRange(clip.events);
+        }
+    }
+
     private void SetNewPlayingClip(GPUSkinningClip clip)
     {
         lastPlayedClip = playingClip;
@@ -371,6 +387,36 @@ public class GPUSkinningPlayer
         lastPlayedTime += timeDelta;
     }
 
+    private void UpdateEvents(GPUSkinningClip playingClip, int playingFrameIndex, GPUSkinningClip corssFadeClip, int crossFadeFrameIndex)
+    {
+        UpdateClipEvent(playingClip, playingFrameIndex, events);
+        UpdateClipEvent(corssFadeClip, crossFadeFrameIndex, events_corssfade);
+    }
+
+    private void UpdateClipEvent(GPUSkinningClip clip, int frameIndex, GPUSkinningBetterList<GPUSkinningAnimEvent> events)
+    {
+        if(clip == null)
+        {
+            return;
+        }
+
+        if(events == null || events.size == 0)
+        {
+            return;
+        }
+
+        //float normalizedTime = (float)frameIndex / clip.frames.Length;
+        //GPUSkinningAnimEvent evt = events.Peek();
+        //if(evt != null)
+        //{
+        //    if(normalizedTime > evt.normalizedTime)
+        //    {
+        //        Debug.LogError("event:" + evt.eventId);
+        //        events.Pop();
+        //    }
+        //}
+    }
+
     private void UpdateMaterial(float deltaTime, GPUSkinningMaterial currMtrl)
     {
         int frameIndex = GetFrameIndex();
@@ -415,6 +461,8 @@ public class GPUSkinningPlayer
                 DoRootMotion(frame, blend_crossFade, true);
             }
         }
+
+        UpdateEvents(playingClip, frameIndex, frame_crossFade == null ? null : lastPlayedClip, frameIndex_crossFade);
     }
 
     private GPUSkinningMaterial GetCurrentMaterial()

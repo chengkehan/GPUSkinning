@@ -424,7 +424,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             if (rt != null)
             {
-                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 512);
+                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 80);
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.FlexibleSpace();
@@ -485,7 +485,7 @@ public class GPUSkinningSamplerEditor : Editor
             BeginBox();
             {
                 EditorGUILayout.Space();
-                if(isAnimEventsFoldout) EditorGUILayout.BeginVertical(GUILayout.Height(110));
+                if(isAnimEventsFoldout) EditorGUILayout.BeginVertical(GUILayout.Height(120));
                 else EditorGUILayout.BeginVertical();
                 {
                     EditorGUILayout.BeginHorizontal();
@@ -679,7 +679,8 @@ public class GPUSkinningSamplerEditor : Editor
 
 	private void OnGUI_AnimEvents_Tips(Rect bgRect)
 	{
-		EditorGUI.HelpBox(bgRect, "Ctrl+Click to Delete", MessageType.None);
+        bgRect.height *= 1.8f;
+		EditorGUI.HelpBox(bgRect, "Click to Add Event \nCtrl + Click to Delete", MessageType.None);
 	}
 
     private Rect OnGUI_AnimEvents_DrawThumb(Rect bgRect, float value01, bool isDragging)
@@ -1302,10 +1303,24 @@ public class GPUSkinningSamplerEditor : Editor
         bounds.max = max;
     }
 
+    private void SortAnimEvents(GPUSkinningAnimation anim)
+    {
+        foreach(GPUSkinningClip clip in anim.clips)
+        {
+            if(clip.events == null || clip.events.Length == 0)
+            {
+                continue;
+            }
+
+            System.Array.Sort(clip.events);
+        }
+    }
+
     private void ApplyAnimModification()
     {
         if(preview != null && anim != null)
         {
+            SortAnimEvents(anim);
             EditorUtility.SetDirty(anim);
             AssetDatabase.Refresh();
             AssetDatabase.SaveAssets();

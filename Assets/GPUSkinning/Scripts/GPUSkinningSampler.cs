@@ -225,12 +225,12 @@ public class GPUSkinningSampler : MonoBehaviour
         gpuSkinningAnimation.rootBoneIndex = 0;
 
         int numClips = gpuSkinningAnimation.clips == null ? 0 : gpuSkinningAnimation.clips.Length;
-        int clipIndex = -1;
+        int overrideClipIndex = -1;
         for (int i = 0; i < numClips; ++i)
         {
             if (gpuSkinningAnimation.clips[i].name == animClip.name)
             {
-                clipIndex = i;
+                overrideClipIndex = i;
                 break;
             }
         }
@@ -255,7 +255,7 @@ public class GPUSkinningSampler : MonoBehaviour
         }
         else
         {
-            if (clipIndex == -1)
+            if (overrideClipIndex == -1)
             {
                 List<GPUSkinningClip> clips = new List<GPUSkinningClip>(gpuSkinningAnimation.clips);
                 clips.Add(gpuSkinningClip);
@@ -263,7 +263,9 @@ public class GPUSkinningSampler : MonoBehaviour
             }
             else
             {
-                gpuSkinningAnimation.clips[clipIndex] = gpuSkinningClip;
+                GPUSkinningClip overridedClip = gpuSkinningAnimation.clips[overrideClipIndex];
+                RestoreCustomClipData(overridedClip, gpuSkinningClip);
+                gpuSkinningAnimation.clips[overrideClipIndex] = gpuSkinningClip;
             }
         }
 
@@ -275,6 +277,21 @@ public class GPUSkinningSampler : MonoBehaviour
     private int GetClipFPS(AnimationClip clip, int clipIndex)
     {
         return fpsList[clipIndex] == 0 ? (int)clip.frameRate : fpsList[clipIndex];
+    }
+
+    private void RestoreCustomClipData(GPUSkinningClip src, GPUSkinningClip dest)
+    {
+        if(src.events != null)
+        {
+            dest.events = new GPUSkinningAnimEvent[src.events.Length];
+            for(int i = 0; i < dest.events.Length; ++i)
+            {
+                GPUSkinningAnimEvent evt = new GPUSkinningAnimEvent();
+                evt.eventId = src.events[i].eventId;
+                evt.normalizedTime = src.events[i].normalizedTime;
+                dest.events[i] = evt;
+            }
+        }
     }
 
     private void RestoreCustomBoneData(GPUSkinningBone[] bonesOrig, GPUSkinningBone[] bonesNew)

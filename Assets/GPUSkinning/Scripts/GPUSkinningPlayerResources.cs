@@ -25,7 +25,7 @@ public class GPUSkinningPlayerResources
 
     private CullingGroup cullingGroup = null;
 
-    private GPUSkinningBetterList<BoundingSphere> cullingBounds = new GPUSkinningBetterList<BoundingSphere>();
+    private GPUSkinningBetterList<BoundingSphere> cullingBounds = new GPUSkinningBetterList<BoundingSphere>(100);
 
     private GPUSkinningMaterial[] mtrls = null;
 
