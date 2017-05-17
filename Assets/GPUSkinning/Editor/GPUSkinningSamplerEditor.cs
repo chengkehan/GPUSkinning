@@ -64,6 +64,8 @@ public class GPUSkinningSamplerEditor : Editor
 
     private Material gridMtrl = null;
 
+    private bool guiEnabled = false;
+
     public override void OnInspectorGUI ()
 	{
 		GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -86,56 +88,62 @@ public class GPUSkinningSamplerEditor : Editor
 
     private void OnGUI_Sampler(GPUSkinningSampler sampler)
     {
+        guiEnabled = !Application.isPlaying;
+
         BeginBox();
         {
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("animName"), new GUIContent("Animation Name"));
+            GUI.enabled = guiEnabled;
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("animName"), new GUIContent("Animation Name"));
 
-            GUI.enabled = false;
-            EditorGUILayout.Space();
-            EditorGUILayout.BeginHorizontal();
-            {
-                GUILayout.FlexibleSpace();
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("anim"), new GUIContent());
+                GUI.enabled = false;
+                EditorGUILayout.Space();
+                EditorGUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("anim"), new GUIContent());
+                }
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("savedMesh"), new GUIContent());
+                }
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("savedMtrl"), new GUIContent());
+                }
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("savedShader"), new GUIContent());
+                }
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("texture"), new GUIContent());
+                }
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.Space();
+                GUI.enabled = true && guiEnabled;
+
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("skinQuality"), new GUIContent("Quality"));
+
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("shaderType"), new GUIContent("Shader Type"));
+
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("rootBoneTransform"), new GUIContent("Root Bone"));
+
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("createNewShader"), new GUIContent("New Shader"));
+
+                OnGUI_AnimClips(sampler);
+
+                OnGUI_LOD(sampler);
             }
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.BeginHorizontal();
-            {
-                GUILayout.FlexibleSpace();
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("savedMesh"), new GUIContent());
-            }
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.BeginHorizontal();
-            {
-                GUILayout.FlexibleSpace();
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("savedMtrl"), new GUIContent());
-            }
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.BeginHorizontal();
-            {
-                GUILayout.FlexibleSpace();
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("savedShader"), new GUIContent());
-            }
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.BeginHorizontal();
-            {
-                GUILayout.FlexibleSpace();
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("texture"), new GUIContent());
-            }
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
             GUI.enabled = true;
-
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("skinQuality"), new GUIContent("Quality"));
-
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("shaderType"), new GUIContent("Shader Type"));
-
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("rootBoneTransform"), new GUIContent("Root Bone"));
-
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("createNewShader"), new GUIContent("New Shader"));
-
-            OnGUI_AnimClips(sampler);
-
-            OnGUI_LOD(sampler);
 
             if (GUILayout.Button("Step1: Play Scene"))
             {
@@ -147,10 +155,17 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 if (GUILayout.Button("Step2: Start Sample"))
                 {
-                    DestroyPreview();
-                    LockInspector(true);
-                    sampler.BeginSample();
-                    sampler.StartSample();
+                    if (!LodDistancesIsLegal(sampler))
+                    {
+                        GPUSkinningSampler.ShowDialog("Errors must be fixed before sampling.");
+                    }
+                    else
+                    {
+                        DestroyPreview();
+                        LockInspector(true);
+                        sampler.BeginSample();
+                        sampler.StartSample();
+                    }
                 }
             }
         }
@@ -219,7 +234,7 @@ public class GPUSkinningSamplerEditor : Editor
 
             EditorGUILayout.PrefixLabel("Sample Clips");
 
-            GUI.enabled = sampler.IsAnimatorOrAnimation();
+            GUI.enabled = sampler.IsAnimatorOrAnimation() && guiEnabled;
             int no = animClips_array_size_sp.intValue;
             int no2 = wrapModes_array_size_sp.intValue;
             int no3 = fpsList_array_size_sp.intValue;
@@ -262,7 +277,7 @@ public class GPUSkinningSamplerEditor : Editor
                 }
             }
             EditorGUILayout.EndHorizontal();
-            GUI.enabled = true;
+            GUI.enabled = true && guiEnabled;
 
             EditorGUILayout.BeginHorizontal();
             {
@@ -322,9 +337,9 @@ public class GPUSkinningSamplerEditor : Editor
                                 }
                                 if(j == 2)
                                 {
-                                    GUI.enabled = sampler.IsAnimatorOrAnimation();
+                                    GUI.enabled = sampler.IsAnimatorOrAnimation() && guiEnabled;
                                     EditorGUILayout.PropertyField(prop, new GUIContent());
-                                    GUI.enabled = true;
+                                    GUI.enabled = true && guiEnabled;
                                 }
                                 if(j == 3)
                                 {
@@ -338,13 +353,13 @@ public class GPUSkinningSamplerEditor : Editor
                                 {
                                     EditorGUILayout.BeginHorizontal();
                                     GUILayout.FlexibleSpace();
-                                    GUI.enabled = prop2.enumValueIndex == 1;
+                                    GUI.enabled = prop2.enumValueIndex == 1 && guiEnabled;
                                     prop5.boolValue = GUILayout.Toggle(prop5.boolValue, string.Empty);
                                     if(!GUI.enabled)
                                     {
                                         prop5.boolValue = false;
                                     }
-                                    GUI.enabled = true;
+                                    GUI.enabled = true && guiEnabled;
                                     GUILayout.FlexibleSpace();
                                     EditorGUILayout.EndHorizontal();
                                 }
@@ -504,9 +519,9 @@ public class GPUSkinningSamplerEditor : Editor
                         if (isRootMotionFoldout)
                         {
                             EditorGUI.BeginChangeCheck();
-                            GUI.enabled = anim.clips[previewClipIndex].rootMotionEnabled;
+                            GUI.enabled = anim.clips[previewClipIndex].rootMotionEnabled && guiEnabled;
                             rootMotionEnabled = EditorGUILayout.Toggle("Apply Root Motion", rootMotionEnabled);
-                            GUI.enabled = true;
+                            GUI.enabled = true && guiEnabled;
                             if (EditorGUI.EndChangeCheck())
                             {
                                 preview.Player.RootMotionEnabled = rootMotionEnabled;
@@ -720,11 +735,43 @@ public class GPUSkinningSamplerEditor : Editor
                 }
                 EditorGUILayout.EndHorizontal();
             }
+
+            OnGUI_LODDistancesChecking(sampler);
         }
         EditorGUILayout.EndVertical();
 
         EditorGUILayout.Space();
         EditorGUILayout.PropertyField(serializedObject.FindProperty("sphereRadius"));
+    }
+
+    private void OnGUI_LODDistancesChecking(GPUSkinningSampler sampler)
+    {
+        if(!LodDistancesIsLegal(sampler))
+        {
+            EditorGUILayout.HelpBox("Error: LOD distances must be sorted in ascending order.", MessageType.Error);
+        }
+    }
+
+    private bool LodDistancesIsLegal(GPUSkinningSampler sampler)
+    {
+        if(sampler.lodDistances == null)
+        {
+            return true;
+        }
+
+        float value = float.MinValue;
+        bool isLegal = true;
+        for (int i = 0; i < sampler.lodDistances.Length; ++i)
+        {
+            if (sampler.lodDistances[i] <= value)
+            {
+                isLegal = false;
+                break;
+            }
+            value = sampler.lodDistances[i];
+        }
+
+        return isLegal;
     }
 
     private void OnGUI_Joints()

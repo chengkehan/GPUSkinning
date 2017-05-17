@@ -861,7 +861,7 @@ public class GPUSkinningSampler : MonoBehaviour
         return System.Array.IndexOf(gpuSkinningAnimation.bones, bone);
     }
 
-	private void ShowDialog(string msg)
+	public static void ShowDialog(string msg)
 	{
 		EditorUtility.DisplayDialog("GPUSkinning", msg, "OK");
 	}
