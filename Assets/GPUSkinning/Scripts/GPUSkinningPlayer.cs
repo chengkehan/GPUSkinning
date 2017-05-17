@@ -531,6 +531,11 @@ public class GPUSkinningPlayer
             if (jointTransform != null)
             {
                 Matrix4x4 jointMatrix = frame.matrices[joint.BoneIndex] * bones[joint.BoneIndex].BindposeInv;
+                if(playingClip.rootMotionEnabled && rootMotionEnabled)
+                {
+                    jointMatrix = frame.RootMotionInv(res.anim.rootBoneIndex) * jointMatrix;
+                }
+
                 jointTransform.localPosition = jointMatrix.MultiplyPoint(Vector3.zero);
 
                 Vector3 jointDir = jointMatrix.MultiplyVector(Vector3.right);
