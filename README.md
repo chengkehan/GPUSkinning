@@ -4,6 +4,8 @@
 
 * [v0.2.2p1](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.2p1)
 
+* [v0.2.2p2](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.2p2)
+
 Features:
 
 * Animation Blend
