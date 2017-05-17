@@ -530,6 +530,8 @@ public class GPUSkinningPlayer
             Transform jointTransform = Application.isPlaying ? joint.Transform : joint.transform;
             if (jointTransform != null)
             {
+                // TODO: Update Joint when Animation Blend
+
                 Matrix4x4 jointMatrix = frame.matrices[joint.BoneIndex] * bones[joint.BoneIndex].BindposeInv;
                 if(playingClip.rootMotionEnabled && rootMotionEnabled)
                 {
