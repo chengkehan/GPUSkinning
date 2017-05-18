@@ -244,11 +244,6 @@ public class GPUSkinningSampler : MonoBehaviour
         gpuSkinningClip.rootMotionEnabled = rootMotionEnabled[samplingClipIndex];
         gpuSkinningClip.individualDifferenceEnabled = individualDifferenceEnabled[samplingClipIndex];
 
-        if(animator != null)
-        {
-            animator.applyRootMotion = gpuSkinningClip.rootMotionEnabled;
-        }
-
         if(gpuSkinningAnimation.clips == null)
         {
             gpuSkinningAnimation.clips = new GPUSkinningClip[] { gpuSkinningClip };
@@ -268,6 +263,7 @@ public class GPUSkinningSampler : MonoBehaviour
         }
 
         SetCurrentAnimationClip();
+        PrepareRecordAnimator();
 
         isSampling = true;
     }
@@ -300,6 +296,25 @@ public class GPUSkinningSampler : MonoBehaviour
             string boneHierarchyPath = GPUSkinningUtil.BoneHierarchyPath(bones, i);
             string guid = GPUSkinningUtil.MD5(boneHierarchyPath);
             bones[i].guid = guid;
+        }
+    }
+
+    private void PrepareRecordAnimator()
+    {
+        if (animator != null)
+        {
+            int numFrames = (int)(gpuSkinningClip.fps * gpuSkinningClip.length);
+
+            animator.applyRootMotion = gpuSkinningClip.rootMotionEnabled;
+            animator.Rebind();
+            animator.recorderStartTime = 0;
+            animator.StartRecording(numFrames);
+            for (int i = 0; i < numFrames; ++i)
+            {
+                animator.Update(1.0f / gpuSkinningClip.fps);
+            }
+            animator.StopRecording();
+            animator.StartPlayback();
         }
     }
 
@@ -641,6 +656,11 @@ public class GPUSkinningSampler : MonoBehaviour
 
         if (samplingFrameIndex >= totalFrams)
         {
+            if(animator != null)
+            {
+                animator.StopPlayback();
+            }
+
             string savePath = null;
             if (anim == null)
             {
@@ -707,9 +727,8 @@ public class GPUSkinningSampler : MonoBehaviour
         frame.matrices = new Matrix4x4[gpuSkinningAnimation.bones.Length];
         if (animation == null)
         {
-            animator.speed = 0;
-            animator.SetTime(time);
-            animator.speed = 1;
+            animator.playbackTime = time;
+            animator.Update(0);
         }
         else
         {
