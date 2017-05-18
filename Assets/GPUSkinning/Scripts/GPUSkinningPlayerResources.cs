@@ -276,6 +276,7 @@ public class GPUSkinningPlayerResources
             mtrls[i] = new GPUSkinningMaterial() { material = new Material(originalMaterial) };
             mtrls[i].material.name = keywords[i];
             mtrls[i].material.hideFlags = hideFlags;
+            mtrls[i].material.enableInstancing = true; // enable instancing in Unity 5.6
             EnableKeywords(i, mtrls[i]);
         }
     }
