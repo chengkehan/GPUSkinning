@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 public class GPUSkinningPlayer
 {
+    public delegate void OnAnimEvent(GPUSkinningPlayer player, int eventId);
+
     private GameObject go = null;
 
     private Transform transform = null;
@@ -35,6 +37,8 @@ public class GPUSkinningPlayer
     private MaterialPropertyBlock mpb = null;
 
     private int rootMotionFrameIndex = -1;
+
+    public event OnAnimEvent onAnimEvent;
 
     private bool rootMotionEnabled = false;
     public bool RootMotionEnabled
@@ -397,9 +401,9 @@ public class GPUSkinningPlayer
         int numEvents = events.Length;
         for(int i = 0; i < numEvents; ++i)
         {
-            if(events[i].frameIndex == frameIndex)
+            if(events[i].frameIndex == frameIndex && onAnimEvent != null)
             {
-                Debug.LogError("Dispatch Event:" + events[i].eventId);
+                onAnimEvent(this, events[i].eventId);
                 break;
             }
         }
