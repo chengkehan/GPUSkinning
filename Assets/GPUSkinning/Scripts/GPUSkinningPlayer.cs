@@ -34,10 +34,6 @@ public class GPUSkinningPlayer
 
     private MaterialPropertyBlock mpb = null;
 
-    private GPUSkinningBetterList<GPUSkinningAnimEvent> events = null;
-
-    private GPUSkinningBetterList<GPUSkinningAnimEvent> events_corssfade = null;
-
     private int rootMotionFrameIndex = -1;
 
     private bool rootMotionEnabled = false;
@@ -223,9 +219,6 @@ public class GPUSkinningPlayer
 
         mpb = new MaterialPropertyBlock();
 
-        events = new GPUSkinningBetterList<GPUSkinningAnimEvent>(10);
-        events_corssfade = new GPUSkinningBetterList<GPUSkinningAnimEvent>(10);
-
         ConstructJoints();
     }
 
@@ -389,32 +382,27 @@ public class GPUSkinningPlayer
 
     private void UpdateEvents(GPUSkinningClip playingClip, int playingFrameIndex, GPUSkinningClip corssFadeClip, int crossFadeFrameIndex)
     {
-        UpdateClipEvent(playingClip, playingFrameIndex, events);
-        UpdateClipEvent(corssFadeClip, crossFadeFrameIndex, events_corssfade);
+        UpdateClipEvent(playingClip, playingFrameIndex);
+        UpdateClipEvent(corssFadeClip, crossFadeFrameIndex);
     }
 
-    private void UpdateClipEvent(GPUSkinningClip clip, int frameIndex, GPUSkinningBetterList<GPUSkinningAnimEvent> events)
+    private void UpdateClipEvent(GPUSkinningClip clip, int frameIndex)
     {
-        if(clip == null)
+        if(clip == null || clip.events == null || clip.events.Length == 0)
         {
             return;
         }
 
-        if(events == null || events.size == 0)
+        GPUSkinningAnimEvent[] events = clip.events;
+        int numEvents = events.Length;
+        for(int i = 0; i < numEvents; ++i)
         {
-            return;
+            if(events[i].frameIndex == frameIndex)
+            {
+                Debug.LogError("Dispatch Event:" + events[i].eventId);
+                break;
+            }
         }
-
-        //float normalizedTime = (float)frameIndex / clip.frames.Length;
-        //GPUSkinningAnimEvent evt = events.Peek();
-        //if(evt != null)
-        //{
-        //    if(normalizedTime > evt.normalizedTime)
-        //    {
-        //        Debug.LogError("event:" + evt.eventId);
-        //        events.Pop();
-        //    }
-        //}
     }
 
     private void UpdateMaterial(float deltaTime, GPUSkinningMaterial currMtrl)

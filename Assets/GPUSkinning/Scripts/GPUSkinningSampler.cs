@@ -283,12 +283,13 @@ public class GPUSkinningSampler : MonoBehaviour
     {
         if(src.events != null)
         {
+            int totalFrames = (int)(dest.length * dest.fps);
             dest.events = new GPUSkinningAnimEvent[src.events.Length];
             for(int i = 0; i < dest.events.Length; ++i)
             {
                 GPUSkinningAnimEvent evt = new GPUSkinningAnimEvent();
                 evt.eventId = src.events[i].eventId;
-                evt.normalizedTime = src.events[i].normalizedTime;
+                evt.frameIndex = Mathf.Clamp(src.events[i].frameIndex, 0, totalFrames - 1);
                 dest.events[i] = evt;
             }
         }

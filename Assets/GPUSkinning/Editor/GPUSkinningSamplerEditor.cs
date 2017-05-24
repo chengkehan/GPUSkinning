@@ -592,13 +592,17 @@ public class GPUSkinningSamplerEditor : Editor
             if (e.type == EventType.MouseDrag && animEvent_dragging && animEvent_dragging_index != -1)
             {
                 float normalizedTime = OnGUI_AnimTimeline_MouseDown_NormalizedTime(mousePos, rect);
-                clip.events[animEvent_dragging_index].normalizedTime = normalizedTime;
+                clip.events[animEvent_dragging_index].frameIndex = GPUSkinningUtil.NormalizeTimeToFrameIndex(clip, normalizedTime);
             }
 
             for (int i = 0; i < clip.events.Length; ++i)
             {
                 GPUSkinningAnimEvent evt = clip.events[i];
-                Rect thumbRect = OnGUI_AnimEvents_DrawThumb(rect, evt.normalizedTime, (animEvent_dragging && animEvent_dragging_index == i) || animEvent_edit_index == i);
+                Rect thumbRect = OnGUI_AnimEvents_DrawThumb(
+                    rect, 
+                    GPUSkinningUtil.FrameIndexToNormalizedTime(clip, evt.frameIndex), 
+                    (animEvent_dragging && animEvent_dragging_index == i) || animEvent_edit_index == i
+                );
 
                 Rect thumbLabelRect = thumbRect; thumbLabelRect.y += 20;
                 thumbLabelRect.width = 400;
@@ -638,7 +642,8 @@ public class GPUSkinningSamplerEditor : Editor
                 }
                 GPUSkinningAnimEvent newEvent = new GPUSkinningAnimEvent();
                 newEvents.Add(newEvent);
-                newEvent.normalizedTime = OnGUI_AnimTimeline_MouseDown_NormalizedTime(mousePos, rect);
+                float normalizedTime = OnGUI_AnimTimeline_MouseDown_NormalizedTime(mousePos, rect);
+                newEvent.frameIndex = GPUSkinningUtil.NormalizeTimeToFrameIndex(clip, normalizedTime);
                 clip.events = newEvents.ToArray();
                 ApplyAnimModification();
                 OnGUI_AnimTimeline_PlayerUpdate();
