@@ -59,7 +59,7 @@ public class GPUSkinningPlayer
     {
         get
         {
-            return cullingMode;
+            return Application.isPlaying ? cullingMode : GPUSKinningCullingMode.AlwaysAnimate;
         }
         set
         {
@@ -431,9 +431,8 @@ public class GPUSkinningPlayer
         }
 
         GPUSkinningFrame frame = playingClip.frames[frameIndex];
-        if (!Application.isPlaying || 
-            cullingMode == GPUSKinningCullingMode.AlwaysAnimate || 
-            visible)
+        if (Visible || 
+            CullingMode == GPUSKinningCullingMode.AlwaysAnimate)
         {
             res.Update(deltaTime, currMtrl);
             res.UpdatePlayingData(
@@ -446,7 +445,7 @@ public class GPUSkinningPlayer
 
         if (playingClip.rootMotionEnabled && rootMotionEnabled && frameIndex != rootMotionFrameIndex)
         {
-            if (!Application.isPlaying || cullingMode != GPUSKinningCullingMode.CullCompletely)
+            if (CullingMode != GPUSKinningCullingMode.CullCompletely)
             {
                 rootMotionFrameIndex = frameIndex;
                 DoRootMotion(frame_crossFade, 1 - blend_crossFade, false);
@@ -597,7 +596,19 @@ public class GPUSkinningPlayer
             Transform jointTransform = Application.isPlaying ? joint.Transform : joint.transform;
             if (jointTransform != null)
             {
-                jointTransform.localPosition = (frame.matrices[joint.BoneIndex] * bones[joint.BoneIndex].BindposeInv).MultiplyPoint(Vector3.zero);
+                // TODO: Update Joint when Animation Blend
+
+                Matrix4x4 jointMatrix = frame.matrices[joint.BoneIndex] * bones[joint.BoneIndex].BindposeInv;
+                if(playingClip.rootMotionEnabled && rootMotionEnabled)
+                {
+                    jointMatrix = frame.RootMotionInv(res.anim.rootBoneIndex) * jointMatrix;
+                }
+
+                jointTransform.localPosition = jointMatrix.MultiplyPoint(Vector3.zero);
+
+                Vector3 jointDir = jointMatrix.MultiplyVector(Vector3.right);
+                Quaternion jointRotation = Quaternion.FromToRotation(Vector3.right, jointDir);
+                jointTransform.localRotation = jointRotation;
             }
             else
             {

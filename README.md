@@ -2,7 +2,11 @@
 
 ### [v0.2.2 release](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.2)
 
-* [Tag v0.2.2](https://github.com/chengkehan/GPUSkinning/tree/v0.2.2)
+* [v0.2.2p1](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.2p1)
+
+* [v0.2.2p2](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.2p2)
+
+* [v0.2.2p3](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.2p3)
 
 Features:
 
@@ -15,8 +19,6 @@ Features:
 * Crowd Example Scene
 
 ### [v0.2.1 release](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.1)
-
-* [Tag v0.2.1](https://github.com/chengkehan/GPUSkinning/tree/v0.2.1)
 
 * [v0.2.1p1](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.1p1)
 
@@ -42,8 +44,6 @@ Deferred:
 
 ### [v0.2 release](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2)
 
-* [Tag v0.2](https://github.com/chengkehan/GPUSkinning/tree/v0.2)
-
 Features:
 
 * No hard-code. 
@@ -55,8 +55,6 @@ Features:
 * New GPUSkinning api.
 
 ### [v0.1-alpha](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.1-alpha)
-
-* [Tag v0.1-alpha](https://github.com/chengkehan/GPUSkinning/tree/v0.1-alpha)
 
 _Experimental Version.This version is not for production use, just to verify feasibility of idea._
 
