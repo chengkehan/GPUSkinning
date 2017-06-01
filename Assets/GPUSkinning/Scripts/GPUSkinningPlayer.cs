@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 public class GPUSkinningPlayer
 {
+    public delegate void OnAnimEvent(GPUSkinningPlayer player, int eventId);
+
     private GameObject go = null;
 
     private Transform transform = null;
@@ -35,6 +37,8 @@ public class GPUSkinningPlayer
     private MaterialPropertyBlock mpb = null;
 
     private int rootMotionFrameIndex = -1;
+
+    public event OnAnimEvent onAnimEvent;
 
     private bool rootMotionEnabled = false;
     public bool RootMotionEnabled
@@ -168,6 +172,32 @@ public class GPUSkinningPlayer
                 return (float)GetFrameIndex() / (float)((int)(playingClip.length * playingClip.fps) - 1);
             }
         }
+        set
+        {
+            if(playingClip != null)
+            {
+                float v = Mathf.Clamp01(value);
+                if(WrapMode == GPUSkinningWrapMode.Once)
+                {
+                    this.time = v * playingClip.length;
+                }
+                else if(WrapMode == GPUSkinningWrapMode.Loop)
+                {
+                    if(playingClip.individualDifferenceEnabled)
+                    {
+                        res.Time = playingClip.length +  v * playingClip.length - this.timeDiff;
+                    }
+                    else
+                    {
+                        res.Time = v * playingClip.length;
+                    }
+                }
+                else
+                {
+                    throw new System.NotImplementedException();
+                }
+            }
+        }
     }
 
     public GPUSkinningPlayer(GameObject attachToThisGo, GPUSkinningPlayerResources res)
@@ -285,6 +315,15 @@ public class GPUSkinningPlayer
         Update_Internal(timeDelta);
     }
 
+    private void FillEvents(GPUSkinningClip clip, GPUSkinningBetterList<GPUSkinningAnimEvent> events)
+    {
+        events.Clear();
+        if(clip != null && clip.events != null && clip.events.Length > 0)
+        {
+            events.AddRange(clip.events);
+        }
+    }
+
     private void SetNewPlayingClip(GPUSkinningClip clip)
     {
         lastPlayedClip = playingClip;
@@ -345,6 +384,31 @@ public class GPUSkinningPlayer
         lastPlayedTime += timeDelta;
     }
 
+    private void UpdateEvents(GPUSkinningClip playingClip, int playingFrameIndex, GPUSkinningClip corssFadeClip, int crossFadeFrameIndex)
+    {
+        UpdateClipEvent(playingClip, playingFrameIndex);
+        UpdateClipEvent(corssFadeClip, crossFadeFrameIndex);
+    }
+
+    private void UpdateClipEvent(GPUSkinningClip clip, int frameIndex)
+    {
+        if(clip == null || clip.events == null || clip.events.Length == 0)
+        {
+            return;
+        }
+
+        GPUSkinningAnimEvent[] events = clip.events;
+        int numEvents = events.Length;
+        for(int i = 0; i < numEvents; ++i)
+        {
+            if(events[i].frameIndex == frameIndex && onAnimEvent != null)
+            {
+                onAnimEvent(this, events[i].eventId);
+                break;
+            }
+        }
+    }
+
     private void UpdateMaterial(float deltaTime, GPUSkinningMaterial currMtrl)
     {
         int frameIndex = GetFrameIndex();
@@ -388,6 +452,8 @@ public class GPUSkinningPlayer
                 DoRootMotion(frame, blend_crossFade, true);
             }
         }
+
+        UpdateEvents(playingClip, frameIndex, frame_crossFade == null ? null : lastPlayedClip, frameIndex_crossFade);
     }
 
     private GPUSkinningMaterial GetCurrentMaterial()

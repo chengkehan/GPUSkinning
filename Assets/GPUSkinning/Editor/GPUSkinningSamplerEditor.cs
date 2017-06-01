@@ -58,6 +58,8 @@ public class GPUSkinningSamplerEditor : Editor
 
     private bool isRootMotionFoldout = true;
 
+    private bool isAnimEventsFoldout = true;
+
     private bool rootMotionEnabled = false;
 
     private GameObject[] gridGos = null;
@@ -469,6 +471,10 @@ public class GPUSkinningSamplerEditor : Editor
 
                 OnGUI_PreviewClipsOptions();
 
+                OnGUI_AnimTimeline();
+
+                EditorGUILayout.Space();
+
                 OnGUI_RootMotion();
 
                 EditorGUILayout.Space();
@@ -483,6 +489,247 @@ public class GPUSkinningSamplerEditor : Editor
         EndBox();
 
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private bool animTimeline_dragging = false;
+    private void OnGUI_AnimTimeline()
+    {
+        EditorGUILayout.BeginHorizontal();
+        {
+            EditorGUILayout.Space();
+            BeginBox();
+            {
+                EditorGUILayout.Space();
+                if(isAnimEventsFoldout) EditorGUILayout.BeginVertical(GUILayout.Height(120));
+                else EditorGUILayout.BeginVertical();
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        isAnimEventsFoldout = EditorGUILayout.Foldout(isAnimEventsFoldout, isAnimEventsFoldout ? string.Empty : "Events");
+                        SetEditorPrefsBool("isAnimEventsFoldout", isAnimEventsFoldout);
+                        GUILayout.FlexibleSpace();
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    if (isAnimEventsFoldout)
+                    {
+                        Rect rect = GUILayoutUtility.GetLastRect();
+                        rect.x += 10;
+                        rect.y += 20;
+                        rect.width -= 20;
+                        EditorGUI.DrawRect(rect, new Color(0, 0, 0, 0.2f));
+
+                        OnGUI_AnimEvents_DrawThumb(rect, preview.Player.NormalizedTime, animTimeline_dragging);
+
+                        Event e = Event.current;
+                        Vector2 mousePos = e.mousePosition;
+                        if (rect.Contains(mousePos))
+                        {
+                            if(e.type == EventType.MouseDown)
+                            {
+                                animTimeline_dragging = true;
+                                OnGUI_AnimTimeline_DraggingUpdate(mousePos, rect);
+                            }
+                        }
+                        if(e.type == EventType.MouseUp)
+                        {
+                            animTimeline_dragging = false;
+                        }
+                        if(animTimeline_dragging && e.type == EventType.MouseDrag)
+                        {
+                            OnGUI_AnimTimeline_DraggingUpdate(mousePos, rect);
+                        }
+
+                        OnGUI_AnimEvents(rect);
+                    }
+                }
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space();
+            }
+            EndBox();
+            EditorGUILayout.Space();
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private float OnGUI_AnimTimeline_MouseDown_NormalizedTime(Vector2 mousePos, Rect rect)
+    {
+        return Mathf.Clamp01((mousePos.x - rect.x) / rect.width);
+    }
+
+    private void OnGUI_AnimTimeline_DraggingUpdate(Vector2 mousePos, Rect rect)
+    {
+        float normalizedTime = OnGUI_AnimTimeline_MouseDown_NormalizedTime(mousePos, rect);
+        preview.Player.NormalizedTime = normalizedTime;
+        OnGUI_AnimTimeline_PlayerUpdate();
+    }
+
+    private void OnGUI_AnimTimeline_PlayerUpdate()
+    {
+        preview.Player.Resume();
+        preview.Player.Update_Editor(0);
+        preview.Player.Stop();
+    }
+
+    private bool animEvent_dragging = false;
+    private int animEvent_dragging_index = -1;
+    private int animEvent_edit_index = -1;
+    private void OnGUI_AnimEvents(Rect rect)
+    {
+        rect.y += 30;
+        EditorGUI.DrawRect(rect, new Color(0, 0, 0, 0.2f));
+
+        if (anim == null || anim.clips.Length == 0 || previewClipIndex >= anim.clips.Length)
+        {
+            return;
+        }
+
+        GPUSkinningClip clip = anim.clips[previewClipIndex];
+
+        Event e = Event.current;
+        Vector2 mousePos = e.mousePosition;
+
+        if (e.type == EventType.MouseUp)
+        {
+            if(animEvent_dragging)
+            {
+                ApplyAnimModification();
+                OnGUI_AnimTimeline_PlayerUpdate();
+            }
+            animEvent_dragging = false;
+            animEvent_dragging_index = -1;
+        }
+
+        if (clip.events != null)
+        {
+            if (e.type == EventType.MouseDrag && animEvent_dragging && animEvent_dragging_index != -1)
+            {
+                float normalizedTime = OnGUI_AnimTimeline_MouseDown_NormalizedTime(mousePos, rect);
+                clip.events[animEvent_dragging_index].frameIndex = GPUSkinningUtil.NormalizeTimeToFrameIndex(clip, normalizedTime);
+            }
+
+            for (int i = 0; i < clip.events.Length; ++i)
+            {
+                GPUSkinningAnimEvent evt = clip.events[i];
+                Rect thumbRect = OnGUI_AnimEvents_DrawThumb(
+                    rect, 
+                    GPUSkinningUtil.FrameIndexToNormalizedTime(clip, evt.frameIndex), 
+                    (animEvent_dragging && animEvent_dragging_index == i) || animEvent_edit_index == i
+                );
+
+                Rect thumbLabelRect = thumbRect; thumbLabelRect.y += 20;
+                thumbLabelRect.width = 400;
+				EditorGUI.LabelField(thumbLabelRect, evt.eventId.ToString());
+
+                if(thumbRect.Contains(mousePos) && e.type == EventType.MouseDown)
+                {
+                    if (e.control)
+                    {
+                        List<GPUSkinningAnimEvent> newEvents = new List<GPUSkinningAnimEvent>(clip.events);
+                        newEvents.RemoveAt(i);
+                        clip.events = newEvents.ToArray();
+                        ApplyAnimModification();
+                        --i;
+                        OnGUI_AnimTimeline_PlayerUpdate();
+                        animEvent_edit_index = -1;
+                    }
+                    else
+                    {
+                        animEvent_dragging = true;
+                        animEvent_dragging_index = i;
+                        animEvent_edit_index = i;
+						GUI.FocusControl(string.Empty);
+                    }
+                }
+            }
+        }
+        
+        if (rect.Contains(mousePos))
+        {
+            if(e.type == EventType.MouseDown && !e.control && !animEvent_dragging)
+            {
+                List<GPUSkinningAnimEvent> newEvents = new List<GPUSkinningAnimEvent>();
+                if(clip.events != null)
+                {
+                    newEvents.AddRange(clip.events);
+                }
+                GPUSkinningAnimEvent newEvent = new GPUSkinningAnimEvent();
+                newEvents.Add(newEvent);
+                float normalizedTime = OnGUI_AnimTimeline_MouseDown_NormalizedTime(mousePos, rect);
+                newEvent.frameIndex = GPUSkinningUtil.NormalizeTimeToFrameIndex(clip, normalizedTime);
+                clip.events = newEvents.ToArray();
+                ApplyAnimModification();
+                OnGUI_AnimTimeline_PlayerUpdate();
+            }
+        }
+
+        if(animEvent_edit_index != -1 && clip.events != null)
+        {
+            OnGUI_AnimEvents_Edit(rect, clip.events[animEvent_edit_index]);
+
+			Rect tipsRect = rect;
+			tipsRect.y += 50;
+			OnGUI_AnimEvents_Tips(tipsRect);
+        }
+		else
+		{
+			Rect tipsRect = rect;
+			tipsRect.y += 30;
+			OnGUI_AnimEvents_Tips(tipsRect);
+		}
+    }
+
+    private void OnGUI_AnimEvents_Edit(Rect bgRect, GPUSkinningAnimEvent evt)
+    {
+        Rect rect = bgRect;
+        rect.y += 30;
+        EditorGUI.PrefixLabel(rect, new GUIContent("EventId:"));
+        rect.x += 80;
+        rect.width -= 80;
+        EditorGUI.BeginChangeCheck();
+        evt.eventId = EditorGUI.IntField(rect, evt.eventId);
+        if(EditorGUI.EndChangeCheck())
+        {
+            ApplyAnimModification();
+			OnGUI_AnimTimeline_PlayerUpdate();
+        }
+    }
+
+	private void OnGUI_AnimEvents_Tips(Rect bgRect)
+	{
+        bgRect.height *= 1.8f;
+		EditorGUI.HelpBox(bgRect, "Click to Add Event \nCtrl + Click to Delete", MessageType.None);
+	}
+
+    private Rect OnGUI_AnimEvents_DrawThumb(Rect bgRect, float value01, bool isDragging)
+    {
+        Color c = isDragging ? new Color(0, 0.6f, 0.6f, 0.6f) : new Color(0, 0, 0, 0.5f);
+        Color bc = new Color(0, 0, 0, 0.3f);
+
+        Rect rectThumb = bgRect;
+        rectThumb.y -= 4;
+        rectThumb.height += 8;
+        rectThumb.width = 10;
+        rectThumb.x = bgRect.x + bgRect.width * value01 - rectThumb.width * 0.5f;
+        EditorGUI.DrawRect(rectThumb, c);
+
+        float borderSize = 1f;
+        Rect rectBorder = rectThumb;
+        rectBorder.width = borderSize;
+        rectBorder.x -= borderSize;
+        EditorGUI.DrawRect(rectBorder, bc);
+        rectBorder.x += rectThumb.width + borderSize;
+        EditorGUI.DrawRect(rectBorder, bc);
+        rectBorder = rectThumb;
+        rectBorder.height = borderSize;
+        rectBorder.y -= borderSize;
+        EditorGUI.DrawRect(rectBorder, bc);
+        rectBorder.y += rectThumb.height + borderSize;
+        EditorGUI.DrawRect(rectBorder, bc);
+
+        return rectThumb;
     }
 
     private void OnGUI_RootMotion()
@@ -1108,10 +1355,24 @@ public class GPUSkinningSamplerEditor : Editor
         bounds.max = max;
     }
 
+    private void SortAnimEvents(GPUSkinningAnimation anim)
+    {
+        foreach(GPUSkinningClip clip in anim.clips)
+        {
+            if(clip.events == null || clip.events.Length == 0)
+            {
+                continue;
+            }
+
+            System.Array.Sort(clip.events);
+        }
+    }
+
     private void ApplyAnimModification()
     {
         if(preview != null && anim != null)
         {
+            SortAnimEvents(anim);
             EditorUtility.SetDirty(anim);
             AssetDatabase.Refresh();
             AssetDatabase.SaveAssets();
@@ -1319,6 +1580,7 @@ public class GPUSkinningSamplerEditor : Editor
         isJointsFoldout = GetEditorPrefsBool("isJointsFoldout", true);
         isRootMotionFoldout = GetEditorPrefsBool("isRootMotionFoldout", true);
         isLODFoldout = GetEditorPrefsBool("isLODFoldout", true);
+        isAnimEventsFoldout = GetEditorPrefsBool("isAnimEventsFoldout", true);
 
         rootMotionEnabled = true;
     }

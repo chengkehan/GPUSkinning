@@ -100,4 +100,27 @@ public class GPUSkinningUtil
         }
         return sTemp.ToLower();
     }
+
+    public static int NormalizeTimeToFrameIndex(GPUSkinningClip clip, float normalizedTime)
+    {
+        if(clip == null)
+        {
+            return 0;
+        }
+
+        normalizedTime = Mathf.Clamp01(normalizedTime);
+        return (int)(normalizedTime * (clip.length * clip.fps - 1));
+    }
+
+    public static float FrameIndexToNormalizedTime(GPUSkinningClip clip, int frameIndex)
+    {
+        if(clip == null)
+        {
+            return 0;
+        }
+
+        int totalFrams = (int)(clip.fps * clip.length);
+        frameIndex = Mathf.Clamp(frameIndex, 0, totalFrams - 1);
+        return (float)frameIndex / (float)(totalFrams - 1);
+    }
 }
