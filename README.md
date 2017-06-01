@@ -1,5 +1,11 @@
 ## GPUSkinning to improve performance.
 
+### [v0.2.3 release](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.3)
+
+Features:
+
+* Animation Event
+
 ### [v0.2.2 release](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.2)
 
 * [v0.2.2p1](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.2p1)
