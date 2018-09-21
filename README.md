@@ -1,5 +1,7 @@
 ## GPUSkinning to improve performance.
 
+[![Donate](http://chengkehan.github.io/donate_paypal.gif)](https://www.paypal.me/chengkehan/10usd)
+
 ### [v0.2.3 release](https://github.com/chengkehan/GPUSkinning/releases/tag/v0.2.3)
 
 Features:
