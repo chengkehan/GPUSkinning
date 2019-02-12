@@ -113,12 +113,21 @@ public class GPUSkinningPlayerMono : MonoBehaviour
         }
     }
 
+#if UNITY_2017_2_OR_NEWER
+    private bool editor_pending_OnValidate_Init;
+#endif
+
     private void OnValidate()
     {
         if (!Application.isPlaying)
         {
+            #if UNITY_2017_2_OR_NEWER
+            // defer Init() call to fix "SendMessage cannot be called during Awake, CheckConsistency, or OnValidate"
+            editor_pending_OnValidate_Init = true;
+            #else
             Init();
             Update_Editor(0);
+            #endif
         }
     }
 #endif
@@ -142,6 +151,13 @@ public class GPUSkinningPlayerMono : MonoBehaviour
             }
             else
             {
+                #if UNITY_2017_2_OR_NEWER
+                if (editor_pending_OnValidate_Init)
+                {
+                    editor_pending_OnValidate_Init = false;
+                    Init();
+                }
+                #endif
                 player.Update_Editor(0);
             }
 #else
