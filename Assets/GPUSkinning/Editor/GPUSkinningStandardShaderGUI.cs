@@ -29,8 +29,8 @@ internal class GPUSkinningStandardShaderGUI : ShaderGUI
 	private static class Styles
 	{
 		public static GUIStyle optionsButton = "PaneOptions";
-		public static GUIContent uvSetLabel = new GUIContent("UV Set");
-		public static GUIContent[] uvSetOptions = new GUIContent[] { new GUIContent("UV channel 0"), new GUIContent("UV channel 1") };
+		//public static GUIContent uvSetLabel = new GUIContent("UV Set");
+		//public static GUIContent[] uvSetOptions = new GUIContent[] { new GUIContent("UV channel 0"), new GUIContent("UV channel 1") };
 
 		public static string emptyTootip = "";
 		public static GUIContent albedoText = new GUIContent("Albedo", "Albedo (RGB) and Transparency (A)");
@@ -40,15 +40,15 @@ internal class GPUSkinningStandardShaderGUI : ShaderGUI
 		public static GUIContent smoothnessText = new GUIContent("Smoothness", "Smoothness value");
 		public static GUIContent smoothnessScaleText = new GUIContent("Smoothness", "Smoothness scale factor");
 		public static GUIContent smoothnessMapChannelText = new GUIContent("Source", "Smoothness texture and channel");
-		public static GUIContent highlightsText = new GUIContent("Specular Highlights", "Specular Highlights");
-		public static GUIContent reflectionsText = new GUIContent("Reflections", "Glossy Reflections");
+		//public static GUIContent highlightsText = new GUIContent("Specular Highlights", "Specular Highlights");
+		//public static GUIContent reflectionsText = new GUIContent("Reflections", "Glossy Reflections");
 		public static GUIContent normalMapText = new GUIContent("Normal Map", "Normal Map");
-		public static GUIContent heightMapText = new GUIContent("Height Map", "Height Map (G)");
+		//public static GUIContent heightMapText = new GUIContent("Height Map", "Height Map (G)");
 		public static GUIContent occlusionText = new GUIContent("Occlusion", "Occlusion (G)");
 		public static GUIContent emissionText = new GUIContent("Emission", "Emission (RGB)");
-		public static GUIContent detailMaskText = new GUIContent("Detail Mask", "Mask for Secondary Maps (A)");
-		public static GUIContent detailAlbedoText = new GUIContent("Detail Albedo x2", "Albedo (RGB) multiplied by 2");
-		public static GUIContent detailNormalMapText = new GUIContent("Normal Map", "Normal Map");
+		//public static GUIContent detailMaskText = new GUIContent("Detail Mask", "Mask for Secondary Maps (A)");
+		//public static GUIContent detailAlbedoText = new GUIContent("Detail Albedo x2", "Albedo (RGB) multiplied by 2");
+		//public static GUIContent detailNormalMapText = new GUIContent("Normal Map", "Normal Map");
 
 		public static string whiteSpaceString = " ";
 		public static string primaryMapsText = "Main Maps";
@@ -71,21 +71,21 @@ internal class GPUSkinningStandardShaderGUI : ShaderGUI
 	MaterialProperty smoothness = null;
 	MaterialProperty smoothnessScale = null;
 	MaterialProperty smoothnessMapChannel = null;
-	MaterialProperty highlights = null;
-	MaterialProperty reflections = null;
+	//MaterialProperty highlights = null;
+	//MaterialProperty reflections = null;
 	MaterialProperty bumpScale = null;
 	MaterialProperty bumpMap = null;
 	MaterialProperty occlusionStrength = null;
 	MaterialProperty occlusionMap = null;
-	MaterialProperty heigtMapScale = null;
-	MaterialProperty heightMap = null;
+	//MaterialProperty heigtMapScale = null;
+	//MaterialProperty heightMap = null;
 	MaterialProperty emissionColorForRendering = null;
 	MaterialProperty emissionMap = null;
-	MaterialProperty detailMask = null;
-	MaterialProperty detailAlbedoMap = null;
-	MaterialProperty detailNormalMapScale = null;
-	MaterialProperty detailNormalMap = null;
-	MaterialProperty uvSetSecondary = null;
+	//MaterialProperty detailMask = null;
+	//MaterialProperty detailAlbedoMap = null;
+	//MaterialProperty detailNormalMapScale = null;
+	//MaterialProperty detailNormalMap = null;
+	//MaterialProperty uvSetSecondary = null;
 
 	MaterialEditor m_MaterialEditor;
 	WorkflowMode m_WorkflowMode = WorkflowMode.Specular;
@@ -112,21 +112,21 @@ internal class GPUSkinningStandardShaderGUI : ShaderGUI
 		smoothness = FindProperty ("_Glossiness", props);
 		smoothnessScale = FindProperty ("_GlossMapScale", props, false);
 		smoothnessMapChannel = FindProperty ("_SmoothnessTextureChannel", props, false);
-		highlights = FindProperty ("_SpecularHighlights", props, false);
-		reflections = FindProperty ("_GlossyReflections", props, false);
+		//highlights = FindProperty ("_SpecularHighlights", props, false);
+		//reflections = FindProperty ("_GlossyReflections", props, false);
 		bumpScale = FindProperty ("_BumpScale", props);
 		bumpMap = FindProperty ("_BumpMap", props);
-		heigtMapScale = FindProperty ("_Parallax", props);
-		heightMap = FindProperty("_ParallaxMap", props);
+		//heigtMapScale = FindProperty ("_Parallax", props);
+		//heightMap = FindProperty("_ParallaxMap", props);
 		occlusionStrength = FindProperty ("_OcclusionStrength", props);
 		occlusionMap = FindProperty ("_OcclusionMap", props);
 		emissionColorForRendering = FindProperty ("_EmissionColor", props);
 		emissionMap = FindProperty ("_EmissionMap", props);
-		detailMask = FindProperty ("_DetailMask", props);
-		detailAlbedoMap = FindProperty ("_DetailAlbedoMap", props);
-		detailNormalMapScale = FindProperty ("_DetailNormalMapScale", props);
-		detailNormalMap = FindProperty ("_DetailNormalMap", props);
-		uvSetSecondary = FindProperty ("_UVSec", props);
+		//detailMask = FindProperty ("_DetailMask", props);
+		//detailAlbedoMap = FindProperty ("_DetailAlbedoMap", props);
+		//detailNormalMapScale = FindProperty ("_DetailNormalMapScale", props);
+		//detailNormalMap = FindProperty ("_DetailNormalMap", props);
+		//uvSetSecondary = FindProperty ("_UVSec", props);
 	}
 
 	public override void OnGUI (MaterialEditor materialEditor, MaterialProperty[] props)
