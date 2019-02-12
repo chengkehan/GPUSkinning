@@ -598,7 +598,7 @@ public class GPUSkinningPlayer
             {
                 // TODO: Update Joint when Animation Blend
 
-                Matrix4x4 jointMatrix = frame.matrices[joint.BoneIndex] * bones[joint.BoneIndex].BindposeInv;
+                Matrix4x4 jointMatrix = matrices[joint.BoneIndex] * bones[joint.BoneIndex].BindposeInv;
                 if(playingClip.rootMotionEnabled && rootMotionEnabled)
                 {
                     jointMatrix = frame.RootMotionInv(res.anim.rootBoneIndex) * jointMatrix;
