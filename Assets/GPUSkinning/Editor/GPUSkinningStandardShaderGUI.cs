@@ -89,7 +89,9 @@ internal class GPUSkinningStandardShaderGUI : ShaderGUI
 
 	MaterialEditor m_MaterialEditor;
 	WorkflowMode m_WorkflowMode = WorkflowMode.Specular;
-	ColorPickerHDRConfig m_ColorPickerHDRConfig = new ColorPickerHDRConfig(0f, 99f, 1/99f, 3f);
+#if !UNITY_2018_1_OR_NEWER
+    ColorPickerHDRConfig m_ColorPickerHDRConfig = new ColorPickerHDRConfig(0f, 99f, 1/99f, 3f);
+#endif
 
 	bool m_FirstTimeApply = true;
 
@@ -271,7 +273,11 @@ internal class GPUSkinningStandardShaderGUI : ShaderGUI
 		bool hadEmissionTexture = emissionMap.textureValue != null;
 
 		// Texture and HDR color controls
+        #if UNITY_2018_1_OR_NEWER
+		m_MaterialEditor.TexturePropertyWithHDRColor(Styles.emissionText, emissionMap, emissionColorForRendering, false);
+        #else
 		m_MaterialEditor.TexturePropertyWithHDRColor(Styles.emissionText, emissionMap, emissionColorForRendering, m_ColorPickerHDRConfig, false);
+        #endif
 
 		// If texture was assigned and color was black set color to white
 		float brightness = emissionColorForRendering.colorValue.maxColorComponent;
