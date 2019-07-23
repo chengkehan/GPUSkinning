@@ -1,12 +1,8 @@
+.vs
 Library
 
 obj
 
 Temp
-GPUSkinning_git.sln
-
-Assembly-CSharp.csproj
-GPUSkinning.csproj
-GPUSkinning.sln
-.vs/GPUSkinning/v14/.suo
-GPUSkinning.Editor.csproj
+*.sln
+*.csproj

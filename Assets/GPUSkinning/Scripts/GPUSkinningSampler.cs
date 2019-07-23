@@ -99,7 +99,7 @@ public class GPUSkinningSampler : MonoBehaviour
     [SerializeField]
     public bool updateOrNew = true;
 
-    private Animation animation = null;
+    private new Animation animation = null;
 
 	private Animator animator = null;
     private RuntimeAnimatorController runtimeAnimatorController = null;
@@ -342,6 +342,15 @@ public class GPUSkinningSampler : MonoBehaviour
         {
             AnimatorOverrideController animatorOverrideController = new AnimatorOverrideController();
             AnimationClip[] clips = runtimeAnimatorController.animationClips;
+#if UNITY_5_6_OR_NEWER
+            List<KeyValuePair<AnimationClip, AnimationClip>> overrides = new List<KeyValuePair<AnimationClip, AnimationClip>>(clips.Length);
+            animatorOverrideController.GetOverrides(overrides);
+            overrides.Clear();
+            for (int i = 0; i < clips.Length; ++i)
+                overrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(clips[i], animClip));
+            animatorOverrideController.runtimeAnimatorController = runtimeAnimatorController;
+            animatorOverrideController.ApplyOverrides(overrides);
+#else // <5.6:
             AnimationClipPair[] pairs = new AnimationClipPair[clips.Length];
             for (int i = 0; i < clips.Length; ++i)
             {
@@ -352,6 +361,7 @@ public class GPUSkinningSampler : MonoBehaviour
             }
             animatorOverrideController.runtimeAnimatorController = runtimeAnimatorController;
             animatorOverrideController.clips = pairs;
+#endif
             animator.runtimeAnimatorController = animatorOverrideController;
         }
     }
@@ -928,4 +938,4 @@ public class GPUSkinningSampler : MonoBehaviour
         PlayerPrefs.DeleteKey(key);
     }
 #endif
-}
+        }
